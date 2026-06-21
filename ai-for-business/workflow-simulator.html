@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workflow Simulator | AIM AI Bootcamp</title>
+  <meta name="description" content="Build an AI workflow by dragging steps into a pipeline, then watch sample data flow through and transform at each step — no AI required." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../assets/css/global.css" />
+  <link rel="stylesheet" href="../assets/css/city-theme.css" />
+
+  <style>html.light-pending body{background:#f4f5f9!important}</style>
+<script>try{if(document.cookie.indexOf('cos_ai_reset=1')!==-1){for(var _ri=localStorage.length-1;_ri>=0;_ri--){var _rk=localStorage.key(_ri);if(_rk&&_rk.indexOf('cos_ai_')===0)localStorage.removeItem(_rk);}document.cookie='cos_ai_reset=;path=/;max-age=0';}}catch(e){}</script>
+<script>try{if(localStorage.getItem('cos_ai_theme')==='light')document.documentElement.classList.add('light-pending')}catch(e){}</script>
+
+  <style>
+    .lead{color:var(--aim-text)}
+    .scn-chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--aim-text);transition:all 160ms ease}
+    .scn-chip:hover{background:rgba(255,255,255,0.12)}
+    .scn-chip.active{border-color:#6dd8ff;color:#fff;background:rgba(109,216,255,0.14)}
+    body.light-mode .scn-chip{color:#475569;background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
+
+    .input-preview{font-size:13px;line-height:1.55;color:var(--aim-text);white-space:pre-wrap;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:12px;padding:12px 14px}
+    body.light-mode .input-preview{background:rgba(0,0,0,0.03);border-color:rgba(0,0,0,0.14)}
+
+    .pal-step{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:10px 12px;border-radius:11px;cursor:grab;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:var(--aim-heading);font-size:13px;font-weight:600;transition:all 150ms ease}
+    .pal-step:hover{background:rgba(255,255,255,0.11);transform:translateY(-1px)}
+    .pal-step:active{cursor:grabbing}
+    .pal-step i{color:var(--ac,#6dd8ff)}
+    body.light-mode .pal-step{color:#1e293b;background:rgba(0,0,0,0.035);border-color:rgba(0,0,0,0.1)}
+
+    .pipe{position:relative;display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;min-height:120px;padding:14px;border-radius:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.10)}
+    .pipe.drag-over{border-color:#6dd8ff;background:rgba(109,216,255,0.06)}
+    body.light-mode .pipe{background:rgba(0,0,0,0.025);border-color:rgba(0,0,0,0.1)}
+    .pipe-input,.pipe-step{border-radius:12px;padding:10px 12px;min-width:118px;display:flex;flex-direction:column;gap:6px;justify-content:space-between}
+    .pipe-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:var(--aim-heading);font-size:12px;font-weight:700}
+    .pipe-input span{font-weight:500;color:var(--aim-muted);font-size:11px}
+    .pipe-step{background:rgba(255,255,255,0.06);border:1px solid var(--ac,#6dd8ff);cursor:grab;transition:transform 160ms ease,box-shadow 160ms ease}
+    .pipe-step.active{transform:translateY(-3px) scale(1.03);box-shadow:0 0 0 2px var(--ac),0 8px 24px rgba(0,0,0,0.3)}
+    .ps-top{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--aim-heading)}
+    .ps-top i{color:var(--ac,#6dd8ff);width:15px;height:15px}
+    .ps-ctl{display:flex;gap:4px}
+    .ps-ctl button{flex:1;border:none;cursor:pointer;font-size:11px;border-radius:6px;padding:3px 0;background:rgba(255,255,255,0.08);color:var(--aim-text)}
+    .ps-ctl button:hover{background:rgba(255,255,255,0.18);color:#fff}
+    body.light-mode .pipe-input,body.light-mode .pipe-step{color:#1e293b}
+    body.light-mode .ps-ctl button{background:rgba(0,0,0,0.06);color:#475569}
+    .pipe-conn{display:flex;align-items:center;color:var(--aim-muted)}
+    .pipe-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--aim-muted);font-size:13px;min-height:90px;text-align:center}
+    .packet{position:absolute;top:0;left:0;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle,#fff,#6dd8ff);box-shadow:0 0 14px #6dd8ff;opacity:0;transition:transform 380ms cubic-bezier(.4,0,.2,1),opacity 200ms;pointer-events:none;z-index:5}
+
+    .run-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:15px;color:#0e1430;background:linear-gradient(135deg,#6dd8ff,#e4a4e1);box-shadow:0 8px 24px rgba(109,216,255,0.28);transition:transform 160ms ease}
+    .run-btn:hover{transform:translateY(-2px)} .run-btn:disabled{opacity:0.5;cursor:default;transform:none}
+    .mini-btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:var(--aim-text)}
+    .mini-btn:hover{background:rgba(255,255,255,0.14)}
+    body.light-mode .mini-btn{color:#475569;background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
+    .time-pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#6dd8ff;padding:8px 13px;border-radius:999px;background:rgba(109,216,255,0.1);border:1px solid rgba(109,216,255,0.25)}
+    .hc-nudge{display:none;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#FFB76B;padding:7px 12px;border-radius:999px;background:rgba(255,183,107,0.1);border:1px solid rgba(255,183,107,0.3)}
+
+    .tx-card{border-radius:12px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-left:3px solid var(--ac,#6dd8ff);animation:txIn 360ms ease both}
+    .tx-card.input{border-left-color:#9fb6ff;opacity:0.92}
+    .tx-card.human{border-left-color:#FFB76B;background:rgba(255,183,107,0.06)}
+    .tx-card.done{border-left-color:#2ecc71;background:rgba(46,204,113,0.06)}
+    @keyframes txIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .tx-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--aim-heading);margin-bottom:5px}
+    .tx-head i{width:16px;height:16px;color:var(--ac,#6dd8ff)}
+    .tx-body{font-size:13px;line-height:1.6;color:var(--aim-text);white-space:pre-wrap;font-family:'Fira Code','SF Mono',monospace}
+    .approve-btn{margin-top:10px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;background:#FFB76B;color:#0e1430}
+    .approve-btn:hover{filter:brightness(1.05)} .approve-btn:disabled{background:rgba(46,204,113,0.8);color:#0e1430}
+
+    .glossary dt{font-weight:800;color:var(--aim-heading);font-size:14px}
+    .glossary dd{color:var(--aim-text);font-size:13.5px;margin:2px 0 12px;line-height:1.55}
+  </style>
+</head>
+<body>
+
+  <nav class="aim-nav fixed top-0 left-0 right-0 z-50 py-5">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <a href="https://www.aim.com.au" target="_blank"><img src="../assets/aimlogo_white.png" alt="AIM" class="h-8 sm:h-10"></a>
+      <a href="index.html" class="aim-back"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Bootcamp</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+        <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main class="relative z-10 max-w-5xl mx-auto px-6 pt-28 pb-20">
+    <div class="pill mb-6 fade-up"><span class="w-2 h-2 rounded-full bg-[#6dd8ff] inline-block"></span> Workflow Builder &middot; Hands-on</div>
+    <h1 class="text-3xl sm:text-5xl font-bold mb-4 fade-up" style="animation-delay:100ms">Workflow <span class="gradient-text">Simulator</span></h1>
+    <p class="lead text-lg mb-8 fade-up" style="animation-delay:200ms">
+      Real AI value comes from <b>chaining steps</b> together. Pick a scenario, drag steps into a pipeline, then press Run and watch a sample piece of work flow through — transforming at each step. It's a simulation with pre-written results, so there's no AI behind it.
+    </p>
+
+    <!-- SCENARIO -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-6 fade-up" style="animation-delay:280ms">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="w-9 h-9 rounded-xl bg-[#6dd8ff]/12 border border-[#6dd8ff]/25 flex items-center justify-center"><i data-lucide="inbox" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+        <div><h2 class="text-base font-bold text-[var(--aim-heading)]">1. Choose what you're working with</h2><p class="text-xs text-[var(--aim-muted)]">This is the raw input your workflow will process.</p></div>
+      </div>
+      <div id="scenarios" class="flex flex-wrap gap-2 mb-4"></div>
+      <div id="inputPreview" class="input-preview"></div>
+    </section>
+
+    <!-- BUILDER -->
+    <section class="grid md:grid-cols-[230px_1fr] gap-5 mb-6 fade-up" style="animation-delay:340ms">
+      <div class="glass rounded-2xl p-4">
+        <h2 class="text-sm font-bold text-[var(--aim-heading)] mb-1">2. AI steps</h2>
+        <p class="text-[11px] text-[var(--aim-muted)] mb-3">Drag into the pipeline, or tap to add.</p>
+        <div id="palette" class="flex flex-col gap-2"></div>
+      </div>
+      <div class="glass rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 class="text-sm font-bold text-[var(--aim-heading)]">3. Your workflow</h2>
+          <div class="flex gap-2">
+            <button class="mini-btn" id="suggestBtn"><i data-lucide="wand-2" class="w-3.5 h-3.5"></i> Use suggested</button>
+            <button class="mini-btn" id="clearBtn"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear</button>
+          </div>
+        </div>
+        <div id="pipe" class="pipe"><div class="packet" id="packet"></div></div>
+        <div class="flex items-center gap-3 flex-wrap mt-4">
+          <button class="run-btn" id="runBtn"><i data-lucide="play" class="w-4 h-4"></i> Run workflow</button>
+          <span class="time-pill" id="timeSaved"><i data-lucide="clock" class="w-3.5 h-3.5"></i> <span id="timeText">Add steps to build your workflow</span></span>
+          <span class="hc-nudge" id="hcNudge"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Tip: add a Human check before Save / Send</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- OUTPUT -->
+    <section class="glass rounded-2xl p-6 mb-10 fade-up" style="animation-delay:380ms">
+      <h2 class="text-base font-bold text-[var(--aim-heading)] mb-1 flex items-center gap-2"><i data-lucide="activity" class="w-4 h-4 text-[#6dd8ff]"></i> What happens at each step</h2>
+      <p class="text-xs text-[var(--aim-muted)] mb-4">Press Run to watch the work transform as it moves down the pipeline.</p>
+      <div id="transcript"><p class="text-sm text-[var(--aim-muted)]">Your workflow's output will appear here, step by step.</p></div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section class="mb-12 fade-up">
+      <h2 class="text-xl font-semibold text-[var(--aim-heading)] mb-6 flex items-center gap-3">
+        <span class="w-8 h-8 rounded-lg bg-[#6dd8ff]/10 border border-[#6dd8ff]/20 flex items-center justify-center"><i data-lucide="key-round" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+        Four things to take away
+      </h2>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">One step, one job</h3><p class="text-xs text-[var(--aim-text)]">Each step does a single, simple task well. Big results come from chaining small, reliable steps — not one giant prompt.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">The output becomes the next input</h3><p class="text-xs text-[var(--aim-text)]">A workflow passes the result of one step into the next. Order matters: summarise before you draft, not after.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Keep a human in the loop</h3><p class="text-xs text-[var(--aim-text)]">Add a Human check before anything is sent or published. AI drafts; a person approves. That's where trust and safety live.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Reuse it</h3><p class="text-xs text-[var(--aim-text)]">Once a workflow works, it saves time every single run. The minutes add up fast across a week of repeated tasks.</p></div>
+      </div>
+    </section>
+
+    <!-- GLOSSARY -->
+    <section class="mb-12 fade-up">
+      <div class="glass rounded-2xl p-6 md:p-7">
+        <h2 class="text-base font-bold text-[var(--aim-heading)] mb-4 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4 text-[#6dd8ff]"></i> Mini glossary</h2>
+        <dl class="glossary grid sm:grid-cols-2 gap-x-8">
+          <div><dt>Workflow</dt><dd>A set sequence of steps that turns an input into a finished result, the same way every time.</dd></div>
+          <div><dt>Step (or node)</dt><dd>One action in the workflow — summarise, draft, format — that does a single job.</dd></div>
+          <div><dt>Chaining</dt><dd>Feeding the output of one step in as the input of the next.</dd></div>
+          <div><dt>Human in the loop</dt><dd>A point where a person reviews and approves before the workflow continues.</dd></div>
+          <div><dt>Automation</dt><dd>Running a workflow with little or no manual effort, so it repeats reliably.</dd></div>
+          <div><dt>Trigger</dt><dd>The event that kicks a workflow off — a new email, a form, or you pressing Run.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="flex flex-col sm:flex-row gap-3 justify-between fade-up">
+      <a href="build-a-workflow.html" class="aim-btn"><i data-lucide="arrow-left" class="w-4 h-4"></i> Build a workflow</a>
+      <a href="workflow-canvas.html" class="aim-btn">Workflow canvas <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </section>
+  </main>
+
+  <footer class="border-t border-[var(--aim-panel)] py-8">
+    <div class="max-w-6xl mx-auto px-6 text-center text-xs text-[var(--aim-muted)]">AIM AI Bootcamp for Small Business</div>
+  </footer>
+
+  <script>lucide.createIcons();</script>
+  <script>
+  (function(){ var KEY='cos_ai_theme',s=localStorage.getItem(KEY); if(s==='light')document.body.classList.add('light-mode'); ic();
+    window.toggleTheme=function(){document.body.classList.toggle('light-mode');var l=document.body.classList.contains('light-mode');localStorage.setItem(KEY,l?'light':'dark');ic();};
+    function ic(){var l=document.body.classList.contains('light-mode');document.querySelectorAll('.theme-icon-dark').forEach(function(e){e.style.display=l?'none':'block';});document.querySelectorAll('.theme-icon-light').forEach(function(e){e.style.display=l?'block':'none';});}
+  })();
+  (function(){var n=document.querySelector('.aim-nav');if(n)window.addEventListener('scroll',function(){n.classList.toggle('scrolled',window.scrollY>10);});})();
+  </script>
+
+  <!-- ===================== WORKFLOW SIMULATOR (no AI — pre-written results) ===================== -->
+  <script>
+  (function(){
+    'use strict';
+    var STEPS={
+      'summarise':{name:'Summarise',icon:'file-text',color:'#6dd8ff',mins:5},
+      'extract-actions':{name:'Extract actions',icon:'list-checks',color:'#6dd8ff',mins:4},
+      'bullets':{name:'Bullet points',icon:'list',color:'#6dd8ff',mins:3},
+      'plain':{name:'Plain English',icon:'book-open',color:'#6dd8ff',mins:3},
+      'tone-friendly':{name:'Friendlier tone',icon:'smile',color:'#e4a4e1',mins:2},
+      'make-formal':{name:'Make formal',icon:'briefcase',color:'#e4a4e1',mins:2},
+      'draft-email':{name:'Draft email',icon:'mail',color:'#2ee0cf',mins:8},
+      'social':{name:'Split into social posts',icon:'share-2',color:'#2ee0cf',mins:10},
+      'human-check':{name:'Human check',icon:'user-check',color:'#FFB76B',mins:1,human:true},
+      'send':{name:'Save / Send',icon:'send',color:'#6dd8ff',mins:1,terminal:true}
+    };
+    var ORDER=['summarise','extract-actions','bullets','plain','tone-friendly','make-formal','draft-email','social','human-check','send'];
+
+    var GENERIC={
+      'summarise':'A short, plain summary of the input.',
+      'extract-actions':'• Key action items pulled from the text',
+      'bullets':'• Reformatted into clear bullet points',
+      'plain':'Rewritten in simple, everyday language.',
+      'tone-friendly':'Tone set to warm and friendly.',
+      'make-formal':'Tone set to professional and formal.',
+      'draft-email':'A ready-to-review email draft.',
+      'social':'A set of platform-specific social captions.',
+      'human-check':'Review — a person checks the result and approves before continuing.',
+      'send':'Done — final output saved or sent.'
+    };
+
+    var SCEN=[
+      { id:'enquiry', label:'Customer enquiry', icon:'message-circle',
+        input:'Hi, I bought a coffee machine from you 3 weeks ago (order #4821) and it’s already leaking everywhere. Pretty annoyed tbh, this is the second one. I want it sorted or my money back. Can someone call me today? — Dave',
+        suggest:['summarise','tone-friendly','draft-email','human-check','send'],
+        steps:{
+          'summarise':{out:'Dave (order #4821) says his coffee machine is leaking — his second faulty unit. He is frustrated and wants a replacement or refund, ideally a call today.',mins:4},
+          'extract-actions':{out:'• Look up order #4821\n• Offer replacement or refund\n• Phone Dave today',mins:3},
+          'tone-friendly':{out:'Tone selected: warm, apologetic and solution-focused.',mins:2},
+          'draft-email':{out:'Hi Dave,\n\nI’m really sorry your coffee machine is leaking again — that’s not good enough. I’ve found order #4821 and I’d like to make it right: I can send a replacement today or arrange a full refund, whichever you’d prefer.\n\nI’ll call you this afternoon to sort it out. Thanks for your patience.\n\nKind regards,\n[Your name]',mins:9},
+          'human-check':{out:'Review: check the refund offer matches policy and the tone feels right before this goes to Dave.',mins:1},
+          'send':{out:'Reply sent to Dave, and order #4821 flagged for follow-up.',mins:1}
+        } },
+      { id:'meeting', label:'Messy meeting notes', icon:'clipboard-list',
+        input:'Team sync 14 May. Discussed Q3 campaign — Priya to finalise budget by Fri. Website redesign delayed, waiting on photos from Sam. Need to book the venue for the launch (cap 80). Reminder: submit grant report end of month. Also coffee machine still broken.',
+        suggest:['summarise','extract-actions','draft-email','human-check','send'],
+        steps:{
+          'summarise':{out:'Team sync (14 May): Q3 budget due Friday (Priya); website redesign waiting on Sam’s photos; launch venue (cap 80) to be booked; grant report due end of month.',mins:5},
+          'extract-actions':{out:'• Priya — finalise Q3 budget by Friday\n• Chase Sam for website photos\n• Book launch venue (capacity 80)\n• Submit grant report by end of month',mins:4},
+          'draft-email':{out:'Subject: Action items from today’s sync\n\nHi team,\n\nQuick recap of who’s doing what:\n• Priya — finalise the Q3 budget by Friday\n• Sam — send the website photos\n• [Owner] — book the launch venue (cap 80)\n• Submit the grant report by month-end\n\nShout if I’ve missed anything.\n\nThanks!',mins:8},
+          'bullets':{out:'• Q3 budget due Friday\n• Website blocked on photos\n• Book venue (80)\n• Grant report due',mins:2},
+          'human-check':{out:'Review: confirm names, dates and that nothing is missing before sending.',mins:1},
+          'send':{out:'Recap email sent to the team.',mins:1}
+        } },
+      { id:'blog', label:'Blog post → social', icon:'newspaper',
+        input:'Blog post: “5 ways small cafes can cut food waste” — covers smarter ordering, daily specials from surplus, staff training, partnering with charities, and tracking waste weekly. About 800 words, friendly tone, aimed at cafe owners.',
+        suggest:['summarise','social','human-check','send'],
+        steps:{
+          'summarise':{out:'A friendly 800-word guide for cafe owners on cutting food waste: smarter ordering, surplus specials, staff training, charity partnerships, and weekly waste tracking.',mins:5},
+          'social':{out:'LinkedIn: Food waste quietly eats into thin cafe margins. Here are 5 practical fixes — from surplus specials to weekly tracking. Which would you try first?\n\nFacebook: Running a cafe? 5 simple ways to cut food waste (and cost) this month.\n\nInstagram: 5 ways to waste less and save more. Save this for your next stock order!',mins:12},
+          'plain':{out:'Simple version: 5 easy things cafes can do to throw away less food and save money.',mins:3},
+          'human-check':{out:'Review: check the captions match your brand voice and tag the right pages before posting.',mins:1},
+          'send':{out:'Captions saved to your content calendar, ready to schedule.',mins:1}
+        } },
+      { id:'document', label:'Long document', icon:'file-stack',
+        input:'Council report (32 pages): proposed changes to weekend parking in the CBD — new 2-hour limits, increased fees after 6pm, exemptions for residents, a 6-month trial starting July, and a review with a community feedback survey.',
+        suggest:['summarise','bullets','plain','human-check','send'],
+        steps:{
+          'summarise':{out:'The 32-page report proposes weekend CBD parking changes: new 2-hour limits, higher fees after 6pm, resident exemptions, and a 6-month trial from July with a community feedback survey.',mins:15},
+          'bullets':{out:'• 2-hour weekend limits in the CBD\n• Higher fees after 6pm\n• Resident exemptions\n• 6-month trial from July\n• Review plus community survey',mins:6},
+          'plain':{out:'In plain English: on weekends you’ll only be able to park in the CBD for 2 hours, it costs more after 6pm, residents are exempt, and it’s a 6-month trial from July that they’ll review with public feedback.',mins:5},
+          'human-check':{out:'Review: verify the summary matches the source document before sharing it.',mins:1},
+          'send':{out:'Summary saved and ready to share with the team.',mins:1}
+        } }
+    ];
+
+    var idx=0, pipeline=SCEN[0].suggest.slice(), running=false;
+    var elScn=document.getElementById('scenarios'), elPal=document.getElementById('palette'),
+        elPipe=document.getElementById('pipe'), elPrev=document.getElementById('inputPreview'),
+        elTime=document.getElementById('timeText'), elNudge=document.getElementById('hcNudge'),
+        elTx=document.getElementById('transcript'), packet=document.getElementById('packet');
+
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+
+    /* scenarios */
+    SCEN.forEach(function(s,i){ var b=document.createElement('button'); b.className='scn-chip'+(i===0?' active':''); b.innerHTML='<i data-lucide="'+s.icon+'" class="w-4 h-4"></i> '+s.label; b.onclick=function(){ idx=i; document.querySelectorAll('.scn-chip').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); renderPrev(); }; elScn.appendChild(b); });
+    function renderPrev(){ elPrev.textContent=SCEN[idx].input; }
+
+    /* palette */
+    ORDER.forEach(function(id){ var s=STEPS[id]; var b=document.createElement('button'); b.className='pal-step'; b.setAttribute('draggable','true'); b.style.setProperty('--ac',s.color); b.dataset.step=id; b.innerHTML='<i data-lucide="'+s.icon+'" class="w-4 h-4"></i> '+s.name; b.onclick=function(){ if(!running){ pipeline.push(id); renderPipe(); } }; b.addEventListener('dragstart',function(e){ e.dataTransfer.setData('text/plain', JSON.stringify({src:'pal',id:id})); }); elPal.appendChild(b); });
+
+    /* pipeline render */
+    window.mv=function(i,d){ if(running)return; var j=i+d; if(j<0||j>=pipeline.length)return; var t=pipeline[i]; pipeline[i]=pipeline[j]; pipeline[j]=t; renderPipe(); };
+    window.rm=function(i){ if(running)return; pipeline.splice(i,1); renderPipe(); };
+    function renderPipe(){
+      var html='<div class="packet" id="packet"></div>';
+      html+='<div class="pipe-input"><span style="display:flex;align-items:center;gap:6px;color:var(--aim-heading)"><i data-lucide="inbox" class="w-3.5 h-3.5"></i>Input</span><span>'+esc(SCEN[idx].label)+'</span></div>';
+      if(!pipeline.length){ html+='<div class="pipe-empty">Drag steps here, or tap one from the left.</div>'; }
+      pipeline.forEach(function(id,i){ var s=STEPS[id];
+        html+='<div class="pipe-conn"><i data-lucide="chevron-right" class="w-4 h-4"></i></div>';
+        html+='<div class="pipe-step" draggable="true" data-i="'+i+'" style="--ac:'+s.color+'"><div class="ps-top"><i data-lucide="'+s.icon+'"></i>'+s.name+'</div><div class="ps-ctl"><button title="Move left" onclick="mv('+i+',-1)">◀</button><button title="Remove" onclick="rm('+i+')">✕</button><button title="Move right" onclick="mv('+i+',1)">▶</button></div></div>';
+      });
+      elPipe.innerHTML=html; packet=document.getElementById('packet'); lucide.createIcons(); attachDnD(); updateBar();
+    }
+    function updateBar(){
+      var mins=0; pipeline.forEach(function(id){ var sc=SCEN[idx].steps[id]; mins+=(sc&&sc.mins!=null)?sc.mins:(STEPS[id].mins||2); });
+      elTime.textContent= pipeline.length? ('≈ '+mins+' min of manual work saved per run · '+pipeline.length+' steps') : 'Add steps to build your workflow';
+      var si=pipeline.indexOf('send'), hi=pipeline.indexOf('human-check');
+      elNudge.style.display=(si!==-1 && (hi===-1 || hi>si))?'inline-flex':'none';
+      document.getElementById('runBtn').disabled = running || !pipeline.length;
+    }
+
+    /* drag + drop */
+    function indexFromX(x){ var kids=elPipe.querySelectorAll('.pipe-step'); for(var k=0;k<kids.length;k++){ var r=kids[k].getBoundingClientRect(); if(x < r.left + r.width/2) return parseInt(kids[k].dataset.i,10); } return pipeline.length; }
+    elPipe.addEventListener('dragover',function(e){ e.preventDefault(); elPipe.classList.add('drag-over'); });
+    elPipe.addEventListener('dragleave',function(){ elPipe.classList.remove('drag-over'); });
+    elPipe.addEventListener('drop',function(e){ e.preventDefault(); elPipe.classList.remove('drag-over'); if(running)return; var d; try{ d=JSON.parse(e.dataTransfer.getData('text/plain')); }catch(_){ return; } var at=indexFromX(e.clientX);
+      if(d.src==='pal'){ pipeline.splice(at,0,d.id); }
+      else if(d.src==='pipe'){ var from=d.from; if(from<at)at--; var m=pipeline.splice(from,1)[0]; pipeline.splice(at,0,m); }
+      renderPipe(); });
+    function attachDnD(){ elPipe.querySelectorAll('.pipe-step').forEach(function(el){ el.addEventListener('dragstart',function(e){ e.dataTransfer.setData('text/plain', JSON.stringify({src:'pipe',from:parseInt(el.dataset.i,10)})); }); }); }
+
+    /* run */
+    function outFor(id){ var sc=SCEN[idx].steps[id]; return (sc&&sc.out)||GENERIC[id]||('Applied: '+STEPS[id].name); }
+    function setActive(i){ var kids=elPipe.querySelectorAll('.pipe-step'); kids.forEach(function(k,n){ k.classList.toggle('active', n===i); }); }
+    function movePacket(i){ if(!packet)return; var target = i<0? elPipe.querySelector('.pipe-input') : elPipe.querySelectorAll('.pipe-step')[i]; if(!target){ packet.style.opacity=0; return; } var pr=elPipe.getBoundingClientRect(), tr=target.getBoundingClientRect(); packet.style.opacity='1'; packet.style.transform='translate('+(tr.left-pr.left+tr.width/2-8)+'px,'+(tr.top-pr.top-10)+'px)'; }
+    function card(s,out,cls){ var d=document.createElement('div'); d.className='tx-card'+(cls?' '+cls:''); d.style.setProperty('--ac',s.color||'#6dd8ff'); d.innerHTML='<div class="tx-head"><i data-lucide="'+s.icon+'"></i>'+s.name+'</div><div class="tx-body">'+esc(out).replace(/\n/g,'<br>')+'</div>'; elTx.appendChild(d); lucide.createIcons(); d.scrollIntoView({behavior:'smooth',block:'nearest'}); return d; }
+    function human(s,out){ return new Promise(function(res){ var d=card(s,out,'human'); var b=document.createElement('button'); b.className='approve-btn'; b.innerHTML='Approve &amp; continue'; b.onclick=function(){ b.disabled=true; b.textContent='Approved'; res(); }; d.appendChild(b); d.scrollIntoView({behavior:'smooth',block:'nearest'}); }); }
+
+    async function run(){
+      if(running||!pipeline.length) return; running=true; updateBar();
+      elTx.innerHTML='';
+      card({name:'Input',icon:'inbox',color:'#9fb6ff'}, SCEN[idx].input, 'input');
+      movePacket(-1); await wait(550);
+      for(var i=0;i<pipeline.length;i++){ var id=pipeline[i], s=STEPS[id]; setActive(i); movePacket(i); await wait(440);
+        if(s.human){ await human(s, outFor(id)); }
+        else { card(s, outFor(id), s.terminal?'done':''); await wait(760); }
+      }
+      setActive(-1); movePacket(-1);
+      var mins=0; pipeline.forEach(function(id){ var sc=SCEN[idx].steps[id]; mins+=(sc&&sc.mins!=null)?sc.mins:(STEPS[id].mins||2); });
+      card({name:'Workflow complete',icon:'check-circle-2',color:'#2ecc71'}, 'Run again any time. This workflow would save roughly '+mins+' minutes of manual work each time you use it.', 'done');
+      running=false; updateBar();
+    }
+
+    document.getElementById('runBtn').onclick=run;
+    document.getElementById('suggestBtn').onclick=function(){ if(running)return; pipeline=SCEN[idx].suggest.slice(); renderPipe(); };
+    document.getElementById('clearBtn').onclick=function(){ if(running)return; pipeline=[]; renderPipe(); };
+
+    /* boot */
+    renderPrev(); renderPipe(); lucide.createIcons();
+  })();
+  </script>
+
+</body>
+</html>

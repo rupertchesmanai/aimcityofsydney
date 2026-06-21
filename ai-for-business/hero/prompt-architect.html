@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Prompt Architect | AIM AI Bootcamp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/city-theme.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+html.light-pending body { background: #070c1a !important; }
+body { padding-bottom: 0 !important; overflow: hidden; }
+
+#three-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0; display: block; cursor: default;
+}
+#three-canvas.selectable { cursor: pointer; }
+
+/* Vignette overlay */
+#vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(4,8,20,0.72) 100%);
+}
+
+@keyframes canvasShake {
+  0%{transform:translateX(0)}15%{transform:translateX(-6px)}30%{transform:translateX(6px)}
+  45%{transform:translateX(-5px)}60%{transform:translateX(5px)}75%{transform:translateX(-3px)}
+  90%{transform:translateX(3px)}100%{transform:translateX(0)}
+}
+#three-canvas.shake { animation: canvasShake 380ms ease; }
+
+.overlay {
+  position: fixed; inset: 0; z-index: 10;
+  pointer-events: none; display: flex;
+  flex-direction: column; justify-content: space-between;
+}
+.aim-nav {
+  pointer-events: all; position: relative !important;
+  background: rgba(7,12,26,0.6) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+.bottom-panel {
+  pointer-events: all; padding: 0 24px 28px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.hero-title-block { text-align: center; animation: fadeUp 800ms ease both; }
+.hero-title-block .pill {
+  margin-bottom: 10px; font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em;
+}
+.hero-title-block h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.4rem,3.5vw,2.2rem);
+  font-weight: 800; line-height: 1.1; color: #fff;
+  margin: 0 0 6px; letter-spacing: -0.02em;
+}
+.hero-title-block h1 span {
+  background: linear-gradient(110deg,#6dd8ff 0%,#a78bfa 50%,#34d399 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-title-block p {
+  font-size: clamp(0.78rem,1.8vw,0.92rem); color: rgba(255,255,255,0.55);
+  font-family: 'DM Mono', monospace; font-weight: 300; letter-spacing: 0.01em;
+  margin: 0; max-width: 520px;
+}
+.block-cards {
+  display: flex; gap: 10px; justify-content: center;
+  flex-wrap: wrap; animation: fadeUp 800ms ease 200ms both;
+  width: 100%; max-width: 820px;
+}
+.block-card {
+  flex: 1; min-width: 150px; max-width: 230px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 13px 16px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  transition: border-color 300ms ease, background 300ms ease, transform 200ms ease, box-shadow 300ms ease;
+  cursor: pointer; user-select: none; position: relative; overflow: hidden;
+}
+.block-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  opacity: 0; transition: opacity 300ms ease;
+}
+.block-card.act::before  { background: radial-gradient(ellipse at top left, rgba(109,216,255,0.12) 0%, transparent 70%); }
+.block-card.explain::before { background: radial-gradient(ellipse at top left, rgba(167,139,250,0.12) 0%, transparent 70%); }
+.block-card.please::before  { background: radial-gradient(ellipse at top left, rgba(52,211,153,0.12) 0%, transparent 70%); }
+.block-card:hover::before { opacity: 1; }
+.block-card:hover { background: rgba(255,255,255,0.07); transform: translateY(-2px); }
+.block-card.act  { border-color: rgba(109,216,255,0.25); }
+.block-card.explain { border-color: rgba(167,139,250,0.25); }
+.block-card.please  { border-color: rgba(52,211,153,0.25); }
+.block-card.act:hover  { border-color: rgba(109,216,255,0.5); }
+.block-card.explain:hover { border-color: rgba(167,139,250,0.5); }
+.block-card.please:hover  { border-color: rgba(52,211,153,0.5); }
+.block-card.selected.act  { border-color:#6dd8ff; box-shadow:0 0 16px rgba(109,216,255,0.35),inset 0 0 0 1px rgba(109,216,255,0.3); }
+.block-card.selected.explain { border-color:#a78bfa; box-shadow:0 0 16px rgba(167,139,250,0.35),inset 0 0 0 1px rgba(167,139,250,0.3); }
+.block-card.selected.please  { border-color:#34d399; box-shadow:0 0 16px rgba(52,211,153,0.35),inset 0 0 0 1px rgba(52,211,153,0.3); }
+.block-card.placed { opacity:0.6; cursor:default; pointer-events:none; }
+.block-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.block-label { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
+.block-label.act     { color:#6dd8ff; }
+.block-label.explain { color:#a78bfa; }
+.block-label.please  { color:#34d399; }
+.block-check {
+  width:18px; height:18px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transform:scale(0.5); transition:opacity 300ms ease,transform 300ms ease;
+}
+.block-check.visible { opacity:1; transform:scale(1); }
+.block-card.act    .block-check { background:rgba(109,216,255,0.2); color:#6dd8ff; }
+.block-card.explain .block-check { background:rgba(167,139,250,0.2); color:#a78bfa; }
+.block-card.please  .block-check { background:rgba(52,211,153,0.2); color:#34d399; }
+.block-desc-head { font-size:10px; font-weight:700; color:rgba(255,255,255,0.7); margin-bottom:2px; }
+.block-desc { font-size:10px; color:rgba(255,255,255,0.4); font-family:'DM Mono',monospace; line-height:1.5; }
+
+/* Toolbar */
+.toolbar-row {
+  display:flex; align-items:center; gap:10px;
+  animation:fadeUp 800ms ease 300ms both; width:100%; max-width:820px;
+}
+.prompt-preview-area {
+  flex:1; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px; padding:8px 14px; min-height:42px; max-height:72px;
+  overflow:hidden; position:relative;
+}
+.prompt-preview-label {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em;
+  text-transform:uppercase; color:rgba(255,255,255,0.28); margin-bottom:2px;
+  display:flex; align-items:center; gap:8px;
+}
+.quality-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.08em;
+  padding:1px 6px; border-radius:4px; font-weight:500;
+  opacity:0; transition:opacity 300ms ease,background 400ms ease,color 400ms ease;
+}
+.quality-badge.visible { opacity:1; }
+.quality-badge.low   { background:rgba(239,68,68,0.18); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+.quality-badge.mid   { background:rgba(234,179,8,0.18); color:#facc15; border:1px solid rgba(234,179,8,0.3); }
+.quality-badge.good  { background:rgba(52,211,153,0.18); color:#34d399; border:1px solid rgba(52,211,153,0.3); }
+.quality-badge.great { background:rgba(0,192,175,0.18); color:#00c0af; border:1px solid rgba(0,192,175,0.3); }
+.prompt-preview-text {
+  font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,255,255,0.6);
+  line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.prompt-preview-text.empty { color:rgba(255,255,255,0.2); font-style:italic; }
+
+/* Buttons */
+.btn-reset {
+  font-family:'DM Mono',monospace; font-size:10px; font-weight:500;
+  letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.5);
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; padding:8px 14px; cursor:pointer; transition:all 200ms ease;
+  white-space:nowrap; flex-shrink:0;
+}
+.btn-reset:hover { background:rgba(255,255,255,0.09); color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.2); }
+
+.btn-toolbar {
+  font-family:'DM Mono',monospace; font-size:10px; font-weight:500;
+  letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.5);
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; padding:8px 14px; cursor:pointer; transition:all 200ms ease;
+  white-space:nowrap; flex-shrink:0; display:flex; align-items:center; gap:6px;
+}
+.btn-toolbar:hover { background:rgba(255,255,255,0.09); color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.2); }
+
+/* Export group */
+.export-group { position:relative; flex-shrink:0; }
+.btn-copy {
+  font-family:'DM Mono',monospace; font-size:10px; font-weight:500;
+  letter-spacing:0.08em; text-transform:uppercase; color:#34d399;
+  background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.3);
+  border-radius:8px 0 0 8px; padding:8px 14px; cursor:pointer; transition:all 200ms ease;
+  white-space:nowrap; display:none; align-items:center; gap:6px;
+}
+.btn-copy.visible { display:flex; }
+.btn-copy:hover { background:rgba(52,211,153,0.15); border-color:rgba(52,211,153,0.5); box-shadow:0 0 12px rgba(52,211,153,0.2); }
+.btn-export-toggle {
+  font-family:'DM Mono',monospace; font-size:10px; font-weight:500;
+  color:#34d399; background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.3);
+  border-left:none; border-radius:0 8px 8px 0; padding:8px 10px;
+  cursor:pointer; transition:all 200ms ease; display:none; align-items:center;
+}
+.btn-export-toggle.visible { display:flex; }
+.btn-export-toggle:hover { background:rgba(52,211,153,0.15); border-color:rgba(52,211,153,0.5); }
+.export-dropdown {
+  position:absolute; bottom:calc(100% + 6px); right:0;
+  background:rgba(8,14,32,0.95); border:1px solid rgba(52,211,153,0.25);
+  border-radius:10px; padding:6px; min-width:200px;
+  backdrop-filter:blur(20px); display:none; flex-direction:column; gap:2px; z-index:40;
+}
+.export-dropdown.open { display:flex; }
+.export-item {
+  font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.7);
+  padding:8px 12px; border-radius:7px; cursor:pointer; transition:all 150ms ease;
+  display:flex; align-items:center; gap:8px; letter-spacing:0.05em;
+}
+.export-item:hover { background:rgba(52,211,153,0.12); color:#34d399; }
+
+/* Error tooltip */
+#error-tooltip {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(0.85); z-index:50;
+  background:rgba(10,15,35,0.92); border:1px solid rgba(239,68,68,0.5);
+  border-radius:10px; padding:10px 20px;
+  font-family:'DM Mono',monospace; font-size:12px; color:#f87171;
+  pointer-events:none; opacity:0; transition:opacity 200ms ease,transform 200ms ease;
+  backdrop-filter:blur(12px); letter-spacing:0.04em; white-space:nowrap;
+}
+#error-tooltip.visible { opacity:1; transform:translate(-50%,-50%) scale(1); }
+
+/* Toast */
+#toast {
+  position:fixed; top:80px; left:50%; transform:translateX(-50%) translateY(-20px);
+  z-index:60; background:rgba(8,14,32,0.95);
+  border:1px solid rgba(52,211,153,0.4); border-radius:10px;
+  padding:10px 22px; font-family:'DM Mono',monospace; font-size:11px;
+  color:#34d399; pointer-events:none; opacity:0;
+  transition:opacity 250ms ease,transform 250ms ease;
+  backdrop-filter:blur(16px); letter-spacing:0.06em;
+}
+#toast.visible { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Screen flash */
+#screen-flash {
+  position:fixed; inset:0; z-index:55; background:#ffffff;
+  opacity:0; pointer-events:none; transition:opacity 200ms ease;
+}
+
+/* Excellent banner */
+#excellent-banner {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(0.7);
+  z-index:52; font-family:'Syne',sans-serif; font-size:clamp(1.8rem,4vw,3rem);
+  font-weight:800; letter-spacing:0.04em;
+  background:linear-gradient(110deg,#6dd8ff,#a78bfa,#34d399);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  opacity:0; pointer-events:none;
+  transition:opacity 400ms ease,transform 400ms ease;
+  text-align:center; text-shadow:none;
+  filter:drop-shadow(0 0 30px rgba(109,216,255,0.5));
+}
+#excellent-banner.visible { opacity:1; transform:translate(-50%,-50%) scale(1); }
+
+/* Input panel */
+#input-panel {
+  position:fixed; right:20px; top:50%; transform:translateY(-50%);
+  z-index:20; display:flex; flex-direction:column; gap:10px;
+  pointer-events:none; width:240px; max-height:calc(100vh - 140px);
+  overflow-y:auto; overflow-x:visible; scrollbar-width:none;
+}
+#input-panel::-webkit-scrollbar { display:none; }
+.input-card {
+  background:rgba(8,14,32,0.82); border-radius:14px; padding:14px 16px;
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.08); pointer-events:all;
+  opacity:0; transform:translateX(24px);
+  transition:opacity 350ms ease,transform 350ms ease,border-color 300ms ease;
+  display:flex; flex-direction:column; gap:8px; flex-shrink:0;
+}
+.input-card.visible { opacity:1; transform:translateX(0); }
+.input-card.act     { border-left:2px solid rgba(109,216,255,0.5); }
+.input-card.explain { border-left:2px solid rgba(167,139,250,0.5); }
+.input-card.please  { border-left:2px solid rgba(52,211,153,0.5); }
+.input-card-label { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; }
+.input-card-label.act     { color:#6dd8ff; }
+.input-card-label.explain { color:#a78bfa; }
+.input-card-label.please  { color:#34d399; }
+.input-card-hint { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.35); line-height:1.4; margin-top:-4px; }
+.input-card textarea {
+  width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px; padding:8px 10px; font-family:'DM Mono',monospace; font-size:11px;
+  color:rgba(255,255,255,0.85); resize:none; outline:none;
+  transition:border-color 200ms ease; line-height:1.5; min-height:60px; max-height:80px;
+}
+.input-card.act     textarea:focus { border-color:rgba(109,216,255,0.35); }
+.input-card.explain textarea:focus { border-color:rgba(167,139,250,0.35); }
+.input-card.please  textarea:focus { border-color:rgba(52,211,153,0.35); }
+.input-card textarea::placeholder { color:rgba(255,255,255,0.2); }
+
+/* AI output */
+#ai-output-card {
+  background:rgba(8,14,32,0.88); border-radius:14px; padding:14px 16px;
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(0,192,175,0.25); border-left:2px solid rgba(0,192,175,0.6);
+  pointer-events:all; opacity:0; transform:translateX(24px);
+  transition:opacity 400ms ease,transform 400ms ease;
+  display:flex; flex-direction:column; gap:10px; flex-shrink:0;
+}
+#ai-output-card.visible { opacity:1; transform:translateX(0); }
+.ai-output-header { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.ai-output-title {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:#00c0af;
+  display:flex; align-items:center; gap:5px;
+}
+.ai-output-title svg { flex-shrink:0; }
+.score-bar-wrap { display:flex; flex-direction:column; gap:4px; }
+.score-bar-label {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.08em;
+  color:rgba(255,255,255,0.35); display:flex; justify-content:space-between;
+}
+.score-bar-track { height:4px; background:rgba(255,255,255,0.07); border-radius:99px; overflow:hidden; }
+.score-bar-fill { height:100%; border-radius:99px; width:0%; transition:width 600ms ease,background 600ms ease; background:linear-gradient(90deg,#ef4444,#eab308,#34d399); }
+.ai-generating { display:none; align-items:center; gap:6px; font-family:'DM Mono',monospace; font-size:9px; color:rgba(0,192,175,0.6); letter-spacing:0.08em; }
+.ai-generating.visible { display:flex; }
+.ai-spinner { width:10px; height:10px; border:1.5px solid rgba(0,192,175,0.2); border-top-color:#00c0af; border-radius:50%; animation:spin 700ms linear infinite; flex-shrink:0; }
+.ai-output-text {
+  font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.7);
+  line-height:1.6; min-height:48px; max-height:120px; overflow-y:auto;
+  scrollbar-width:thin; scrollbar-color:rgba(0,192,175,0.2) transparent;
+  word-break:break-word; white-space:pre-wrap;
+}
+.ai-output-text::-webkit-scrollbar { width:3px; }
+.ai-output-text::-webkit-scrollbar-thumb { background:rgba(0,192,175,0.2); border-radius:99px; }
+.ai-cursor { display:inline-block; width:1px; height:1em; background:#00c0af; margin-left:1px; vertical-align:text-bottom; animation:blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Loading */
+#loading-overlay {
+  position:fixed; inset:0; z-index:100; background:#070c1a;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:16px; transition:opacity 600ms ease;
+}
+#loading-overlay.hidden { opacity:0; pointer-events:none; }
+.loading-spinner { width:40px; height:40px; border:2px solid rgba(109,216,255,0.15); border-top-color:#6dd8ff; border-radius:50%; animation:spin 900ms linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-text { font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:0.15em; text-transform:uppercase; }
+
+.scroll-hint {
+  position:fixed; bottom:20px; right:20px; z-index:20;
+  font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.25);
+  letter-spacing:0.1em; text-transform:uppercase;
+  display:flex; align-items:center; gap:6px;
+  animation:fadeUp 1s ease 1.5s both; pointer-events:none;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* Mobile tap hint */
+#mobile-tap-hint {
+  position:fixed; bottom:160px; left:50%; transform:translateX(-50%);
+  z-index:25; font-family:'DM Mono',monospace; font-size:11px;
+  color:rgba(255,255,255,0.6); background:rgba(8,14,32,0.85);
+  border:1px solid rgba(255,255,255,0.12); border-radius:20px;
+  padding:8px 18px; letter-spacing:0.05em; pointer-events:none;
+  opacity:0; transition:opacity 500ms ease; display:none;
+}
+#mobile-tap-hint.visible { opacity:1; }
+
+/* ── Tutorial overlay ── */
+#tutorial-overlay {
+  position:fixed; inset:0; z-index:200; pointer-events:none;
+  opacity:0; transition:opacity 400ms ease;
+}
+#tutorial-overlay.visible { opacity:1; pointer-events:all; }
+#tutorial-backdrop {
+  position:absolute; inset:0;
+  background:rgba(4,8,20,0.82);
+  backdrop-filter:blur(2px);
+}
+#tutorial-spotlight {
+  position:absolute;
+  box-shadow:0 0 0 9999px rgba(4,8,20,0.82);
+  border-radius:14px;
+  border:2px solid rgba(109,216,255,0.5);
+  transition:all 500ms cubic-bezier(0.4,0,0.2,1);
+  pointer-events:none;
+}
+#tutorial-card {
+  position:absolute; background:rgba(8,14,32,0.97);
+  border:1px solid rgba(109,216,255,0.35); border-radius:16px;
+  padding:22px 26px; max-width:340px; min-width:280px;
+  backdrop-filter:blur(20px); transition:all 500ms cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.tutorial-step-pill {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em;
+  text-transform:uppercase; color:#6dd8ff; margin-bottom:10px;
+  display:flex; align-items:center; gap:8px;
+}
+.tutorial-step-dots { display:flex; gap:5px; }
+.tutorial-step-dot { width:6px; height:6px; border-radius:50%; background:rgba(109,216,255,0.2); transition:background 300ms ease; }
+.tutorial-step-dot.active { background:#6dd8ff; }
+.tutorial-message {
+  font-family:'DM Mono',monospace; font-size:12px; color:rgba(255,255,255,0.85);
+  line-height:1.65; margin-bottom:16px;
+}
+.tutorial-btn-row { display:flex; gap:8px; }
+.tutorial-btn-next {
+  font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:0.06em; color:#070c1a; background:#6dd8ff;
+  border:none; border-radius:8px; padding:9px 20px; cursor:pointer;
+  transition:all 200ms ease; flex:1;
+}
+.tutorial-btn-next:hover { background:#9de8ff; transform:translateY(-1px); }
+.tutorial-btn-skip {
+  font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.35);
+  background:transparent; border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; padding:9px 14px; cursor:pointer; transition:all 200ms ease;
+}
+.tutorial-btn-skip:hover { color:rgba(255,255,255,0.6); border-color:rgba(255,255,255,0.2); }
+
+/* Light mode */
+body.light-mode #three-canvas { filter:brightness(0.9) contrast(1.05); }
+body.light-mode .block-card { background:rgba(255,255,255,0.7); border-color:rgba(0,0,0,0.08); }
+body.light-mode .block-card:hover { background:rgba(255,255,255,0.85); }
+body.light-mode .block-desc { color:rgba(0,0,0,0.45); }
+body.light-mode .block-desc-head { color:rgba(0,0,0,0.65); }
+body.light-mode .hero-title-block p { color:rgba(0,0,0,0.5); }
+body.light-mode #loading-overlay { background:#f4f5f9; }
+body.light-mode .loading-text { color:rgba(0,0,0,0.4); }
+body.light-mode .loading-spinner { border-color:rgba(46,61,125,0.15); border-top-color:#2e3d7d; }
+body.light-mode .scroll-hint { color:rgba(0,0,0,0.2); }
+body.light-mode .input-card { background:rgba(240,242,255,0.92); }
+body.light-mode .input-card textarea { background:rgba(255,255,255,0.6); color:rgba(0,0,0,0.75); }
+body.light-mode .input-card-hint { color:rgba(0,0,0,0.4); }
+body.light-mode .prompt-preview-area { background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.1); }
+body.light-mode .prompt-preview-label { color:rgba(0,0,0,0.3); }
+body.light-mode .prompt-preview-text { color:rgba(0,0,0,0.6); }
+body.light-mode .btn-reset { background:rgba(0,0,0,0.05); border-color:rgba(0,0,0,0.1); color:rgba(0,0,0,0.5); }
+body.light-mode #ai-output-card { background:rgba(240,252,250,0.92); }
+body.light-mode .ai-output-text { color:rgba(0,0,0,0.65); }
+
+@media (max-width:780px) {
+  #input-panel {
+    position:fixed; right:auto; top:auto; bottom:0; left:0; right:0;
+    transform:none; flex-direction:row; flex-wrap:nowrap;
+    overflow-x:auto; overflow-y:visible; padding:0 12px 8px;
+    width:100%; gap:8px; max-height:none;
+  }
+  .input-card { min-width:200px; flex-shrink:0; }
+  #ai-output-card { min-width:260px; flex-shrink:0; }
+  .scroll-hint { display:none; }
+}
+@media (max-width:640px) {
+  .block-cards { gap:8px; }
+  .block-card { padding:10px 12px; min-width:120px; }
+  .bottom-panel { padding:0 12px 20px; gap:10px; }
+  .hero-title-block h1 { font-size:1.3rem; }
+  .toolbar-row { flex-wrap:wrap; }
+}
+@media (max-height:680px) {
+  .block-cards { display:none; }
+  .toolbar-row { display:none; }
+}
+  </style>
+  <script>try{if(document.cookie.indexOf('cos_ai_reset=1')!==-1){for(var _ri=localStorage.length-1;_ri>=0;_ri--){var _rk=localStorage.key(_ri);if(_rk&&_rk.indexOf('cos_ai_')===0)localStorage.removeItem(_rk);}document.cookie='cos_ai_reset=;path=/;max-age=0';}}catch(e){}</script>
+  <script>try{if(localStorage.getItem('cos_ai_theme')==='light')document.documentElement.classList.add('light-pending')}catch(e){}</script>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Initialising Scene</div>
+</div>
+
+<!-- VIGNETTE -->
+<div id="vignette"></div>
+
+<!-- CANVAS -->
+<canvas id="three-canvas"></canvas>
+
+<!-- SCREEN FLASH -->
+<div id="screen-flash"></div>
+
+<!-- EXCELLENT BANNER -->
+<div id="excellent-banner">EXCELLENT PROMPT!</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ERROR TOOLTIP -->
+<div id="error-tooltip"></div>
+
+<!-- TUTORIAL OVERLAY -->
+<div id="tutorial-overlay">
+  <div id="tutorial-backdrop"></div>
+  <div id="tutorial-spotlight"></div>
+  <div id="tutorial-card">
+    <div class="tutorial-step-pill">
+      Tutorial
+      <div class="tutorial-step-dots">
+        <div class="tutorial-step-dot active" id="tdot-0"></div>
+        <div class="tutorial-step-dot" id="tdot-1"></div>
+        <div class="tutorial-step-dot" id="tdot-2"></div>
+        <div class="tutorial-step-dot" id="tdot-3"></div>
+      </div>
+    </div>
+    <div class="tutorial-message" id="tutorial-message"></div>
+    <div class="tutorial-btn-row">
+      <button class="tutorial-btn-next" id="tutorial-btn-next">Next</button>
+      <button class="tutorial-btn-skip" id="tutorial-btn-skip">Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT PANEL -->
+<div id="input-panel">
+  <div class="input-card act" id="card-act">
+    <div class="input-card-label act">ACT</div>
+    <div class="input-card-hint">What role should the AI take? What's the task?</div>
+    <textarea id="input-act" placeholder="e.g. Act as an expert copywriter and write..." rows="3"></textarea>
+  </div>
+  <div class="input-card explain" id="card-explain">
+    <div class="input-card-label explain">EXPLAIN</div>
+    <div class="input-card-hint">What context, details, or examples?</div>
+    <textarea id="input-explain" placeholder="e.g. The audience is marketing managers..." rows="3"></textarea>
+  </div>
+  <div class="input-card please" id="card-please">
+    <div class="input-card-label please">PLEASE</div>
+    <div class="input-card-hint">What format should the output be in?</div>
+    <textarea id="input-please" placeholder="e.g. Give me 5 bullet points, each under 20 words" rows="3"></textarea>
+  </div>
+  <!-- AI OUTPUT -->
+  <div id="ai-output-card">
+    <div class="ai-output-header">
+      <div class="ai-output-title">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        AI Output Preview
+      </div>
+      <div class="ai-generating" id="ai-generating">
+        <div class="ai-spinner"></div>
+        Generating...
+      </div>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label">
+        <span>Prompt Quality</span>
+        <span id="score-pct-label">—</span>
+      </div>
+      <div class="score-bar-track"><div class="score-bar-fill" id="score-bar-fill"></div></div>
+    </div>
+    <div class="ai-output-text" id="ai-output-text">
+      <span style="color:rgba(255,255,255,0.2);font-style:italic">Place blocks and type your prompt to see AI output...</span>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE TAP HINT -->
+<div id="mobile-tap-hint">Tap a block to select, tap platform to place</div>
+
+<!-- OVERLAY -->
+<div class="overlay">
+  <!-- NAV -->
+  <nav class="aim-nav py-4 sm:py-5">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <a href="https://www.aim.com.au" target="_blank">
+        <img src="../../assets/aimlogo_white.png" alt="AIM" class="h-8 sm:h-10">
+      </a>
+      <a href="../index.html" class="aim-back">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Course
+      </a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+        <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- BOTTOM PANEL -->
+  <div class="bottom-panel">
+    <!-- Toolbar -->
+    <div class="toolbar-row" id="toolbar-row">
+      <div class="prompt-preview-area">
+        <div class="prompt-preview-label">
+          Prompt Preview
+          <span class="quality-badge" id="quality-badge">Score: 0%</span>
+        </div>
+        <div class="prompt-preview-text empty" id="prompt-preview">Place a block to begin building your prompt...</div>
+      </div>
+      <button class="btn-toolbar" id="btn-example" onclick="loadNextTemplate()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Try Example
+      </button>
+      <button class="btn-toolbar" id="btn-tutorial" onclick="startTutorial()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Tutorial
+      </button>
+      <button class="btn-reset" id="btn-reset" onclick="resetBuild()">Reset</button>
+      <!-- Export group -->
+      <div class="export-group" id="export-group">
+        <button class="btn-copy" id="btn-copy" onclick="copyPrompt()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+        <button class="btn-export-toggle" id="btn-export-toggle" onclick="toggleExportDropdown()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="export-dropdown" id="export-dropdown">
+          <div class="export-item" onclick="copyPlainText()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Copy as Plain Text
+          </div>
+          <div class="export-item" onclick="saveToToolkit()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            Save to My Toolkit
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Block cards -->
+    <div class="block-cards">
+      <div class="block-card act" id="blockcard-act" onclick="selectBlockFromCard('ACT')">
+        <div class="block-card-header">
+          <div class="block-label act">ACT</div>
+          <div class="block-check" id="check-act">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="block-desc-head">Role &amp; Task</div>
+        <div class="block-desc">Tell the AI who to be and what to do</div>
+      </div>
+      <div class="block-card explain" id="blockcard-explain" onclick="selectBlockFromCard('EXPLAIN')">
+        <div class="block-card-header">
+          <div class="block-label explain">EXPLAIN</div>
+          <div class="block-check" id="check-explain">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="block-desc-head">Context &amp; Details</div>
+        <div class="block-desc">Give background, constraints, examples</div>
+      </div>
+      <div class="block-card please" id="blockcard-please" onclick="selectBlockFromCard('PLEASE')">
+        <div class="block-card-header">
+          <div class="block-label please">PLEASE</div>
+          <div class="block-check" id="check-please">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="block-desc-head">Output Format</div>
+        <div class="block-desc">Define the shape and style of the result</div>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div class="hero-title-block">
+      <div class="pill"><span class="w-2 h-2 rounded-full bg-[#a78bfa] inline-block"></span>&nbsp; Interactive Lesson</div>
+      <h1>The <span>Prompt Architect</span></h1>
+      <p>Build your prompt with Act, Explain &amp; Please — watch the AI output improve as your structure grows</p>
+    </div>
+  </div>
+</div>
+
+<!-- Scroll hint -->
+<div class="scroll-hint">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+  Drag to rotate · Click to place
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+
+<!-- THEME + GLOBAL STUBS -->
+<script>
+(function(){
+  var KEY='cos_ai_theme';
+  var saved=localStorage.getItem(KEY);
+  if(saved==='light') document.body.classList.add('light-mode');
+  updateIcon();
+  window.toggleTheme=function(){
+    document.body.classList.toggle('light-mode');
+    var isLight=document.body.classList.contains('light-mode');
+    localStorage.setItem(KEY,isLight?'light':'dark');
+    updateIcon();
+  };
+  function updateIcon(){
+    var isLight=document.body.classList.contains('light-mode');
+    document.querySelectorAll('.theme-icon-dark').forEach(function(el){el.style.display=isLight?'none':'block';});
+    document.querySelectorAll('.theme-icon-light').forEach(function(el){el.style.display=isLight?'block':'none';});
+  }
+  if(saved==='light'&&!document.body.classList.contains('light-mode')) document.body.classList.add('light-mode');
+})();
+lucide.createIcons();
+
+window.selectBlockFromCard=function(){};
+window.resetBuild=function(){};
+window.copyPrompt=function(){};
+window.copyPlainText=function(){};
+window.saveToToolkit=function(){};
+window.toggleExportDropdown=function(){};
+window.loadNextTemplate=function(){};
+window.startTutorial=function(){};
+</script>
+
+<!-- 3D SCENE -->
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* API config (set key to enable live AI) */
+const OPUS_API_KEY='';
+const USE_AI=OPUS_API_KEY.length>0;
+
+/* ── Renderer ── */
+const canvas=document.getElementById('three-canvas');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.1;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+/* ── Scene + Camera ── */
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x070c1a);
+scene.fog=new THREE.FogExp2(0x070c1a,0.055);
+const camera=new THREE.PerspectiveCamera(55,window.innerWidth/window.innerHeight,0.1,200);
+camera.position.set(5.5,4.2,8.5);
+camera.lookAt(0,0,0);
+
+/* ── Controls ── */
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=0.055;
+controls.autoRotate=true;
+controls.autoRotateSpeed=0.4;
+controls.enablePan=false;
+controls.minDistance=5;
+controls.maxDistance=18;
+controls.minPolarAngle=Math.PI*0.18;
+controls.maxPolarAngle=Math.PI*0.52;
+controls.target.set(0,0.2,0);
+controls.addEventListener('start',()=>{controls.autoRotateSpeed=0;});
+controls.addEventListener('end',()=>{setTimeout(()=>{if(!selectedBlock)controls.autoRotateSpeed=0.4;},2500);});
+
+/* ── Lighting ── */
+const ambient=new THREE.AmbientLight(0x1a2a4a,1.8);
+scene.add(ambient);
+const dirLight=new THREE.DirectionalLight(0xfff4e0,2.4);
+dirLight.position.set(8,10,5);
+dirLight.castShadow=true;
+dirLight.shadow.mapSize.set(1024,1024);
+dirLight.shadow.camera.near=0.5;
+dirLight.shadow.camera.far=40;
+dirLight.shadow.camera.left=-8;
+dirLight.shadow.camera.right=8;
+dirLight.shadow.camera.top=8;
+dirLight.shadow.camera.bottom=-8;
+dirLight.shadow.bias=-0.001;
+scene.add(dirLight);
+const rimLight=new THREE.DirectionalLight(0x6dd8ff,0.8);
+rimLight.position.set(-5,3,-6);
+scene.add(rimLight);
+const lightACT=new THREE.PointLight(0x6dd8ff,8,10);
+const lightEXPLAIN=new THREE.PointLight(0xa78bfa,8,10);
+const lightPLEASE=new THREE.PointLight(0x34d399,8,10);
+scene.add(lightACT,lightEXPLAIN,lightPLEASE);
+const platformGlow=new THREE.PointLight(0x00c0af,3.5,6);
+platformGlow.position.set(0,-0.6,0);
+scene.add(platformGlow);
+
+/* ── Canvas texture helper ── */
+function makeCanvasTexture(text,color,width=512,height=256){
+  const cvs=document.createElement('canvas');
+  cvs.width=width;cvs.height=height;
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,width,height);
+  const grd=ctx.createLinearGradient(0,0,0,height);
+  grd.addColorStop(0,color+'22');grd.addColorStop(0.5,color+'08');grd.addColorStop(1,color+'00');
+  ctx.fillStyle=grd;ctx.fillRect(0,0,width,height);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor=color;ctx.shadowBlur=40;
+  ctx.font=`bold ${Math.round(width*0.22)}px "Syne","Helvetica Neue",Arial,sans-serif`;
+  ctx.fillStyle='#ffffff';ctx.fillText(text,width/2,height/2);
+  ctx.shadowBlur=0;ctx.strokeStyle=color+'60';ctx.lineWidth=1.5;
+  const tw=ctx.measureText(text).width;
+  ctx.beginPath();ctx.moveTo(width/2-tw/2,height*0.72);ctx.lineTo(width/2+tw/2,height*0.72);ctx.stroke();
+  return new THREE.CanvasTexture(cvs);
+}
+
+/* ── Platform ── */
+const platGroup=new THREE.Group();
+const platGeo=new THREE.CylinderGeometry(3.2,3.0,0.18,64);
+const platMat=new THREE.MeshStandardMaterial({color:0x0d2040,emissive:new THREE.Color(0x00c0af),emissiveIntensity:0.08,roughness:0.35,metalness:0.85});
+const platMesh=new THREE.Mesh(platGeo,platMat);
+platMesh.receiveShadow=true;
+platGroup.add(platMesh);
+for(let r=0.6;r<3.2;r+=0.65){
+  const ringGeo=new THREE.RingGeometry(r-0.008,r+0.008,80);
+  const ringMat=new THREE.MeshBasicMaterial({color:0x00c0af,opacity:0.18,transparent:true,side:THREE.DoubleSide});
+  const ring=new THREE.Mesh(ringGeo,ringMat);
+  ring.rotation.x=-Math.PI/2;ring.position.y=0.095;
+  platGroup.add(ring);
+}
+// Store ring meshes for pulse effect
+const gridRings=[];
+for(let i=1;i<platGroup.children.length;i++) gridRings.push(platGroup.children[i]);
+
+for(let i=0;i<12;i++){
+  const angle=(i/12)*Math.PI*2;
+  const spokeGeo=new THREE.PlaneGeometry(3.0,0.012);
+  const spokeMat=new THREE.MeshBasicMaterial({color:0x00c0af,opacity:0.10,transparent:true,side:THREE.DoubleSide});
+  const spoke=new THREE.Mesh(spokeGeo,spokeMat);
+  spoke.rotation.x=-Math.PI/2;spoke.rotation.z=angle;
+  spoke.position.set(Math.cos(angle)*1.5,0.097,Math.sin(angle)*1.5);
+  platGroup.add(spoke);
+}
+const edgeGeo=new THREE.TorusGeometry(3.12,0.028,16,120);
+const edgeMat=new THREE.MeshStandardMaterial({color:0x00c0af,emissive:new THREE.Color(0x00c0af),emissiveIntensity:1.2,roughness:0.1,metalness:0.2});
+const edgeMesh=new THREE.Mesh(edgeGeo,edgeMat);
+edgeMesh.position.y=0.04;
+platGroup.add(edgeMesh);
+const glowGeo=new THREE.CylinderGeometry(4.0,3.5,0.02,64);
+const glowMat=new THREE.MeshBasicMaterial({color:0x00c0af,opacity:0.06,transparent:true,side:THREE.DoubleSide});
+const glowMesh=new THREE.Mesh(glowGeo,glowMat);
+glowMesh.position.y=-0.22;
+platGroup.add(glowMesh);
+platGroup.position.y=-0.9;
+scene.add(platGroup);
+const platClickGeo=new THREE.CylinderGeometry(3.1,3.1,0.3,32);
+const platClickMat=new THREE.MeshBasicMaterial({visible:false});
+const platClickMesh=new THREE.Mesh(platClickGeo,platClickMat);
+platClickMesh.position.copy(platGroup.position);
+platClickMesh.userData.isPlatform=true;
+scene.add(platClickMesh);
+
+/* Grid pulse state */
+let gridPulseActive=false;
+let gridPulseTime=0;
+
+function triggerGridPulse(){
+  gridPulseActive=true;
+  gridPulseTime=0;
+}
+
+/* ── Stability Meter ── */
+const meterGroup=new THREE.Group();
+meterGroup.position.set(3.8,-0.2,0);
+scene.add(meterGroup);
+const meterSegColors=[0x6dd8ff,0xa78bfa,0x34d399];
+const meterSegMeshes=[];
+const meterSegLit=[false,false,false];
+const poleGeo=new THREE.CylinderGeometry(0.022,0.022,2.8,8);
+const poleMat=new THREE.MeshStandardMaterial({color:0x1a3050,roughness:0.4,metalness:0.9});
+meterGroup.add(new THREE.Mesh(poleGeo,poleMat));
+for(let s=0;s<3;s++){
+  const segGeo=new THREE.BoxGeometry(0.28,0.26,0.09);
+  const segMat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(meterSegColors[s]).multiplyScalar(0.08),
+    emissive:new THREE.Color(meterSegColors[s]),
+    emissiveIntensity:0.05,roughness:0.2,metalness:0.5,transparent:true,opacity:0.5
+  });
+  const segMesh=new THREE.Mesh(segGeo,segMat);
+  segMesh.position.set(0.2,-0.9+s*0.75,0);
+  meterGroup.add(segMesh);
+  meterSegMeshes.push(segMesh);
+  const segEdges=new THREE.EdgesGeometry(segGeo);
+  const segLine=new THREE.LineSegments(segEdges,new THREE.LineBasicMaterial({color:meterSegColors[s],opacity:0.3,transparent:true}));
+  segLine.position.copy(segMesh.position);
+  meterGroup.add(segLine);
+}
+const meterLabelCanvas=document.createElement('canvas');
+meterLabelCanvas.width=256;meterLabelCanvas.height=64;
+const meterLabelCtx=meterLabelCanvas.getContext('2d');
+const meterLabelTex=new THREE.CanvasTexture(meterLabelCanvas);
+const meterLabelGeo=new THREE.PlaneGeometry(0.9,0.22);
+const meterLabelMat=new THREE.MeshBasicMaterial({map:meterLabelTex,transparent:true,depthWrite:false});
+const meterLabelMesh=new THREE.Mesh(meterLabelGeo,meterLabelMat);
+meterLabelMesh.position.set(0.2,1.05,0.05);
+meterGroup.add(meterLabelMesh);
+function updateMeterLabel(text,color){
+  meterLabelCtx.clearRect(0,0,256,64);
+  meterLabelCtx.textAlign='center';meterLabelCtx.textBaseline='middle';
+  meterLabelCtx.font='bold 18px "DM Mono",monospace';
+  meterLabelCtx.fillStyle=color||'rgba(255,255,255,0.4)';
+  meterLabelCtx.shadowColor=color||'transparent';
+  meterLabelCtx.shadowBlur=color?12:0;
+  meterLabelCtx.fillText(text,128,32);
+  meterLabelTex.needsUpdate=true;
+}
+updateMeterLabel('UNSTABLE','rgba(255,255,255,0.25)');
+function setMeterSegments(count){
+  const labels=['UNSTABLE','FOUNDATION','TAKING SHAPE','SOLID PROMPT'];
+  const labelColors=['rgba(255,255,255,0.25)','#6dd8ff','#a78bfa','#34d399'];
+  for(let s=0;s<3;s++){
+    const lit=s<count;
+    meterSegLit[s]=lit;
+    const seg=meterSegMeshes[s];
+    seg.material.emissiveIntensity=lit?1.2:0.05;
+    seg.material.opacity=lit?0.95:0.45;
+    seg.material.color.set(lit?new THREE.Color(meterSegColors[s]).multiplyScalar(0.3):new THREE.Color(meterSegColors[s]).multiplyScalar(0.05));
+  }
+  updateMeterLabel(labels[count],labelColors[count]);
+}
+
+
+/* ── Block data ── */
+const blockData=[
+  {id:'ACT',color:'#6dd8ff',hex:0x6dd8ff,geo:new THREE.BoxGeometry(2.2,0.55,1.35),
+   shelfPos:new THREE.Vector3(-3.2,1.2,-0.3),shelfRotY:0.3,
+   placedPos:new THREE.Vector3(0,-0.54,0),bobOffset:0,labelScale:[2.2,0.55]},
+  {id:'EXPLAIN',color:'#a78bfa',hex:0xa78bfa,geo:new THREE.BoxGeometry(1.5,1.9,1.1),
+   shelfPos:new THREE.Vector3(-3.0,1.6,1.5),shelfRotY:-0.2,
+   placedPos:new THREE.Vector3(0,0.41,0),bobOffset:0.7,labelScale:[1.5,1.9]},
+  {id:'PLEASE',color:'#34d399',hex:0x34d399,geo:new THREE.BoxGeometry(1.8,0.75,1.0),
+   shelfPos:new THREE.Vector3(-3.3,0.55,0.6),shelfRotY:0.5,
+   placedPos:new THREE.Vector3(0,1.69,0),bobOffset:1.4,labelScale:[1.8,0.75]}
+];
+const blockGroups=[];
+const blockLights=[lightACT,lightEXPLAIN,lightPLEASE];
+const blockMeshes=[];
+
+blockData.forEach((bd,i)=>{
+  const group=new THREE.Group();
+  group.position.copy(bd.shelfPos);
+  group.rotation.y=bd.shelfRotY;
+  group.userData.blockId=bd.id;
+  group.userData.blockIndex=i;
+  const mat=new THREE.MeshPhysicalMaterial({
+    color:new THREE.Color(bd.hex).multiplyScalar(0.25),
+    emissive:new THREE.Color(bd.hex),emissiveIntensity:0.12,
+    transmission:0.55,roughness:0.05,metalness:0.05,ior:1.5,thickness:1.2,
+    clearcoat:1.0,clearcoatRoughness:0.05,opacity:0.88,transparent:true,side:THREE.FrontSide
+  });
+  const mesh=new THREE.Mesh(bd.geo,mat);
+  mesh.castShadow=true;mesh.receiveShadow=true;
+  mesh.userData.blockId=bd.id;mesh.userData.blockIndex=i;
+  group.add(mesh);
+  const edges=new THREE.EdgesGeometry(bd.geo,5);
+  const edgeLine=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:new THREE.Color(bd.hex),opacity:0.55,transparent:true}));
+  group.add(edgeLine);
+  const labelTex=makeCanvasTexture(bd.id,bd.color,512,256);
+  const [lw,lh]=bd.labelScale;
+  const labelGeo=new THREE.PlaneGeometry(lw*0.88,lh*0.75);
+  const labelMat=new THREE.MeshBasicMaterial({map:labelTex,transparent:true,opacity:0.92,depthWrite:false});
+  const labelPlane=new THREE.Mesh(labelGeo,labelMat);
+  const halfD=bd.geo.parameters.depth/2;
+  labelPlane.position.z=halfD+0.005;
+  group.add(labelPlane);
+  const labelBack=new THREE.Mesh(labelGeo,labelMat);
+  labelBack.position.z=-(halfD+0.005);
+  labelBack.rotation.y=Math.PI;
+  group.add(labelBack);
+  scene.add(group);
+  blockGroups.push({group,bd,baseY:bd.shelfPos.y,mat,edgeLine,placed:false,tweening:false});
+  blockMeshes.push(mesh);
+  blockLights[i].position.copy(bd.shelfPos).add(new THREE.Vector3(0.4,0.4,0.4));
+});
+
+/* ── Ambient particles ── */
+const PARTICLE_COUNT=320;
+const pPositions=new Float32Array(PARTICLE_COUNT*3);
+const pSpeeds=new Float32Array(PARTICLE_COUNT);
+const pColors=new Float32Array(PARTICLE_COUNT*3);
+const particleColors=[new THREE.Color(0x6dd8ff),new THREE.Color(0xa78bfa),new THREE.Color(0x34d399),new THREE.Color(0x00c0af)];
+for(let i=0;i<PARTICLE_COUNT;i++){
+  const spread=14;
+  pPositions[i*3]=(Math.random()-0.5)*spread;
+  pPositions[i*3+1]=(Math.random()-0.5)*10-2;
+  pPositions[i*3+2]=(Math.random()-0.5)*spread;
+  pSpeeds[i]=0.008+Math.random()*0.018;
+  const c=particleColors[Math.floor(Math.random()*particleColors.length)];
+  pColors[i*3]=c.r;pColors[i*3+1]=c.g;pColors[i*3+2]=c.b;
+}
+const pGeo=new THREE.BufferGeometry();
+pGeo.setAttribute('position',new THREE.BufferAttribute(pPositions,3));
+pGeo.setAttribute('color',new THREE.BufferAttribute(pColors,3));
+const pMat=new THREE.PointsMaterial({size:0.055,vertexColors:true,transparent:true,opacity:0.65,sizeAttenuation:true,depthWrite:false});
+const particles=new THREE.Points(pGeo,pMat);
+scene.add(particles);
+
+/* ── Celebration burst ── */
+const BURST_COUNT=80;
+const burstGeo=new THREE.BufferGeometry();
+const burstPos=new Float32Array(BURST_COUNT*3);
+const burstVel=[];
+const burstCol=new Float32Array(BURST_COUNT*3);
+for(let i=0;i<BURST_COUNT;i++){
+  burstPos[i*3]=burstPos[i*3+1]=burstPos[i*3+2]=0;
+  burstVel.push(new THREE.Vector3((Math.random()-0.5)*0.15,Math.random()*0.12+0.04,(Math.random()-0.5)*0.15));
+  const c=particleColors[Math.floor(Math.random()*particleColors.length)];
+  burstCol[i*3]=c.r;burstCol[i*3+1]=c.g;burstCol[i*3+2]=c.b;
+}
+burstGeo.setAttribute('position',new THREE.BufferAttribute(burstPos,3));
+burstGeo.setAttribute('color',new THREE.BufferAttribute(burstCol,3));
+const burstMat=new THREE.PointsMaterial({size:0.12,vertexColors:true,transparent:true,opacity:0,sizeAttenuation:true,depthWrite:false});
+const burstPoints=new THREE.Points(burstGeo,burstMat);
+burstPoints.position.set(0,1.5,0);
+scene.add(burstPoints);
+let burstActive=false,burstTime=0;
+
+function triggerBurst(){
+  burstActive=true;burstTime=0;burstMat.opacity=0.9;
+  const posAttr=burstGeo.attributes.position;
+  for(let i=0;i<BURST_COUNT;i++){
+    posAttr.array[i*3]=posAttr.array[i*3+1]=posAttr.array[i*3+2]=0;
+    burstVel[i].set((Math.random()-0.5)*0.15,Math.random()*0.12+0.04,(Math.random()-0.5)*0.15);
+  }
+  posAttr.needsUpdate=true;
+}
+
+/* ── Debris particles (for reset) ── */
+const DEBRIS_SETS=[];
+function spawnDebrisForBlock(worldPos,hexColor){
+  const COUNT=24;
+  const dGeo=new THREE.BufferGeometry();
+  const dPos=new Float32Array(COUNT*3);
+  const dVel=[];
+  const dCol=new Float32Array(COUNT*3);
+  const c=new THREE.Color(hexColor);
+  for(let i=0;i<COUNT;i++){
+    dPos[i*3]=worldPos.x;dPos[i*3+1]=worldPos.y;dPos[i*3+2]=worldPos.z;
+    dVel.push(new THREE.Vector3((Math.random()-0.5)*0.18,(Math.random()*0.14+0.03),(Math.random()-0.5)*0.18));
+    dCol[i*3]=c.r;dCol[i*3+1]=c.g;dCol[i*3+2]=c.b;
+  }
+  dGeo.setAttribute('position',new THREE.BufferAttribute(dPos,3));
+  dGeo.setAttribute('color',new THREE.BufferAttribute(dCol,3));
+  const dMat=new THREE.PointsMaterial({size:0.09,vertexColors:true,transparent:true,opacity:0.9,sizeAttenuation:true,depthWrite:false});
+  const dPoints=new THREE.Points(dGeo,dMat);
+  scene.add(dPoints);
+  DEBRIS_SETS.push({points:dPoints,geo:dGeo,mat:dMat,vel:dVel,time:0,active:true});
+}
+
+/* ── Stars ── */
+const STAR_COUNT=180;
+const starPos=new Float32Array(STAR_COUNT*3);
+for(let i=0;i<STAR_COUNT;i++){
+  starPos[i*3]=(Math.random()-0.5)*80;
+  starPos[i*3+1]=(Math.random()-0.5)*50;
+  starPos[i*3+2]=(Math.random()-0.5)*80;
+}
+const starGeo=new THREE.BufferGeometry();
+starGeo.setAttribute('position',new THREE.BufferAttribute(starPos,3));
+const starMat=new THREE.PointsMaterial({color:0xffffff,size:0.05,transparent:true,opacity:0.22,sizeAttenuation:true,depthWrite:false});
+scene.add(new THREE.Points(starGeo,starMat));
+
+/* ── Ground shadow ── */
+const shadowDisc=new THREE.Mesh(
+  new THREE.CircleGeometry(5,80),
+  new THREE.MeshBasicMaterial({color:0x000000,opacity:0.35,transparent:true,depthWrite:false})
+);
+shadowDisc.rotation.x=-Math.PI/2;shadowDisc.position.y=-1.05;
+scene.add(shadowDisc);
+
+/* ── State ── */
+let selectedBlock=null;
+const placedBlocks={ACT:false,EXPLAIN:false,PLEASE:false};
+const promptParts={act:'',explain:'',please:''};
+const qualityScores={clarity:0,context:0,format:0,overall:0};
+let celebrationFired=false;
+let rainbowActive=false,rainbowTime=0;
+const activeTweens=[];
+
+/* ── Tween helpers ── */
+function easeOutBack(t){const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);}
+function tweenVec3(vec3,target,duration,onComplete){
+  const sx=vec3.x,sy=vec3.y,sz=vec3.z;
+  const dx=target.x-sx,dy=target.y-sy,dz=target.z-sz;
+  let elapsed=0;
+  activeTweens.push({obj:null,update(dt){
+    elapsed+=dt;const t=Math.min(elapsed/duration,1);const e=easeOutBack(t);
+    vec3.set(sx+dx*e,sy+dy*e,sz+dz*e);
+    if(t>=1){vec3.set(target.x,target.y,target.z);if(onComplete)onComplete();return true;}
+    return false;
+  }});
+}
+function tweenScalar(ref,key,target,duration,onComplete){
+  const start=ref[key],delta=target-start;let elapsed=0;
+  activeTweens.push({obj:null,update(dt){
+    elapsed+=dt;const t=Math.min(elapsed/duration,1);const e=easeOutBack(t);
+    ref[key]=start+delta*e;
+    if(t>=1){ref[key]=target;if(onComplete)onComplete();return true;}
+    return false;
+  }});
+}
+function runTweens(dt){
+  for(let i=activeTweens.length-1;i>=0;i--){
+    const tw=activeTweens[i];
+    if(tw.update){if(tw.update(dt))activeTweens.splice(i,1);}
+    else{
+      tw.elapsed+=dt;const t=Math.min(tw.elapsed/tw.duration,1);const e=easeOutBack(t);
+      tw.keys.forEach(k=>{tw.obj[k]=tw.start[k]+tw.delta[k]*e;});
+      if(t>=1){tw.keys.forEach(k=>{tw.obj[k]=tw.start[k]+tw.delta[k];});if(tw.onComplete)tw.onComplete();activeTweens.splice(i,1);}
+    }
+  }
+}
+
+
+/* ── Interaction ── */
+function selectBlock(index){
+  if(selectedBlock!==null){
+    const prev=blockGroups[selectedBlock];
+    prev.mat.emissiveIntensity=0.12;
+    prev.edgeLine.material.opacity=0.55;
+  }
+  selectedBlock=index;
+  if(index!==null){
+    const bg=blockGroups[index];
+    bg.mat.emissiveIntensity=0.45;
+    bg.edgeLine.material.opacity=1.0;
+    controls.autoRotateSpeed=0;
+    canvas.classList.add('selectable');
+    // SOUND: playSound('block-select') — subtle glass chime
+  } else {
+    controls.autoRotateSpeed=0.4;
+    canvas.classList.remove('selectable');
+  }
+  updateCardSelectedState();
+}
+
+function updateCardSelectedState(){
+  ['act','explain','please'].forEach(id=>{document.getElementById('blockcard-'+id).classList.remove('selected');});
+  if(selectedBlock!==null){
+    const id=blockData[selectedBlock].id.toLowerCase();
+    document.getElementById('blockcard-'+id).classList.add('selected');
+  }
+}
+
+function showError(msg){
+  const el=document.getElementById('error-tooltip');
+  el.textContent=msg;el.classList.add('visible');
+  canvas.classList.remove('shake');void canvas.offsetWidth;canvas.classList.add('shake');
+  edgeMat.emissive.set(0xff3333);
+  // SOUND: playSound('block-error') — low warning buzz
+  setTimeout(()=>{edgeMat.emissive.set(0x00c0af);},500);
+  setTimeout(()=>{el.classList.remove('visible');},1800);
+}
+
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('visible');
+  setTimeout(()=>el.classList.remove('visible'),2200);
+}
+
+function placeBlock(blockIndex){
+  const bg=blockGroups[blockIndex];
+  const bd=bg.bd;
+  if(bd.id==='EXPLAIN'&&!placedBlocks.ACT){showError('Place ACT first!');selectBlock(null);return;}
+  if(bd.id==='PLEASE'&&!placedBlocks.EXPLAIN){showError('Place EXPLAIN first!');selectBlock(null);return;}
+  if(placedBlocks[bd.id]){selectBlock(null);return;}
+
+  placedBlocks[bd.id]=true;bg.placed=true;bg.tweening=true;bg.baseY=null;
+  selectBlock(null);
+
+  // SOUND: playSound('block-place') — satisfying thunk + glass ring
+
+  const targetPos=bd.placedPos.clone();
+  const currPos=bg.group.position;
+  tweenVec3(currPos,targetPos,0.6,()=>{
+    bg.tweening=false;
+    bg.group.rotation.y=0;
+    blockLights[blockIndex].position.copy(targetPos).add(new THREE.Vector3(0,0.5,0));
+    triggerGridPulse();
+  });
+  // Rotation smoothing inline
+  activeTweens.push({obj:null,update(dt){
+    bg.group.rotation.y+=(0-bg.group.rotation.y)*Math.min(dt/0.5*3,1);
+    if(Math.abs(bg.group.rotation.y)<0.001){bg.group.rotation.y=0;return true;}
+    return false;
+  }});
+
+  const placed=Object.values(placedBlocks).filter(Boolean).length;
+  setMeterSegments(placed);
+  document.getElementById('card-'+bd.id.toLowerCase()).classList.add('visible');
+  document.getElementById('ai-output-card').classList.add('visible');
+  document.getElementById('check-'+bd.id.toLowerCase()).classList.add('visible');
+  document.getElementById('blockcard-'+bd.id.toLowerCase()).classList.add('placed');
+
+  if(placed===3) setTimeout(triggerBurst,400);
+  scheduleScoreUpdate();
+}
+
+/* ── Raycaster ── */
+const raycaster=new THREE.Raycaster();
+const mousePos=new THREE.Vector2();
+let mouseDownPos=null;
+
+canvas.addEventListener('pointerdown',e=>{mouseDownPos={x:e.clientX,y:e.clientY};});
+canvas.addEventListener('pointerup',e=>{
+  if(!mouseDownPos)return;
+  const dx=e.clientX-mouseDownPos.x,dy=e.clientY-mouseDownPos.y;
+  mouseDownPos=null;
+  if(Math.sqrt(dx*dx+dy*dy)>5)return;
+
+  // Dismiss mobile tap hint on first interaction
+  const mth=document.getElementById('mobile-tap-hint');
+  if(mth.classList.contains('visible')){mth.classList.remove('visible');setTimeout(()=>{mth.style.display='none';},600);}
+
+  mousePos.x=(e.clientX/window.innerWidth)*2-1;
+  mousePos.y=-(e.clientY/window.innerHeight)*2+1;
+  raycaster.setFromCamera(mousePos,camera);
+  const targets=[];
+  blockGroups.forEach(bg=>{if(!bg.placed&&!bg.tweening)bg.group.children.forEach(child=>{if(child.isMesh)targets.push(child);});});
+  targets.push(platClickMesh);
+  const hits=raycaster.intersectObjects(targets,false);
+  if(hits.length===0){selectBlock(null);return;}
+  const hit=hits[0].object;
+  if(hit.userData.isPlatform){if(selectedBlock!==null)placeBlock(selectedBlock);return;}
+  if(hit.userData.blockIndex!==undefined){
+    const idx=hit.userData.blockIndex;
+    const bg=blockGroups[idx];
+    if(bg.placed||bg.tweening)return;
+    if(selectedBlock===idx)selectBlock(null);
+    else selectBlock(idx);
+  }
+});
+canvas.addEventListener('pointermove',e=>{
+  mousePos.x=(e.clientX/window.innerWidth)*2-1;
+  mousePos.y=-(e.clientY/window.innerHeight)*2+1;
+  raycaster.setFromCamera(mousePos,camera);
+  const targets=[];
+  blockGroups.forEach(bg=>{if(!bg.placed&&!bg.tweening)bg.group.children.forEach(child=>{if(child.isMesh)targets.push(child);});});
+  if(selectedBlock!==null)targets.push(platClickMesh);
+  const hits=raycaster.intersectObjects(targets,false);
+  canvas.style.cursor=hits.length>0?'pointer':(selectedBlock!==null?'crosshair':'default');
+});
+
+/* ── Prompt preview ── */
+function updatePromptPreview(){
+  const parts=[];
+  if(promptParts.act)     parts.push('[ACT] '+promptParts.act.trim());
+  if(promptParts.explain) parts.push('[EXPLAIN] '+promptParts.explain.trim());
+  if(promptParts.please)  parts.push('[PLEASE] '+promptParts.please.trim());
+  const el=document.getElementById('prompt-preview');
+  if(parts.length===0){el.textContent='Place a block to begin building your prompt...';el.classList.add('empty');}
+  else{el.textContent=parts.join(' ');el.classList.remove('empty');}
+  const allPlaced=placedBlocks.ACT&&placedBlocks.EXPLAIN&&placedBlocks.PLEASE;
+  const allHaveText=promptParts.act.trim()&&promptParts.explain.trim()&&promptParts.please.trim();
+  const show=allPlaced&&allHaveText;
+  document.getElementById('btn-copy').style.display=show?'flex':'none';
+  document.getElementById('btn-export-toggle').style.display=show?'flex':'none';
+}
+
+['act','explain','please'].forEach(key=>{
+  const el=document.getElementById('input-'+key);
+  el.addEventListener('input',()=>{
+    promptParts[key]=el.value;
+    updatePromptPreview();
+    scheduleScoreUpdate();
+  });
+});
+
+/* ── Quality scoring ── */
+let scoreDebounceTimer=null;
+let typewriterInterval=null;
+
+function scheduleScoreUpdate(){
+  const hasAnyBlock=placedBlocks.ACT||placedBlocks.EXPLAIN||placedBlocks.PLEASE;
+  const hasAnyText=promptParts.act.trim()||promptParts.explain.trim()||promptParts.please.trim();
+  if(!hasAnyBlock||!hasAnyText)return;
+  clearTimeout(scoreDebounceTimer);
+  scoreDebounceTimer=setTimeout(runQualityScore,1000);
+}
+
+function scoreText(text,bonusWords){
+  const t=text.trim();if(!t)return 0;
+  let score=0;
+  if(t.length>10)score=30;if(t.length>30)score=60;if(t.length>60)score=90;
+  const lower=t.toLowerCase();
+  const bonusHits=bonusWords.filter(w=>lower.includes(w)).length;
+  return Math.min(100,score+bonusHits*5);
+}
+
+function runQualityScore(){
+  const actText=placedBlocks.ACT?promptParts.act.trim():'';
+  const explainText=placedBlocks.EXPLAIN?promptParts.explain.trim():'';
+  const pleaseText=placedBlocks.PLEASE?promptParts.please.trim():'';
+  const clarity=scoreText(actText,['act as','you are','write','create','draft','generate','role','task','help']);
+  const context=scoreText(explainText,['audience','tone','about','because','example','context','background','purpose','goal','relevant','detail']);
+  const format=scoreText(pleaseText,['bullet','list','paragraph','table','email','steps','words','format','numbered','section','heading','json','markdown','short','long']);
+  const placed=[placedBlocks.ACT,placedBlocks.EXPLAIN,placedBlocks.PLEASE];
+  const scores=[clarity,context,format];
+  let total=0,count=0;
+  placed.forEach((p,i)=>{if(p){total+=scores[i];count++;}});
+  const overall=count>0?Math.round(total/count):0;
+  qualityScores.clarity=clarity;qualityScores.context=context;qualityScores.format=format;qualityScores.overall=overall;
+  updateScoreUI(overall);
+  applyBlockMaterialQuality(overall);
+  generateDemoOutput(overall,actText,explainText,pleaseText);
+
+  // SOUND: playSound('score-up') — ascending tone
+
+  // Enhanced celebration at 80+
+  if(overall>=80&&!celebrationFired){
+    celebrationFired=true;
+    triggerExcellentCelebration();
+  }
+
+  // Star brightness — all 3 blocks placed with text
+  const allFull=placedBlocks.ACT&&placedBlocks.EXPLAIN&&placedBlocks.PLEASE&&promptParts.act.trim()&&promptParts.explain.trim()&&promptParts.please.trim();
+  const targetOpacity=allFull?0.45:0.22;
+  const opRef={v:starMat.opacity};
+  tweenScalar(opRef,'v',targetOpacity,1.2,null);
+  const idx2=activeTweens.length-1;
+  const origUp=activeTweens[idx2].update;
+  activeTweens[idx2].update=(dt)=>{const done=origUp(dt);starMat.opacity=opRef.v;return done;};
+}
+
+function triggerExcellentCelebration(){
+  // Screen flash
+  const flash=document.getElementById('screen-flash');
+  flash.style.opacity='0.25';
+  setTimeout(()=>{flash.style.opacity='0';},200);
+
+  // SOUND: playSound('celebration') — sparkle/fanfare
+
+  // Rainbow ring sweep
+  rainbowActive=true;rainbowTime=0;
+
+  // Floating banner
+  const banner=document.getElementById('excellent-banner');
+  banner.classList.add('visible');
+  setTimeout(()=>banner.classList.remove('visible'),3000);
+}
+
+function updateScoreUI(score){
+  const fill=document.getElementById('score-bar-fill');
+  const label=document.getElementById('score-pct-label');
+  fill.style.width=score+'%';label.textContent=score+'%';
+  if(score<30)fill.style.background='linear-gradient(90deg,#ef4444,#f97316)';
+  else if(score<60)fill.style.background='linear-gradient(90deg,#f97316,#eab308)';
+  else if(score<80)fill.style.background='linear-gradient(90deg,#eab308,#34d399)';
+  else fill.style.background='linear-gradient(90deg,#34d399,#00c0af)';
+  const badge=document.getElementById('quality-badge');
+  badge.textContent='Score: '+score+'%';badge.className='quality-badge visible';
+  if(score<30)badge.classList.add('low');
+  else if(score<60)badge.classList.add('mid');
+  else if(score<80)badge.classList.add('good');
+  else badge.classList.add('great');
+}
+
+function applyBlockMaterialQuality(score){
+  let targetTransmission,targetEmissive;
+  if(score<=30){targetTransmission=0.70;targetEmissive=0.08;}
+  else if(score<=60){targetTransmission=0.45;targetEmissive=0.25;}
+  else if(score<=80){targetTransmission=0.25;targetEmissive=0.55;}
+  else{targetTransmission=0.10;targetEmissive=0.85;}
+  blockGroups.forEach((bg,i)=>{
+    if(!bg.placed)return;
+    const transRef={v:bg.mat.transmission};
+    tweenScalar(transRef,'v',targetTransmission,0.8,null);
+    const tIdx=activeTweens.length-1;
+    const tOrig=activeTweens[tIdx].update;
+    activeTweens[tIdx].update=(dt)=>{const done=tOrig(dt);bg.mat.transmission=transRef.v;return done;};
+    if(selectedBlock!==i){
+      const emRef={v:bg.mat.emissiveIntensity};
+      tweenScalar(emRef,'v',targetEmissive,0.8,null);
+      const eIdx=activeTweens.length-1;
+      const eOrig=activeTweens[eIdx].update;
+      activeTweens[eIdx].update=(dt)=>{const done=eOrig(dt);bg.mat.emissiveIntensity=emRef.v;return done;};
+    }
+  });
+  if(score>=81)platformGlow.color.set(0xffd700);
+  else platformGlow.color.set(0x00c0af);
+}
+
+
+/* ── Demo AI output ── */
+function generateDemoOutput(score,actText,explainText,pleaseText){
+  if(typewriterInterval){clearInterval(typewriterInterval);typewriterInterval=null;}
+  const spinner=document.getElementById('ai-generating');
+  spinner.classList.add('visible');
+  setTimeout(()=>{
+    spinner.classList.remove('visible');
+    const outputText=buildDemoOutput(score,actText,explainText,pleaseText);
+    streamOutput(outputText);
+  },600);
+}
+
+function buildDemoOutput(score,actText,explainText,pleaseText){
+  const act=actText.toLowerCase(),explain=explainText.toLowerCase(),please=pleaseText.toLowerCase();
+  const isBlog=act.includes('blog')||act.includes('post')||act.includes('article');
+  const isEmail=act.includes('email')||act.includes('newsletter');
+  const isSocial=act.includes('social')||act.includes('tweet')||act.includes('linkedin')||act.includes('instagram');
+  const topic=explain.split(' ').slice(0,5).join(' ')||'the given topic';
+  if(score<=20)return '⚠️ Your prompt needs more detail. Try adding a specific role in ACT, context in EXPLAIN, and output format in PLEASE.';
+  if(score<=40)return `Sure! Here is some content about ${topic}. It covers the main points. You can use this for your needs. Let me know if you want changes.`;
+  if(score<=60){
+    if(isBlog)return `Blog Post: ${topic}\n\nIntroduction: This topic is important for many reasons.\n\n• Key point one\n• Key point two\n• Key point three\n\nConclusion: In summary, this covers the basics of the subject.`;
+    if(isEmail)return `Subject: Update on ${topic}\n\nHi [Name],\n\nI wanted to share some information about ${topic}.\n\nLet me know if you have questions.\n\n[Signature]`;
+    return `Here is a response covering ${topic}:\n\n• Main idea one\n• Main idea two\n• Main idea three\n\nThis addresses the core requirements.`;
+  }
+  if(score<=80){
+    if(isBlog)return `# ${topic.charAt(0).toUpperCase()+topic.slice(1)}: What You Need to Know\n\nMarketers today face a clear challenge: standing out in a noisy landscape.\n\n**Key insights:**\n1. Focus on audience-first messaging\n2. Use data to validate your approach\n3. Test, iterate, and refine\n\nApplying these principles consistently drives measurable results.`;
+    if(isEmail)return `Subject: How ${topic} Can Help Your Team\n\nHi [First Name],\n\nWe know your time is valuable — so here is the short version:\n\n→ Benefit 1: Save 3 hours per week\n→ Benefit 2: Reduce errors by 40%\n→ Benefit 3: Scale without extra headcount\n\nInterested? Reply and I'll set up a 15-min call.\n\nBest, [Name]`;
+    if(isSocial)return `"Most people overlook this simple truth about ${topic}. The teams getting results aren't working harder — they're working smarter.\n\n3 things that changed everything:\n✅ Clear goals\n✅ The right tools\n✅ Consistent habits\n\nWhat's your #1 tip? Drop it below 👇"`;
+    return `Here is a structured response to your prompt:\n\n**Overview:** ${topic.charAt(0).toUpperCase()+topic.slice(1)} requires a clear strategy.\n\n**Recommendations:**\n1. Start with a clear goal\n2. Define your audience\n3. Choose the right format\n4. Measure and iterate`;
+  }
+  if(isBlog)return `# 5 Reasons ${topic.charAt(0).toUpperCase()+topic.slice(1)} Matters in 2025\n\n**1. Audience expectations have shifted**\nReaders want depth, not fluff. Give them both insight and actionable takeaways.\n\n**2. Search rewards expertise**\nE-E-A-T signals matter more than ever — demonstrate real-world experience.\n\n**3. Consistency builds trust**\nPublish on a regular cadence; irregular posts lose 60% of return visitors.\n\n**Takeaway:** Great content serves the reader first, the algorithm second.`;
+  if(isEmail)return `Subject: The one thing about ${topic} nobody talks about\n\nHi [First Name],\n\nQuick question: are you getting the results you expected?\n\nHere's what top performers do differently:\n\n→ They set specific KPIs before they begin\n→ They review weekly, not monthly\n→ They cut what's not working — fast\n\n[CTA Button: See the Full Framework →]\n\nTalk soon, [Name]`;
+  if(isSocial)return `I spent 6 months studying what separates good from great in ${topic}.\n\nThe answer surprised me.\n\nIt wasn't talent. It wasn't budget.\n\nIt was clarity.\n\nClear goal → Clear message → Clear result.\n\nThe teams winning right now know exactly what success looks like before they start.\n\nDo you? 🎯\n\n#Marketing #Strategy #${topic.split(' ')[0]}`;
+  return `**Prompt Response**\n\nRole: ${actText.slice(0,60)}...\n\n**Executive Summary**\nBased on the context provided, here is a targeted response for your audience around ${topic}.\n\n**Key Points:**\n1. Lead with the most important insight first\n2. Support each claim with a specific example or data point\n3. Close with a clear, single call to action\n\n**Recommended next steps:**\n• Review against your brand guidelines\n• A/B test two headline variants\n• Schedule for optimal send time\n\n*Output formatted as requested — ready for review.*`;
+}
+
+function streamOutput(text){
+  const el=document.getElementById('ai-output-text');
+  el.innerHTML='';
+  const words=text.split(' ');let idx=0,rendered='';
+  typewriterInterval=setInterval(()=>{
+    if(idx>=words.length){clearInterval(typewriterInterval);typewriterInterval=null;el.innerHTML=rendered;return;}
+    rendered+=(idx>0?' ':'')+words[idx];idx++;
+    el.innerHTML=rendered+'<span class="ai-cursor"></span>';
+    el.scrollTop=el.scrollHeight;
+  },50);
+}
+
+/* ── Templates ── */
+const TEMPLATES=[
+  {
+    act:"Act as an expert content writer specialising in small business marketing",
+    explain:"My audience is small business owners in Sydney who are new to AI. The tone should be friendly, practical, and encouraging. Include real examples they can relate to.",
+    please:"Write a 300-word blog post with a compelling headline, 3 subheadings, and a call to action at the end."
+  },
+  {
+    act:"Act as a professional customer service representative for a boutique design studio",
+    explain:"A client has emailed asking why their project is delayed by two weeks. They sound frustrated but are a long-term client we value. We need to be honest about the delay while maintaining the relationship.",
+    please:"Draft a reply email under 150 words. Use a warm but professional tone. Include an apology, a brief honest explanation, and a concrete next step with a date."
+  },
+  {
+    act:"Act as a social media manager for an Australian cafe chain",
+    explain:"We're launching a new winter menu next week featuring turmeric lattes and sourdough toasties. Our audience is 25-40 year old inner-city professionals who care about quality food. Our brand voice is witty, warm, and slightly irreverent.",
+    please:"Create 3 Instagram caption options, each under 50 words. Include relevant emoji and 5 hashtags per post. One should be funny, one informative, one question-based."
+  }
+];
+let templateIndex=0;
+
+window.loadNextTemplate=function(){
+  const tpl=TEMPLATES[templateIndex%TEMPLATES.length];
+  templateIndex++;
+
+  // If blocks already placed, reset first
+  if(placedBlocks.ACT||placedBlocks.EXPLAIN||placedBlocks.PLEASE) window.resetBuild();
+
+  setTimeout(()=>{
+    // Auto-place ACT
+    const bg0=blockGroups[0];
+    if(!bg0.placed){
+      placedBlocks.ACT=true;bg0.placed=true;bg0.tweening=true;bg0.baseY=null;
+      tweenVec3(bg0.group.position,blockData[0].placedPos.clone(),0.3,()=>{
+        bg0.tweening=false;bg0.group.rotation.y=0;
+        blockLights[0].position.copy(blockData[0].placedPos).add(new THREE.Vector3(0,0.5,0));
+        document.getElementById('card-act').classList.add('visible');
+        document.getElementById('check-act').classList.add('visible');
+        document.getElementById('blockcard-act').classList.add('placed');
+        document.getElementById('ai-output-card').classList.add('visible');
+        setMeterSegments(1);
+        // EXPLAIN after 300ms
+        setTimeout(()=>{
+          const bg1=blockGroups[1];
+          placedBlocks.EXPLAIN=true;bg1.placed=true;bg1.tweening=true;bg1.baseY=null;
+          tweenVec3(bg1.group.position,blockData[1].placedPos.clone(),0.3,()=>{
+            bg1.tweening=false;bg1.group.rotation.y=0;
+            blockLights[1].position.copy(blockData[1].placedPos).add(new THREE.Vector3(0,0.5,0));
+            document.getElementById('card-explain').classList.add('visible');
+            document.getElementById('check-explain').classList.add('visible');
+            document.getElementById('blockcard-explain').classList.add('placed');
+            setMeterSegments(2);
+            // PLEASE after 300ms
+            setTimeout(()=>{
+              const bg2=blockGroups[2];
+              placedBlocks.PLEASE=true;bg2.placed=true;bg2.tweening=true;bg2.baseY=null;
+              tweenVec3(bg2.group.position,blockData[2].placedPos.clone(),0.3,()=>{
+                bg2.tweening=false;bg2.group.rotation.y=0;
+                blockLights[2].position.copy(blockData[2].placedPos).add(new THREE.Vector3(0,0.5,0));
+                document.getElementById('card-please').classList.add('visible');
+                document.getElementById('check-please').classList.add('visible');
+                document.getElementById('blockcard-please').classList.add('placed');
+                setMeterSegments(3);
+                setTimeout(triggerBurst,200);
+                // Fill text
+                ['act','explain','please'].forEach(k=>{
+                  const ta=document.getElementById('input-'+k);
+                  ta.value=tpl[k];
+                  promptParts[k]=tpl[k];
+                });
+                updatePromptPreview();
+                scheduleScoreUpdate();
+                showToast('Template loaded!');
+              });
+            },300);
+          });
+        },300);
+      });
+    }
+  },200);
+};
+
+
+/* ── Global functions ── */
+window.selectBlockFromCard=function(id){
+  const idx=blockData.findIndex(b=>b.id===id);
+  if(idx<0)return;
+  const bg=blockGroups[idx];
+  if(bg.placed||bg.tweening)return;
+  if(selectedBlock===idx){selectBlock(null);return;}
+  selectBlock(idx);
+};
+
+window.resetBuild=function(){
+  if(typewriterInterval){clearInterval(typewriterInterval);typewriterInterval=null;}
+  clearTimeout(scoreDebounceTimer);
+
+  // Debris particles for each placed block before animating back
+  blockGroups.forEach((bg,i)=>{
+    if(bg.placed) spawnDebrisForBlock(bg.group.position.clone(),blockData[i].hex);
+  });
+
+  // SOUND: playSound('reset') — gentle whoosh
+
+  Object.keys(placedBlocks).forEach(k=>{placedBlocks[k]=false;});
+  Object.keys(promptParts).forEach(k=>{promptParts[k]='';});
+  qualityScores.clarity=qualityScores.context=qualityScores.format=qualityScores.overall=0;
+  celebrationFired=false;
+  rainbowActive=false;
+  edgeMat.color.set(0x00c0af);
+  edgeMat.emissive.set(0x00c0af);
+
+  ['act','explain','please'].forEach(key=>{
+    document.getElementById('input-'+key).value='';
+    document.getElementById('card-'+key).classList.remove('visible');
+    document.getElementById('check-'+key).classList.remove('visible');
+    document.getElementById('blockcard-'+key).classList.remove('placed','selected');
+  });
+  document.getElementById('ai-output-card').classList.remove('visible');
+  document.getElementById('score-bar-fill').style.width='0%';
+  document.getElementById('score-pct-label').textContent='—';
+  document.getElementById('ai-output-text').innerHTML='<span style="color:rgba(255,255,255,0.2);font-style:italic">Place blocks and type your prompt to see AI output...</span>';
+  document.getElementById('ai-generating').classList.remove('visible');
+  const badge=document.getElementById('quality-badge');
+  badge.className='quality-badge';badge.textContent='Score: 0%';
+  platformGlow.color.set(0x00c0af);
+  starMat.opacity=0.22;
+  // Close export dropdown
+  document.getElementById('export-dropdown').classList.remove('open');
+
+  blockGroups.forEach((bg,i)=>{
+    bg.placed=false;bg.tweening=true;bg.baseY=null;
+    tweenVec3(bg.group.position,bg.bd.shelfPos,0.5,()=>{
+      bg.tweening=false;bg.baseY=bg.bd.shelfPos.y;
+      bg.group.rotation.y=bg.bd.shelfRotY;
+      bg.mat.emissiveIntensity=0.12;bg.mat.transmission=0.55;
+      bg.edgeLine.material.opacity=0.55;
+    });
+  });
+  selectBlock(null);
+  setMeterSegments(0);
+  updatePromptPreview();
+  controls.autoRotateSpeed=0.4;
+};
+
+window.copyPrompt=function(){
+  const parts=[];
+  if(promptParts.act)     parts.push('[ACT] '+promptParts.act.trim());
+  if(promptParts.explain) parts.push('[EXPLAIN] '+promptParts.explain.trim());
+  if(promptParts.please)  parts.push('[PLEASE] '+promptParts.please.trim());
+  navigator.clipboard.writeText(parts.join('\n\n')).then(()=>{
+    // SOUND: playSound('copy') — click/tick
+    const btn=document.getElementById('btn-copy');
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    setTimeout(()=>{btn.innerHTML=orig;},1800);
+  });
+};
+
+window.copyPlainText=function(){
+  const parts=[];
+  if(promptParts.act)     parts.push(promptParts.act.trim());
+  if(promptParts.explain) parts.push(promptParts.explain.trim());
+  if(promptParts.please)  parts.push(promptParts.please.trim());
+  navigator.clipboard.writeText(parts.join('\n\n')).then(()=>{
+    showToast('Plain text copied!');
+  });
+  document.getElementById('export-dropdown').classList.remove('open');
+};
+
+window.saveToToolkit=function(){
+  const saved=JSON.parse(localStorage.getItem('pa_saved_prompts')||'[]');
+  saved.push({
+    act:promptParts.act.trim(),
+    explain:promptParts.explain.trim(),
+    please:promptParts.please.trim(),
+    score:qualityScores.overall,
+    date:new Date().toISOString()
+  });
+  localStorage.setItem('pa_saved_prompts',JSON.stringify(saved));
+  showToast('Saved to My Toolkit!');
+  document.getElementById('export-dropdown').classList.remove('open');
+};
+
+window.toggleExportDropdown=function(){
+  document.getElementById('export-dropdown').classList.toggle('open');
+};
+// Close dropdown on outside click
+document.addEventListener('click',e=>{
+  const dd=document.getElementById('export-dropdown');
+  if(!e.target.closest('.export-group')&&dd.classList.contains('open')) dd.classList.remove('open');
+});
+
+/* ── Tutorial ── */
+const tutorialSteps=[
+  {
+    msg:"These are your building blocks. Each one represents a part of a great AI prompt. ACT sets the role, EXPLAIN gives context, and PLEASE defines the output format.",
+    spotlightId:'block-cards-area',
+    btnLabel:'Next'
+  },
+  {
+    msg:"ACT defines the AI's role and your task. Click it to select it — it will glow — then click the platform to place it.",
+    spotlightId:'blockcard-act',
+    btnLabel:'Next'
+  },
+  {
+    msg:"Type your instructions here. The more specific you are, the stronger your building becomes — and the higher your quality score rises.",
+    spotlightId:'input-panel',
+    btnLabel:'Next'
+  },
+  {
+    msg:"Keep building! Add EXPLAIN for context and PLEASE for output format. Watch your structure grow and your quality score rise. You're ready to architect great prompts!",
+    spotlightId:null,
+    btnLabel:'Got it!'
+  }
+];
+let tutorialStep=0;
+
+function getSpotlightRect(id){
+  if(id==='block-cards-area'){
+    const el=document.querySelector('.block-cards');
+    return el?el.getBoundingClientRect():null;
+  }
+  if(id==='input-panel'){
+    const el=document.getElementById('input-panel');
+    return el?el.getBoundingClientRect():null;
+  }
+  const el=document.getElementById(id);
+  return el?el.getBoundingClientRect():null;
+}
+
+function renderTutorialStep(step){
+  const data=tutorialSteps[step];
+  document.getElementById('tutorial-message').textContent=data.msg;
+  document.getElementById('tutorial-btn-next').textContent=data.btnLabel;
+  // Dots
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('tdot-'+i);
+    if(dot) dot.classList.toggle('active',i===step);
+  }
+  // Spotlight
+  const spotlight=document.getElementById('tutorial-spotlight');
+  const card=document.getElementById('tutorial-card');
+  if(data.spotlightId){
+    const rect=getSpotlightRect(data.spotlightId);
+    if(rect){
+      const pad=12;
+      spotlight.style.left=(rect.left-pad)+'px';
+      spotlight.style.top=(rect.top-pad)+'px';
+      spotlight.style.width=(rect.width+pad*2)+'px';
+      spotlight.style.height=(rect.height+pad*2)+'px';
+      spotlight.style.opacity='1';
+      // Position card below or above
+      const cardW=320;
+      const cardLeft=Math.max(12,Math.min(rect.left,window.innerWidth-cardW-12));
+      if(rect.bottom+200<window.innerHeight){
+        card.style.top=(rect.bottom+pad+16)+'px';
+        card.style.bottom='auto';
+      } else {
+        card.style.bottom=(window.innerHeight-rect.top+pad+16)+'px';
+        card.style.top='auto';
+      }
+      card.style.left=cardLeft+'px';
+      card.style.right='auto';
+    }
+  } else {
+    spotlight.style.opacity='0';
+    spotlight.style.width='0';spotlight.style.height='0';
+    card.style.top='50%';card.style.left='50%';
+    card.style.transform='translate(-50%,-50%)';
+    card.style.bottom='auto';card.style.right='auto';
+  }
+  if(data.spotlightId) card.style.transform='';
+}
+
+function closeTutorial(){
+  document.getElementById('tutorial-overlay').classList.remove('visible');
+  localStorage.setItem('pa_tutorial_done','1');
+}
+
+document.getElementById('tutorial-btn-next').addEventListener('click',()=>{
+  tutorialStep++;
+  if(tutorialStep>=tutorialSteps.length){closeTutorial();return;}
+  renderTutorialStep(tutorialStep);
+});
+document.getElementById('tutorial-btn-skip').addEventListener('click',closeTutorial);
+
+window.startTutorial=function(){
+  tutorialStep=0;
+  document.getElementById('tutorial-card').style.transform='';
+  renderTutorialStep(0);
+  document.getElementById('tutorial-overlay').classList.add('visible');
+};
+
+/* ── Resize ── */
+function onResize(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+}
+window.addEventListener('resize',onResize);
+
+
+/* ── Animation loop ── */
+const clock=new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const elapsed=clock.getElapsedTime();
+  animate._prev=animate._prev||elapsed;
+  const delta=Math.min(elapsed-animate._prev,0.05);
+  animate._prev=elapsed;
+
+  runTweens(delta);
+
+  // Block bobbing + pulse
+  blockGroups.forEach((bg,i)=>{
+    if(!bg.placed&&!bg.tweening&&bg.baseY!==null){
+      const bob=Math.sin(elapsed*0.75+bg.bd.bobOffset)*0.12;
+      bg.group.position.y=bg.baseY+bob;
+    }
+    if(!bg.placed&&!bg.tweening&&selectedBlock===i){
+      const pulse=1+Math.sin(elapsed*4)*0.025;
+      bg.group.scale.setScalar(pulse);
+    } else if(!bg.tweening){
+      bg.group.scale.setScalar(1);
+    }
+  });
+
+  // Ambient particles
+  const posAttr=pGeo.attributes.position;
+  for(let i=0;i<PARTICLE_COUNT;i++){
+    posAttr.array[i*3+1]+=pSpeeds[i];
+    if(posAttr.array[i*3+1]>6){
+      posAttr.array[i*3+1]=-6;
+      posAttr.array[i*3]=(Math.random()-0.5)*14;
+      posAttr.array[i*3+2]=(Math.random()-0.5)*14;
+    }
+  }
+  posAttr.needsUpdate=true;
+
+  // Burst particles
+  if(burstActive){
+    burstTime+=delta;
+    const bPos=burstGeo.attributes.position;
+    for(let i=0;i<BURST_COUNT;i++){
+      bPos.array[i*3]+=burstVel[i].x;
+      bPos.array[i*3+1]+=burstVel[i].y;
+      bPos.array[i*3+2]+=burstVel[i].z;
+      burstVel[i].y-=0.003;
+    }
+    bPos.needsUpdate=true;
+    burstMat.opacity=Math.max(0,0.9-burstTime*1.2);
+    if(burstTime>1.8)burstActive=false;
+  }
+
+  // Debris particles
+  for(let d=DEBRIS_SETS.length-1;d>=0;d--){
+    const ds=DEBRIS_SETS[d];
+    if(!ds.active)continue;
+    ds.time+=delta;
+    const dPos=ds.geo.attributes.position;
+    for(let i=0;i<dPos.count;i++){
+      dPos.array[i*3]+=ds.vel[i].x;
+      dPos.array[i*3+1]+=ds.vel[i].y;
+      dPos.array[i*3+2]+=ds.vel[i].z;
+      ds.vel[i].y-=0.004;
+    }
+    dPos.needsUpdate=true;
+    ds.mat.opacity=Math.max(0,0.9-ds.time*1.1);
+    if(ds.time>0.85){
+      ds.active=false;
+      scene.remove(ds.points);
+      ds.geo.dispose();ds.mat.dispose();
+      DEBRIS_SETS.splice(d,1);
+    }
+  }
+
+  // Platform glow
+  const glow=0.06+Math.sin(elapsed*1.1)*0.015;
+  platMat.emissiveIntensity=glow;
+
+  // Edge ring — rainbow sweep when active, else normal pulse
+  if(rainbowActive){
+    rainbowTime+=delta;
+    const t=(rainbowTime%1.5)/1.5;
+    // Cycle ACT→EXPLAIN→PLEASE colours
+    const rainbowColors=[new THREE.Color(0x6dd8ff),new THREE.Color(0xa78bfa),new THREE.Color(0x34d399)];
+    const seg=t*3;
+    const segIdx=Math.floor(seg)%3;
+    const nextIdx=(segIdx+1)%3;
+    const lerp=seg-Math.floor(seg);
+    const rCol=new THREE.Color().lerpColors(rainbowColors[segIdx],rainbowColors[nextIdx],lerp);
+    edgeMat.color.copy(rCol);
+    edgeMat.emissive.copy(rCol);
+    edgeMat.emissiveIntensity=1.6;
+    if(rainbowTime>=1.5){
+      rainbowActive=false;
+      edgeMat.color.set(0x00c0af);
+      edgeMat.emissive.set(0x00c0af);
+    }
+  } else {
+    edgeMat.emissiveIntensity=0.9+Math.sin(elapsed*1.8)*0.3;
+  }
+
+  // Grid pulse on block place
+  if(gridPulseActive){
+    gridPulseTime+=delta;
+    const brightness=Math.max(0.18,0.18+0.45*Math.max(0,1-gridPulseTime*3));
+    gridRings.forEach(r=>{if(r.material)r.material.opacity=brightness;});
+    if(gridPulseTime>0.7){
+      gridPulseActive=false;
+      gridRings.forEach(r=>{if(r.material)r.material.opacity=0.18;});
+    }
+  }
+
+  // Block lights
+  lightACT.intensity=7.5+Math.sin(elapsed*1.4)*0.8;
+  lightEXPLAIN.intensity=7.5+Math.sin(elapsed*1.4+1.2)*0.8;
+  lightPLEASE.intensity=7.5+Math.sin(elapsed*1.4+2.4)*0.8;
+  platformGlow.intensity=3.0+Math.sin(elapsed*0.9)*0.5;
+
+  // Meter pulse
+  for(let s=0;s<3;s++){
+    if(meterSegLit[s]){
+      const qualityMod=qualityScores.overall/100;
+      const pulseSpeed=2+qualityMod*4;
+      const pulseAmp=0.2+qualityMod*0.6;
+      meterSegMeshes[s].material.emissiveIntensity=1.0+Math.sin(elapsed*pulseSpeed+s)*pulseAmp;
+    }
+  }
+
+  controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+
+/* ── Loading overlay — cycling text ── */
+const loadingTexts=['Initialising Scene','Preparing Blocks','Ready'];
+let loadingIdx=0;
+const loadingEl=document.getElementById('loading-text');
+const loadingTimer=setInterval(()=>{
+  loadingIdx++;
+  if(loadingIdx<loadingTexts.length) loadingEl.textContent=loadingTexts[loadingIdx];
+  else clearInterval(loadingTimer);
+},700);
+
+let hideAfter=5;
+function tryHide(){
+  hideAfter--;
+  if(hideAfter<=0){
+    document.getElementById('loading-overlay').classList.add('hidden');
+    clearInterval(loadingTimer);
+    // Check tutorial
+    if(!localStorage.getItem('pa_tutorial_done')){
+      setTimeout(window.startTutorial,800);
+    }
+    // Mobile tap hint
+    if('ontouchstart' in window||navigator.maxTouchPoints>1){
+      const mth=document.getElementById('mobile-tap-hint');
+      mth.style.display='block';
+      setTimeout(()=>mth.classList.add('visible'),300);
+      setTimeout(()=>{mth.classList.remove('visible');setTimeout(()=>{mth.style.display='none';},600);},5000);
+    }
+  } else {
+    requestAnimationFrame(tryHide);
+  }
+}
+requestAnimationFrame(tryHide);
+
+</script>
+</body>
+</html>

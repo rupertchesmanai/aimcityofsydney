@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Token &amp; Cost Estimator | AIM AI Bootcamp</title>
+  <meta name="description" content="Paste any text to see how many tokens it is, roughly what it would cost to run, how long it takes, and how much trimming or summarising first saves." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../assets/css/global.css" />
+  <link rel="stylesheet" href="../assets/css/city-theme.css" />
+
+  <style>html.light-pending body{background:#f4f5f9!important}</style>
+<script>try{if(document.cookie.indexOf('cos_ai_reset=1')!==-1){for(var _ri=localStorage.length-1;_ri>=0;_ri--){var _rk=localStorage.key(_ri);if(_rk&&_rk.indexOf('cos_ai_')===0)localStorage.removeItem(_rk);}document.cookie='cos_ai_reset=;path=/;max-age=0';}}catch(e){}</script>
+<script>try{if(localStorage.getItem('cos_ai_theme')==='light')document.documentElement.classList.add('light-pending')}catch(e){}</script>
+
+  <style>
+    .lead{color:var(--aim-text)}
+    .ai-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);border-radius:12px;padding:13px 15px;color:var(--aim-heading);font-size:14px;font-family:inherit;resize:vertical;outline:none;line-height:1.6}
+    .ai-input:focus{border-color:#6dd8ff;box-shadow:0 0 0 3px rgba(109,216,255,0.18)}
+    body.light-mode .ai-input{background:#fff;border-color:rgba(0,0,0,0.12);color:#1e293b}
+    .chip{font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--aim-text);transition:all 160ms ease}
+    .chip:hover{background:rgba(255,255,255,0.13)} .chip.active{border-color:#6dd8ff;color:#fff;background:rgba(109,216,255,0.14)}
+    body.light-mode .chip{color:#475569;background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
+
+    .stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px 16px;text-align:center}
+    body.light-mode .stat{background:rgba(0,0,0,0.03);border-color:rgba(0,0,0,0.1)}
+    .stat .v{font-size:26px;font-weight:800;color:var(--aim-heading);line-height:1.1}
+    .stat .v.accent{color:#6dd8ff}
+    .stat .k{font-size:11px;color:var(--aim-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+    .stat .sub{font-size:11px;color:var(--aim-muted);margin-top:2px}
+
+    .tok{display:inline-flex;align-items:center;padding:3px 7px;border-radius:7px;margin:2px;font-size:12px;font-family:'Fira Code',monospace;background:rgba(109,216,255,0.12);border:1px solid rgba(109,216,255,0.3);color:var(--aim-heading)}
+    .tok.cont{background:rgba(228,164,225,0.12);border-color:rgba(228,164,225,0.34)}
+    body.light-mode .tok{color:#1e293b}
+
+    .rate-in{width:88px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);border-radius:8px;padding:6px 9px;color:var(--aim-heading);font-size:13px;font-family:'Fira Code',monospace;outline:none}
+    .rate-in:focus{border-color:#6dd8ff}
+    body.light-mode .rate-in{background:#fff;border-color:rgba(0,0,0,0.12);color:#1e293b}
+    .seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+    .seg button{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:9px;cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--aim-text)}
+    .seg button.active{background:linear-gradient(135deg,#6dd8ff,#e4a4e1);color:#0e1430;border-color:transparent}
+    body.light-mode .seg button{color:#475569;background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
+    input[type=range]{accent-color:#6dd8ff;width:100%}
+    .note{font-size:11.5px;color:var(--aim-muted)}
+    .glossary dt{font-weight:800;color:var(--aim-heading);font-size:14px}
+    .glossary dd{color:var(--aim-text);font-size:13.5px;margin:2px 0 12px;line-height:1.55}
+  </style>
+</head>
+<body>
+
+  <nav class="aim-nav fixed top-0 left-0 right-0 z-50 py-5">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <a href="https://www.aim.com.au" target="_blank"><img src="../assets/aimlogo_white.png" alt="AIM" class="h-8 sm:h-10"></a>
+      <a href="../index.html" class="aim-back"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Bootcamp</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+        <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main class="relative z-10 max-w-4xl mx-auto px-6 pt-28 pb-20">
+    <div class="pill mb-6 fade-up"><span class="w-2 h-2 rounded-full bg-[#6dd8ff] inline-block"></span> AI Essentials &middot; Tools</div>
+    <h1 class="text-3xl sm:text-5xl font-bold mb-4 fade-up" style="animation-delay:100ms">Token &amp; Cost <span class="gradient-text">Estimator</span></h1>
+    <p class="lead text-lg mb-8 fade-up" style="animation-delay:200ms">
+      AI usage is measured and billed in <b>tokens</b>, not words. Paste any text to see how many tokens it is, roughly what it would cost to run, how long it might take, and how much you'd save by trimming or summarising first.
+    </p>
+
+    <!-- INPUT -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-6 fade-up" style="animation-delay:280ms">
+      <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <h2 class="text-base font-bold text-[var(--aim-heading)]">Your text</h2>
+        <div id="presets" class="flex flex-wrap gap-2"></div>
+      </div>
+      <textarea id="text" class="ai-input" rows="6" placeholder="Paste or type the text you'd send to AI…"></textarea>
+      <div class="grid grid-cols-3 gap-3 mt-4">
+        <div class="stat"><div class="v" id="chars">0</div><div class="k">Characters</div></div>
+        <div class="stat"><div class="v" id="words">0</div><div class="k">Words</div></div>
+        <div class="stat"><div class="v accent" id="tokens">0</div><div class="k">Tokens</div><div class="sub" id="ratio">&nbsp;</div></div>
+      </div>
+      <details class="mt-4">
+        <summary class="text-sm font-semibold text-[#6dd8ff] cursor-pointer">See the tokens</summary>
+        <div id="chips" class="mt-3" style="max-height:160px;overflow:auto"></div>
+      </details>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-6 fade-up" style="animation-delay:340ms">
+      <h2 class="text-base font-bold text-[var(--aim-heading)] mb-1">Settings</h2>
+      <p class="note mb-4">Prices are <b>real published API rates as of June 2026</b> (USD per 1M tokens). They change often — pick a model, then edit any field to match current pricing.</p>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-xs font-bold text-[var(--aim-heading)] mb-2">Model</p>
+          <select id="model" class="rate-in" style="width:100%;max-width:330px;margin-bottom:12px;font-family:inherit"></select>
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-xs text-[var(--aim-muted)] w-28">Input rate</span>
+            <input class="rate-in" id="rateIn" type="number" min="0" step="0.01"> <span class="note">$ / 1M tokens</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-[var(--aim-muted)] w-28">Output rate</span>
+            <input class="rate-in" id="rateOut" type="number" min="0" step="0.01"> <span class="note">$ / 1M tokens</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-[var(--aim-heading)] mb-2">Expected reply length (output)</p>
+          <div class="seg mb-4" id="reply"></div>
+          <p class="text-xs font-bold text-[var(--aim-heading)] mb-2">How often will you run this?</p>
+          <div class="flex items-center gap-2">
+            <input class="rate-in" id="perDay" type="number" min="0" step="1" value="10" style="width:72px"> <span class="note">times per day</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-6 fade-up" style="animation-delay:380ms">
+      <h2 class="text-base font-bold text-[var(--aim-heading)] mb-4 flex items-center gap-2"><i data-lucide="calculator" class="w-4 h-4 text-[#6dd8ff]"></i> Estimate</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="stat"><div class="v" id="totTok">0</div><div class="k">Total tokens</div><div class="sub" id="ioTok">in + out</div></div>
+        <div class="stat"><div class="v accent" id="costRun">$0</div><div class="k">Cost / run</div></div>
+        <div class="stat"><div class="v accent" id="costMonth">$0</div><div class="k">Cost / month</div><div class="sub">22 working days</div></div>
+        <div class="stat"><div class="v" id="time">0s</div><div class="k">Approx. time</div><div class="sub">per run</div></div>
+      </div>
+      <p class="note mt-3" id="reassure"></p>
+    </section>
+
+    <!-- SAVINGS -->
+    <section class="rounded-2xl p-6 md:p-7 mb-10 fade-up" style="animation-delay:420ms;background:linear-gradient(135deg, rgba(46,204,113,0.08), transparent);border:1px solid rgba(46,204,113,0.2)">
+      <div class="flex items-start gap-3">
+        <span class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3)"><i data-lucide="piggy-bank" class="w-4 h-4" style="color:#2ecc71"></i></span>
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-[var(--aim-heading)] mb-1">Trim to save</h3>
+          <p class="text-sm text-[var(--aim-text)] mb-4">A big chunk of cost is the text you send in. Summarising or trimming it first cuts input tokens — and the saving repeats every run.</p>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-xs text-[var(--aim-muted)] w-40">Trim input to <b id="trimPct" style="color:var(--aim-heading)">100%</b></span>
+            <input type="range" id="trim" min="20" max="100" value="100" step="5">
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="stat"><div class="v" id="savedTok" style="color:#2ecc71">0</div><div class="k">Tokens saved / run</div></div>
+            <div class="stat"><div class="v" id="savedRun" style="color:#2ecc71">$0</div><div class="k">Saved / run</div></div>
+            <div class="stat"><div class="v" id="savedMonth" style="color:#2ecc71">$0</div><div class="k">Saved / month</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section class="mb-12 fade-up">
+      <h2 class="text-xl font-semibold text-[var(--aim-heading)] mb-6 flex items-center gap-3">
+        <span class="w-8 h-8 rounded-lg bg-[#6dd8ff]/10 border border-[#6dd8ff]/20 flex items-center justify-center"><i data-lucide="key-round" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+        Four things to take away
+      </h2>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Tokens, not words</h3><p class="text-xs text-[var(--aim-text)]">A token is a chunk of text — roughly ¾ of a word on average. Usage and price are counted in tokens, so a "word count" understates it.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">You pay twice</h3><p class="text-xs text-[var(--aim-text)]">You're charged for input (what you send) and output (what it writes back) — and output usually costs several times more per token.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Most single requests are cents</h3><p class="text-xs text-[var(--aim-text)]">One request is usually tiny. Cost adds up through volume — running the same task hundreds of times a week.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Trim the input</h3><p class="text-xs text-[var(--aim-text)]">Sending a whole 30-page document when a 1-page summary would do wastes tokens every time. Trim first; the saving repeats.</p></div>
+      </div>
+    </section>
+
+    <!-- GLOSSARY -->
+    <section class="mb-12 fade-up">
+      <div class="glass rounded-2xl p-6 md:p-7">
+        <h2 class="text-base font-bold text-[var(--aim-heading)] mb-4 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4 text-[#6dd8ff]"></i> Mini glossary</h2>
+        <dl class="glossary grid sm:grid-cols-2 gap-x-8">
+          <div><dt>Token</dt><dd>The chunk of text AI works in — a word, part of a word, or punctuation. About ¾ of a word on average.</dd></div>
+          <div><dt>Input tokens</dt><dd>Everything you send: your prompt plus any document or context attached to it.</dd></div>
+          <div><dt>Output tokens</dt><dd>Everything the AI writes back. Usually priced higher per token than input.</dd></div>
+          <div><dt>Context window</dt><dd>The maximum tokens a model can consider at once — input and output combined.</dd></div>
+          <div><dt>$ per 1M tokens</dt><dd>How API pricing is quoted. Divide by a million to get the cost of a single token.</dd></div>
+          <div><dt>Throughput</dt><dd>How fast a model produces tokens — it drives how long a reply takes.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="flex flex-col sm:flex-row gap-3 justify-between fade-up">
+      <a href="how-ai-reads-your-words.html" class="aim-btn"><i data-lucide="arrow-left" class="w-4 h-4"></i> How AI reads your words</a>
+      <a href="what-ai-is-good-for.html" class="aim-btn">What AI is good for <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </section>
+  </main>
+
+  <footer class="border-t border-[var(--aim-panel)] py-8">
+    <div class="max-w-6xl mx-auto px-6 text-center text-xs text-[var(--aim-muted)]">AIM AI Bootcamp for Small Business</div>
+  </footer>
+
+  <script>lucide.createIcons();</script>
+  <script>
+  (function(){ var KEY='cos_ai_theme',s=localStorage.getItem(KEY); if(s==='light')document.body.classList.add('light-mode'); ic();
+    window.toggleTheme=function(){document.body.classList.toggle('light-mode');var l=document.body.classList.contains('light-mode');localStorage.setItem(KEY,l?'light':'dark');ic();};
+    function ic(){var l=document.body.classList.contains('light-mode');document.querySelectorAll('.theme-icon-dark').forEach(function(e){e.style.display=l?'none':'block';});document.querySelectorAll('.theme-icon-light').forEach(function(e){e.style.display=l?'block':'none';});}
+  })();
+  (function(){var n=document.querySelector('.aim-nav');if(n)window.addEventListener('scroll',function(){n.classList.toggle('scrolled',window.scrollY>10);});})();
+  </script>
+
+  <!-- ===================== ESTIMATOR (no AI — same tokeniser as the lesson) ===================== -->
+  <script>
+  (function(){
+    'use strict';
+    /* --- tokeniser (matches "How AI Reads Your Words") --- */
+    var SUFFIX=['ation','tion','ment','ness','able','ible','ing','ed','ly','er','ers','est','es','s'];
+    var PREFIX=['inter','under','over','re','un','pre','dis'];
+    function splitWord(w){ var lower=w.toLowerCase(); if(lower.length<=4||/[^a-z]/.test(lower)) return [w];
+      var pieces=[],rest=w,rl=lower;
+      for(var p=0;p<PREFIX.length;p++){ if(rl.startsWith(PREFIX[p])&&rl.length-PREFIX[p].length>=3){ pieces.push(rest.slice(0,PREFIX[p].length)); rest=rest.slice(PREFIX[p].length); rl=rl.slice(PREFIX[p].length); break; } }
+      var suf='';
+      for(var s=0;s<SUFFIX.length;s++){ if(rl.endsWith(SUFFIX[s])&&rl.length-SUFFIX[s].length>=3){ suf=rest.slice(rest.length-SUFFIX[s].length); rest=rest.slice(0,rest.length-SUFFIX[s].length); rl=rl.slice(0,rl.length-SUFFIX[s].length); break; } }
+      if(rest.length>6){ var mid=Math.ceil(rest.length/2); pieces.push(rest.slice(0,mid)); pieces.push('##'+rest.slice(mid)); }
+      else if(rest.length){ pieces.push(pieces.length?'##'+rest:rest); }
+      if(suf) pieces.push('##'+suf);
+      if(pieces.length>1&&pieces[0].indexOf('##')===0) pieces[0]=pieces[0].slice(2);
+      return pieces.length?pieces:[w];
+    }
+    function tokenize(text){ text=(text||'').trim().replace(/\s+/g,' '); if(!text) return [];
+      var raw=text.match(/[A-Za-z]+(?:'[A-Za-z]+)?|\d+|[^\sA-Za-z\d]/g)||[]; var out=[];
+      raw.forEach(function(chunk){ if(/^[A-Za-z]/.test(chunk)){ splitWord(chunk).forEach(function(piece){ out.push({text:piece.replace(/^##/,'‧'),cont:piece.indexOf('##')===0}); }); }
+        else out.push({text:chunk,cont:false}); });
+      return out;
+    }
+
+    /* --- pricing tiers (illustrative, editable) --- */
+    /* Real published API list prices, standard tier, USD per 1M tokens — as of June 2026. Editable in the UI. */
+    var MODELS=[
+      {g:'OpenAI', name:'GPT-5.5', in:5.00, out:30.00},
+      {g:'OpenAI', name:'GPT-5.5 Pro', in:30.00, out:180.00},
+      {g:'OpenAI', name:'GPT-5.4', in:2.50, out:15.00},
+      {g:'OpenAI', name:'GPT-5.4 mini', in:0.75, out:4.50},
+      {g:'OpenAI', name:'GPT-5.4 nano', in:0.20, out:1.25},
+      {g:'OpenAI', name:'GPT-5.2-Codex', in:1.75, out:14.00},
+      {g:'OpenAI', name:'GPT-5', in:1.25, out:10.00},
+      {g:'OpenAI', name:'GPT-5 mini', in:0.25, out:2.00},
+      {g:'OpenAI', name:'GPT-5 nano', in:0.05, out:0.40},
+      {g:'OpenAI', name:'GPT-4o', in:2.50, out:10.00},
+      {g:'OpenAI', name:'GPT-4o mini', in:0.15, out:0.60},
+      {g:'OpenAI', name:'o3', in:2.00, out:8.00},
+      {g:'OpenAI', name:'o3-pro', in:20.00, out:80.00},
+      {g:'Google (Gemini)', name:'Gemini 3.5 Flash', in:1.50, out:9.00},
+      {g:'Google (Gemini)', name:'Gemini 3.1 Pro', in:2.00, out:12.00},
+      {g:'Google (Gemini)', name:'Gemini 3.1 Flash-Lite', in:0.25, out:1.50},
+      {g:'Google (Gemini)', name:'Gemini 2.5 Pro', in:1.25, out:10.00},
+      {g:'Google (Gemini)', name:'Gemini 2.5 Flash', in:0.30, out:2.50},
+      {g:'Google (Gemini)', name:'Gemini 2.5 Flash-Lite', in:0.10, out:0.40},
+      {g:'Anthropic (Claude)', name:'Claude Opus 4.8', in:5.00, out:25.00},
+      {g:'Anthropic (Claude)', name:'Claude Sonnet 4.6', in:3.00, out:15.00},
+      {g:'Anthropic (Claude)', name:'Claude Haiku 4.5', in:1.00, out:5.00},
+      {g:'xAI (Grok)', name:'Grok 4', in:3.00, out:15.00},
+      {g:'xAI (Grok)', name:'Grok 4.20', in:2.00, out:6.00},
+      {g:'xAI (Grok)', name:'Grok 4.3', in:1.25, out:2.50},
+      {g:'xAI (Grok)', name:'Grok 4.1 Fast', in:0.20, out:0.50},
+      {g:'xAI (Grok)', name:'Grok 3 Mini', in:0.30, out:0.50}
+    ];
+    var REPLIES=[ {name:'No reply',tok:0}, {name:'Short',tok:150}, {name:'A few paras',tok:500}, {name:'Long',tok:1500} ];
+    var PRESETS=[
+      {label:'Short email', text:'Hi team, quick reminder that the venue walkthrough is this Thursday at 2pm. Please bring your section plans and let me know if you can\'t make it. Thanks!'},
+      {label:'Customer message', text:'Hi, I bought a coffee machine three weeks ago (order #4821) and it is already leaking. This is the second faulty one. I\'d like a replacement or a refund, and a call back today please.'},
+      {label:'Meeting transcript', text:'Alright everyone, thanks for joining. First up, the Q3 campaign — Priya, where are we with the budget? We\'re close, just waiting on final numbers from the supplier, should have it by Friday. Good. Next, the website redesign — that\'s blocked on photos from Sam, who\'s away until Wednesday. Let\'s chase that. We also need to book the launch venue, capacity around eighty, and someone needs to own the grant report due end of month. I can take the grant report. Great. Any other business? The coffee machine is still broken. Noted. Okay, let\'s wrap.'},
+      {label:'Long report excerpt', text:'The proposed amendments to weekend parking arrangements within the central business district are intended to improve turnover of high-demand spaces while balancing the needs of residents, businesses and visitors. Under the proposal, a two-hour limit would apply to on-street parking on Saturdays and Sundays between 8am and 6pm. After 6pm, an increased tariff would apply to discourage long-stay parking during peak dining hours. Residents holding a valid parking permit would be exempt from both the time limit and the increased evening tariff. The changes would be introduced on a six-month trial basis commencing in July, after which a comprehensive review would be undertaken, incorporating usage data and the results of a community feedback survey distributed to affected households and businesses. Officers recommend that the trial proceed, noting that similar measures in comparable precincts have increased space availability by an estimated fifteen to twenty per cent during peak periods.'}
+    ];
+
+    var DEF=MODELS.findIndex(function(m){return m.name==='GPT-5.4';}); if(DEF<0)DEF=0;
+    var st={ model:DEF, rateIn:MODELS[DEF].in, rateOut:MODELS[DEF].out, reply:1, perDay:10, trim:100, presetActive:-1 };
+    var $=function(id){return document.getElementById(id);};
+
+    /* build controls */
+    PRESETS.forEach(function(p,i){ var b=document.createElement('button'); b.className='chip'; b.textContent=p.label; b.onclick=function(){ $('text').value=p.text; st.presetActive=i; recompute(); }; $('presets').appendChild(b); });
+    function buildModelSelect(){ var sel=$('model'),groups={}; MODELS.forEach(function(m,i){ if(!groups[m.g]){ groups[m.g]=document.createElement('optgroup'); groups[m.g].label=m.g; sel.appendChild(groups[m.g]); } var o=document.createElement('option'); o.value=i; o.textContent=m.name+'  ($'+m.in.toFixed(2)+' / $'+m.out.toFixed(2)+')'; groups[m.g].appendChild(o); }); sel.value=st.model; sel.onchange=function(){ st.model=parseInt(this.value,10); var m=MODELS[st.model]; st.rateIn=m.in; st.rateOut=m.out; $('rateIn').value=m.in; $('rateOut').value=m.out; recompute(); }; }
+    buildModelSelect();
+    REPLIES.forEach(function(r,i){ var b=document.createElement('button'); b.textContent=r.name; if(i===1)b.classList.add('active'); b.onclick=function(){ st.reply=i; seg('reply',i); recompute(); }; $('reply').appendChild(b); });
+    function seg(id,i){ var k=$(id).children; for(var n=0;n<k.length;n++) k[n].classList.toggle('active',n===i); }
+
+    $('rateIn').value=st.rateIn; $('rateOut').value=st.rateOut;
+    $('text').addEventListener('input',function(){ st.presetActive=-1; recompute(); });
+    $('rateIn').addEventListener('input',function(){ st.rateIn=parseFloat(this.value)||0; recompute(); });
+    $('rateOut').addEventListener('input',function(){ st.rateOut=parseFloat(this.value)||0; recompute(); });
+    $('perDay').addEventListener('input',function(){ st.perDay=Math.max(0,parseInt(this.value,10)||0); recompute(); });
+    $('trim').addEventListener('input',function(){ st.trim=parseInt(this.value,10); recompute(); });
+
+    function money(x){ if(!x) return '$0'; if(x>=1) return '$'+x.toFixed(2); if(x>=0.01) return '$'+x.toFixed(3); return '$'+x.toPrecision(2); }
+    function fmt(n){ return n.toLocaleString('en-AU'); }
+
+    function recompute(){
+      var text=$('text').value;
+      var toks=tokenize(text);
+      var inTok=toks.length;
+      var words=(text.match(/[A-Za-z0-9]+/g)||[]).length;
+      var chars=text.length;
+      $('chars').textContent=fmt(chars); $('words').textContent=fmt(words); $('tokens').textContent=fmt(inTok);
+      $('ratio').textContent = words? ('≈ '+(inTok/words).toFixed(2)+' tokens/word') : ' ';
+
+      /* chips (first 80) */
+      var chips=$('chips'), cap=80; chips.innerHTML='';
+      if(!inTok){ chips.innerHTML='<span class="note">Type some text to see its tokens.</span>'; }
+      else { toks.slice(0,cap).forEach(function(t){ var s=document.createElement('span'); s.className='tok'+(t.cont?' cont':''); s.textContent=t.text; chips.appendChild(s); }); if(inTok>cap){ var m=document.createElement('span'); m.className='note'; m.style.marginLeft='6px'; m.textContent='+ '+fmt(inTok-cap)+' more'; chips.appendChild(m); } }
+
+      var outTok=REPLIES[st.reply].tok;
+      var costIn=inTok/1e6*st.rateIn, costOut=outTok/1e6*st.rateOut, run=costIn+costOut;
+      var month=run*st.perDay*22;
+      $('totTok').textContent=fmt(inTok+outTok); $('ioTok').textContent=fmt(inTok)+' in + '+fmt(outTok)+' out';
+      $('costRun').textContent=money(run); $('costMonth').textContent=money(month);
+      var secs=Math.max(0.3, outTok/55 + inTok/4000); $('time').textContent= secs<1? (Math.round(secs*10)/10+'s') : (Math.round(secs)+'s');
+      $('reassure').innerHTML = inTok? ('At '+st.perDay+' runs/day this is about <b style="color:var(--aim-heading)">'+money(month)+'</b> a month on '+MODELS[st.model].name+'. Output is charged at '+ (st.rateIn?Math.round(st.rateOut/st.rateIn):'several')+'× the input rate here.') : 'Enter text to see an estimate.';
+
+      /* savings */
+      var keep=st.trim/100; $('trimPct').textContent=st.trim+'%';
+      var savedTok=Math.round(inTok*(1-keep));
+      var savedRun=savedTok/1e6*st.rateIn;
+      $('savedTok').textContent=fmt(savedTok); $('savedRun').textContent=money(savedRun); $('savedMonth').textContent=money(savedRun*st.perDay*22);
+    }
+
+    /* boot with a sample */
+    $('text').value=PRESETS[3].text; recompute();
+  })();
+  </script>
+
+</body>
+</html>

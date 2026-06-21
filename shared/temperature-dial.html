@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Temperature Dial | AIM AI Bootcamp</title>
+  <meta name="description" content="Slide one control and watch the same prompt go from safe and predictable to creative and wild — an interactive explainer of AI 'temperature'." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../assets/css/global.css" />
+  <link rel="stylesheet" href="../assets/css/city-theme.css" />
+
+  <style>html.light-pending body{background:#f4f5f9!important}</style>
+<script>try{if(document.cookie.indexOf('cos_ai_reset=1')!==-1){for(var _ri=localStorage.length-1;_ri>=0;_ri--){var _rk=localStorage.key(_ri);if(_rk&&_rk.indexOf('cos_ai_')===0)localStorage.removeItem(_rk);}document.cookie='cos_ai_reset=;path=/;max-age=0';}}catch(e){}</script>
+<script>try{if(localStorage.getItem('cos_ai_theme')==='light')document.documentElement.classList.add('light-pending')}catch(e){}</script>
+
+  <style>
+    .lead{color:var(--aim-text)}
+    .chip{font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--aim-text);transition:all 160ms ease}
+    .chip:hover{background:rgba(255,255,255,0.13)} .chip.active{border-color:#6dd8ff;color:#fff;background:rgba(109,216,255,0.14)}
+    body.light-mode .chip{color:#475569;background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
+
+    .temp-slider{-webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:999px;outline:none;
+      background:linear-gradient(90deg,#2ecc71 0%,#6dd8ff 28%,#FFB76B 62%,#ff6b52 100%)}
+    .temp-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #6dd8ff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+    .temp-slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid #6dd8ff;cursor:pointer}
+
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+    .bar-word{width:84px;flex-shrink:0;font-size:13px;font-family:'Fira Code',monospace;color:var(--aim-heading);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bar-track{flex:1;height:20px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden}
+    body.light-mode .bar-track{background:rgba(0,0,0,0.05)}
+    .bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#6dd8ff,#3a9fd6);transition:width 220ms ease, background 220ms ease;min-width:2px}
+    .bar-fill.top{background:linear-gradient(90deg,#6dd8ff,#e4a4e1)}
+    .bar-pct{width:46px;flex-shrink:0;font-size:12px;font-family:'Fira Code',monospace;color:var(--aim-muted);text-align:right}
+
+    .answer{font-size:16px;line-height:1.6;color:var(--aim-heading);min-height:64px}
+    .answer .pre{color:var(--aim-muted)}
+    .gen-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13.5px;color:#0e1430;background:linear-gradient(135deg,#6dd8ff,#e4a4e1)}
+    .gen-btn:hover{filter:brightness(1.04)}
+    .det{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+
+    .guide{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)}
+    body.light-mode .guide{background:rgba(0,0,0,0.03);border-color:rgba(0,0,0,0.08)}
+    .guide .sw{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0}
+    .glossary dt{font-weight:800;color:var(--aim-heading);font-size:14px}
+    .glossary dd{color:var(--aim-text);font-size:13.5px;margin:2px 0 12px;line-height:1.55}
+  </style>
+</head>
+<body>
+
+  <nav class="aim-nav fixed top-0 left-0 right-0 z-50 py-5">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <a href="https://www.aim.com.au" target="_blank"><img src="../assets/aimlogo_white.png" alt="AIM" class="h-8 sm:h-10"></a>
+      <a href="../index.html" class="aim-back"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Bootcamp</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+        <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main class="relative z-10 max-w-4xl mx-auto px-6 pt-28 pb-20">
+    <div class="pill mb-6 fade-up"><span class="w-2 h-2 rounded-full bg-[#6dd8ff] inline-block"></span> Shared Module &middot; How AI Works</div>
+    <h1 class="text-3xl sm:text-5xl font-bold mb-4 fade-up" style="animation-delay:100ms">The Temperature <span class="gradient-text">Dial</span></h1>
+    <p class="lead text-lg mb-8 fade-up" style="animation-delay:200ms">
+      Ever asked AI the same thing twice and got different answers? That's <b>temperature</b> — one setting that controls how adventurous the AI is when it picks the next word. Pick a prompt, then turn the dial and watch what changes.
+    </p>
+
+    <!-- PROMPT -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-6 fade-up" style="animation-delay:280ms">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="w-9 h-9 rounded-xl bg-[#6dd8ff]/12 border border-[#6dd8ff]/25 flex items-center justify-center"><i data-lucide="message-square" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+        <div><h2 class="text-base font-bold text-[var(--aim-heading)]">1. Pick a prompt</h2><p class="text-xs text-[var(--aim-muted)]">The text you give the AI to continue.</p></div>
+      </div>
+      <div id="prompts" class="flex flex-wrap gap-2 mb-4"></div>
+      <div class="rounded-xl px-4 py-3" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">
+        <span class="text-xs text-[var(--aim-muted)]">Prompt</span>
+        <div class="text-[var(--aim-heading)] font-semibold" id="promptText" style="font-family:'Fira Code',monospace;font-size:14px">&nbsp;</div>
+      </div>
+    </section>
+
+    <!-- DIAL -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-6 fade-up" style="animation-delay:340ms">
+      <div class="grid md:grid-cols-[300px_1fr] gap-6 items-center">
+        <div class="text-center">
+          <svg id="gauge" viewBox="0 0 280 156" width="100%" style="max-width:300px"></svg>
+          <div class="text-4xl font-black text-[var(--aim-heading)] -mt-2" id="tempVal">0.7</div>
+          <div class="text-sm font-bold" id="bandLabel" style="color:#6dd8ff">Balanced</div>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-[var(--aim-heading)] mb-2">2. Turn the dial</p>
+          <input type="range" class="temp-slider" id="temp" min="0.05" max="1.5" step="0.05" value="0.7">
+          <div class="flex justify-between text-[11px] text-[var(--aim-muted)] mt-1"><span>0 &middot; predictable</span><span>0.7</span><span>1.5 &middot; wild</span></div>
+          <p class="det mt-4" id="det"></p>
+          <p class="text-xs text-[var(--aim-muted)] mt-2" id="dialNote"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- OUTPUT -->
+    <section class="grid md:grid-cols-2 gap-5 mb-6 fade-up" style="animation-delay:380ms">
+      <div class="glass rounded-2xl p-6">
+        <h2 class="text-sm font-bold text-[var(--aim-heading)] mb-1">Next-word odds</h2>
+        <p class="text-xs text-[var(--aim-muted)] mb-4">How likely each word is to come next. Low temperature makes the favourite dominate; high temperature flattens the field.</p>
+        <div id="bars"></div>
+      </div>
+      <div class="glass rounded-2xl p-6 flex flex-col">
+        <h2 class="text-sm font-bold text-[var(--aim-heading)] mb-1">The AI's answer</h2>
+        <p class="text-xs text-[var(--aim-muted)] mb-4">A sample answer at this temperature.</p>
+        <div class="answer flex-1" id="answer"></div>
+        <div class="mt-4"><button class="gen-btn" id="gen"><i data-lucide="dice-5" class="w-4 h-4"></i> Generate again</button></div>
+      </div>
+    </section>
+
+    <!-- GUIDANCE -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-10 fade-up" style="animation-delay:420ms">
+      <h2 class="text-base font-bold text-[var(--aim-heading)] mb-4 flex items-center gap-2"><i data-lucide="compass" class="w-4 h-4 text-[#6dd8ff]"></i> Which setting when?</h2>
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div class="guide"><span class="sw" style="background:#2ecc71"></span><div><div class="text-sm font-bold text-[var(--aim-heading)]">Low (0&ndash;0.3)</div><div class="text-xs text-[var(--aim-text)]">Facts, data, code, policy answers, customer support. Consistent and on-the-rails.</div></div></div>
+        <div class="guide"><span class="sw" style="background:#6dd8ff"></span><div><div class="text-sm font-bold text-[var(--aim-heading)]">Medium (0.4&ndash;0.8)</div><div class="text-xs text-[var(--aim-text)]">Everyday writing, emails, summaries. A natural balance of reliable and varied.</div></div></div>
+        <div class="guide"><span class="sw" style="background:#ff6b52"></span><div><div class="text-sm font-bold text-[var(--aim-heading)]">High (0.9+)</div><div class="text-xs text-[var(--aim-text)]">Brainstorming, names, taglines, story ideas. Creative &mdash; but likelier to wander or make things up.</div></div></div>
+      </div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section class="mb-12 fade-up">
+      <h2 class="text-xl font-semibold text-[var(--aim-heading)] mb-6 flex items-center gap-3">
+        <span class="w-8 h-8 rounded-lg bg-[#6dd8ff]/10 border border-[#6dd8ff]/20 flex items-center justify-center"><i data-lucide="key-round" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+        Four things to take away
+      </h2>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">It picks words by probability</h3><p class="text-xs text-[var(--aim-text)]">For every next word the AI has a ranked list of options. Temperature decides how often it strays from the top pick.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Low = consistent, high = varied</h3><p class="text-xs text-[var(--aim-text)]">Near zero it almost always chooses the favourite, so you get the same answer. Higher up it gambles on long shots.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Creativity has a cost</h3><p class="text-xs text-[var(--aim-text)]">High temperature is great for ideas, but the same randomness makes it more likely to drift off-topic or invent facts.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">It's a tool, not a quality knob</h3><p class="text-xs text-[var(--aim-text)]">High isn't "smarter" and low isn't "dumber" — match the dial to the job. Many chat apps hide it; some let you set it.</p></div>
+      </div>
+    </section>
+
+    <!-- GLOSSARY -->
+    <section class="mb-12 fade-up">
+      <div class="glass rounded-2xl p-6 md:p-7">
+        <h2 class="text-base font-bold text-[var(--aim-heading)] mb-4 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4 text-[#6dd8ff]"></i> Mini glossary</h2>
+        <dl class="glossary grid sm:grid-cols-2 gap-x-8">
+          <div><dt>Temperature</dt><dd>A setting (often 0&ndash;2) for how much randomness the AI uses when choosing each next word.</dd></div>
+          <div><dt>Sampling</dt><dd>Picking the next word from the ranked options rather than always taking the top one.</dd></div>
+          <div><dt>Deterministic</dt><dd>Same input, same output every time — what you get at temperature near zero.</dd></div>
+          <div><dt>Probability distribution</dt><dd>The full set of "how likely" scores across all possible next words.</dd></div>
+          <div><dt>Top-p / Top-k</dt><dd>Related dials that limit the AI to only the most likely words before it samples.</dd></div>
+          <div><dt>Hallucination</dt><dd>A confident but wrong answer — more common at high temperature.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="flex flex-col sm:flex-row gap-3 justify-between fade-up">
+      <a href="how-ai-reads-your-words.html" class="aim-btn"><i data-lucide="arrow-left" class="w-4 h-4"></i> How AI reads your words</a>
+      <a href="hallucination-spotter.html" class="aim-btn">Why AI makes things up <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </section>
+  </main>
+
+  <footer class="border-t border-[var(--aim-panel)] py-8">
+    <div class="max-w-6xl mx-auto px-6 text-center text-xs text-[var(--aim-muted)]">AIM AI Bootcamp for Small Business</div>
+  </footer>
+
+  <script>lucide.createIcons();</script>
+  <script>
+  (function(){ var KEY='cos_ai_theme',s=localStorage.getItem(KEY); if(s==='light')document.body.classList.add('light-mode'); ic();
+    window.toggleTheme=function(){document.body.classList.toggle('light-mode');var l=document.body.classList.contains('light-mode');localStorage.setItem(KEY,l?'light':'dark');ic();};
+    function ic(){var l=document.body.classList.contains('light-mode');document.querySelectorAll('.theme-icon-dark').forEach(function(e){e.style.display=l?'none':'block';});document.querySelectorAll('.theme-icon-light').forEach(function(e){e.style.display=l?'block':'none';});}
+  })();
+  (function(){var n=document.querySelector('.aim-nav');if(n)window.addEventListener('scroll',function(){n.classList.toggle('scrolled',window.scrollY>10);});})();
+  </script>
+
+  <!-- ===================== TEMPERATURE DIAL (no AI — pre-written samples + live softmax) ===================== -->
+  <script>
+  (function(){
+    'use strict';
+    var PROMPTS=[
+      { id:'tagline', label:'Coffee shop tagline', text:'A tagline for a new coffee shop:',
+        cands:[{w:'"Great',l:4.6},{w:'"Your',l:4.1},{w:'"Wake',l:3.6},{w:'"Life',l:3.2},{w:'"Sip',l:3.0},{w:'"Bean',l:2.7}],
+        low:['"Great coffee, every day."'],
+        med:['"Your daily cup, made with care."','"Freshly brewed, locally loved."'],
+        high:['"Wake up and smell the revolution."','"Sip happens — make it good."','"Liquid sunshine, served daily."','"Bean there, brewed that — better."'] },
+      { id:'capital', label:'A factual question', text:'The capital of France is',
+        cands:[{w:'Paris',l:9.2},{w:'a',l:2.6},{w:'the',l:2.3},{w:'located',l:1.9},{w:'home',l:1.6},{w:'known',l:1.3}],
+        low:['Paris.'],
+        med:['Paris, the country’s capital and largest city.'],
+        high:['Paris — the City of Light.','Paris, naturellement.','the famously romantic city of Paris.'] },
+      { id:'story', label:'Start a story', text:'Once upon a time, there was a',
+        cands:[{w:'little',l:4.2},{w:'young',l:3.8},{w:'small',l:3.5},{w:'brave',l:3.3},{w:'lonely',l:3.0},{w:'curious',l:2.8}],
+        low:['little girl who lived in a quiet village.'],
+        med:['curious fox who longed to see the sea.','young baker with one secret recipe.'],
+        high:['clockwork whale who collected forgotten songs.','dragon who was terribly afraid of marshmallows.','lighthouse that fell in love with a passing comet.'] },
+      { id:'name', label:'Name a chatbot', text:'A friendly name for our council chatbot is',
+        cands:[{w:'Ava',l:3.9},{w:'Sam',l:3.6},{w:'Max',l:3.4},{w:'Coby',l:3.1},{w:'Sydney',l:2.9},{w:'Pixel',l:2.6}],
+        low:['"Helper".'],
+        med:['"Ava" — approachable and easy to remember.','"Sam", short and friendly.'],
+        high:['"Cobalt the Curious".','"Sir Reply-a-Lot".','"Pixel", with a little wink for a logo.'] }
+    ];
+
+    var $=function(id){return document.getElementById(id);};
+    var idx=0, temp=0.7, lastBand='';
+
+    /* ---- gauge ---- */
+    var R=104, CX=140, CY=128, TMAX=1.5;
+    function polar(deg,r){ r=r||R; var a=deg*Math.PI/180; return [CX+r*Math.cos(a), CY-r*Math.sin(a)]; }
+    function degFor(t){ return 180-180*(t/TMAX); }
+    function arc(d0,d1,color,w){ var a=polar(d0),b=polar(d1); return '<path d="M '+a[0].toFixed(1)+' '+a[1].toFixed(1)+' A '+R+' '+R+' 0 0 1 '+b[0].toFixed(1)+' '+b[1].toFixed(1)+'" fill="none" stroke="'+color+'" stroke-width="'+w+'" stroke-linecap="butt"/>'; }
+    function buildGauge(){
+      var g=$('gauge'); var zones=[[0,0.35,'#2ecc71'],[0.35,0.8,'#6dd8ff'],[0.8,1.1,'#FFB76B'],[1.1,1.5,'#ff6b52']];
+      var s='';
+      zones.forEach(function(z){ s+=arc(degFor(z[0]),degFor(z[1]),z[2],16); });
+      s+='<line id="needle" x1="'+CX+'" y1="'+CY+'" x2="'+CX+'" y2="'+(CY-R+22)+'" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>';
+      s+='<circle cx="'+CX+'" cy="'+CY+'" r="7" fill="#fff"/>';
+      g.innerHTML=s;
+    }
+    function setNeedle(t){ var d=degFor(t), e=polar(d,R-22); var n=$('needle'); if(n){ n.setAttribute('x2',e[0].toFixed(1)); n.setAttribute('y2',e[1].toFixed(1)); } }
+
+    /* ---- softmax with temperature ---- */
+    function probs(cands,T){ var mx=Math.max.apply(null,cands.map(function(c){return c.l;})); var ex=cands.map(function(c){return Math.exp((c.l-mx)/Math.max(0.05,T));}); var sum=ex.reduce(function(a,b){return a+b;},0); return cands.map(function(c,i){return {w:c.w, p:ex[i]/sum};}); }
+    function bandOf(t){ return t<0.35?'low': t<0.8?'med':'high'; }
+    function bandLabel(t){ return t<0.35?'Predictable': t<0.8?'Balanced': t<1.1?'Creative':'Wild'; }
+    function bandColor(t){ return t<0.35?'#2ecc71': t<0.8?'#6dd8ff': t<1.1?'#FFB76B':'#ff6b52'; }
+
+    function clean(w){ return w.replace(/^"/,''); }
+    function renderBars(sampledIdx){
+      var P=probs(PROMPTS[idx].cands,temp).slice().sort(function(a,b){return b.p-a.p;});
+      var top=P[0].w;
+      var html=P.map(function(d){ var isTop=d.w===top; var pct=Math.round(d.p*100);
+        return '<div class="bar-row"><div class="bar-word">'+clean(d.w)+'</div><div class="bar-track"><div class="bar-fill'+(isTop?' top':'')+'" style="width:'+(d.p*100).toFixed(1)+'%"></div></div><div class="bar-pct">'+pct+'%</div></div>';
+      }).join('');
+      $('bars').innerHTML=html;
+    }
+
+    function pickAnswer(regen){
+      var p=PROMPTS[idx], b=bandOf(temp), arr=p[b];
+      var pick = arr[ regen ? Math.floor(Math.random()*arr.length) : 0 ];
+      $('answer').innerHTML='<span class="pre">'+p.text+'</span> <b>'+pick+'</b>';
+    }
+
+    function update(regen){
+      $('tempVal').textContent=temp.toFixed(2);
+      $('bandLabel').textContent=bandLabel(temp); $('bandLabel').style.color=bandColor(temp);
+      setNeedle(temp); renderBars();
+      var b=bandOf(temp);
+      if(b!==lastBand || regen){ pickAnswer(regen); lastBand=b; }
+      var same = temp<0.2;
+      $('det').innerHTML = same
+        ? '<span style="color:#2ecc71"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2ecc71;margin-right:6px"></span>Same answer every time</span>'
+        : '<span style="color:'+bandColor(temp)+'"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+bandColor(temp)+';margin-right:6px"></span>Different each run — press Generate again</span>';
+      $('dialNote').textContent = temp<0.35 ? 'The AI almost always takes its favourite next word.'
+        : temp<0.8 ? 'The AI mostly favours likely words, with some variety.'
+        : temp<1.1 ? 'The AI takes more chances on less likely words.'
+        : 'The AI gambles freely — surprising, and more error-prone.';
+    }
+
+    /* prompts */
+    PROMPTS.forEach(function(p,i){ var b=document.createElement('button'); b.className='chip'+(i===0?' active':''); b.textContent=p.label; b.onclick=function(){ idx=i; document.querySelectorAll('#prompts .chip').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); $('promptText').textContent=p.text; lastBand=''; update(true); }; $('prompts').appendChild(b); });
+
+    $('temp').addEventListener('input',function(){ temp=parseFloat(this.value); update(false); });
+    $('gen').onclick=function(){ update(true); };
+
+    /* boot */
+    buildGauge(); $('promptText').textContent=PROMPTS[0].text; update(true);
+  })();
+  </script>
+
+</body>
+</html>

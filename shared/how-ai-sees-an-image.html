@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How AI Sees an Image | AIM AI Bootcamp</title>
+  <meta name="description" content="An interactive 3D explainer: watch a picture get split into patches, turned into numbers, and recognised by a neural network — no maths required." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../assets/css/global.css" />
+  <link rel="stylesheet" href="../assets/css/city-theme.css" />
+
+  <style>html.light-pending body{background:#f4f5f9!important}</style>
+<script>/* Reset wipe — clears localStorage for this directory scope */
+try{if(document.cookie.indexOf('cos_ai_reset=1')!==-1){for(var _ri=localStorage.length-1;_ri>=0;_ri--){var _rk=localStorage.key(_ri);if(_rk&&_rk.indexOf('cos_ai_')===0)localStorage.removeItem(_rk);}document.cookie='cos_ai_reset=;path=/;max-age=0';}}catch(e){}</script>
+<script>/* Early theme apply — prevents flash */try{if(localStorage.getItem('cos_ai_theme')==='light')document.documentElement.classList.add('light-pending')}catch(e){}</script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <style>
+    .lead { color: var(--aim-text); }
+    .tabs-row { display:flex; gap:10px; flex-wrap:wrap; }
+    .tab-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; transition:all 200ms ease; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:var(--aim-text); }
+    .tab-btn:hover { background:rgba(255,255,255,0.12); transform:translateY(-1px); }
+    .tab-btn.active { background:linear-gradient(135deg,#6dd8ff,#e4a4e1); color:#0e1430; border-color:transparent; box-shadow:0 6px 22px rgba(109,216,255,0.25); }
+    body.light-mode .tab-btn { color:#475569; background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.10); }
+    body.light-mode .tab-btn.active { color:#0e1430; }
+
+    .preset-chip { display:flex; align-items:center; gap:9px; font-size:13px; font-weight:600; padding:7px 13px 7px 7px; border-radius:12px; cursor:pointer; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:var(--aim-text); transition:all 180ms ease; }
+    .preset-chip:hover { background:rgba(255,255,255,0.13); }
+    .preset-chip.active { border-color:#6dd8ff; color:#fff; background:rgba(109,216,255,0.14); }
+    .preset-chip canvas { width:30px; height:30px; border-radius:7px; display:block; }
+    body.light-mode .preset-chip { color:#475569; background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.10); }
+
+    .run-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:12px; border:none; cursor:pointer; font-weight:800; font-size:15px; color:#0e1430; background:linear-gradient(135deg,#6dd8ff,#e4a4e1); box-shadow:0 8px 24px rgba(109,216,255,0.28); transition:transform 160ms ease, box-shadow 160ms ease; }
+    .run-btn:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(109,216,255,0.36); }
+
+    .src-img { width:120px; height:120px; border-radius:14px; border:1px solid rgba(255,255,255,0.18); display:block; }
+    .patch-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:2px; width:160px; height:160px; }
+    .patch-grid canvas { width:100%; height:100%; display:block; border-radius:1px; }
+
+    .stage-wrap { position:relative; width:100%; height:clamp(380px, 56vh, 560px); border-radius:16px; overflow:hidden; background:radial-gradient(120% 120% at 50% 0%, rgba(46,61,125,0.55) 0%, rgba(14,20,48,0.92) 70%); }
+    body.light-mode .stage-wrap { background:radial-gradient(120% 120% at 50% 0%, #eef1fb 0%, #dfe4f5 75%); }
+    #scene { position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+    .scene-badge { position:absolute; top:12px; left:12px; font-size:11px; font-weight:700; letter-spacing:.04em; padding:5px 10px; border-radius:999px; background:rgba(14,20,48,0.55); color:#9fe1ff; border:1px solid rgba(109,216,255,0.3); backdrop-filter:blur(8px); display:flex; align-items:center; gap:6px; }
+    .scene-legend { position:absolute; top:12px; right:12px; font-size:11px; padding:7px 11px; border-radius:10px; background:rgba(14,20,48,0.55); border:1px solid rgba(255,255,255,0.12); color:rgba(255,255,255,0.82); backdrop-filter:blur(8px); display:flex; flex-direction:column; gap:4px; max-width:60%; }
+    .scene-legend .lg { display:flex; align-items:center; gap:6px; }
+    .scene-legend .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .scene-hint { position:absolute; bottom:12px; right:12px; font-size:11px; color:rgba(255,255,255,0.6); background:rgba(14,20,48,0.5); padding:5px 9px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); }
+    .caption-bar { position:absolute; left:12px; bottom:12px; max-width:70%; font-size:13.5px; line-height:1.5; color:#fff; background:rgba(14,20,48,0.62); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:10px 14px; backdrop-filter:blur(10px); }
+    .caption-bar b { color:#9fe1ff; }
+
+    .step-controls { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .step-btn { width:42px; height:42px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.16); color:var(--aim-heading); }
+    .step-btn:hover { background:rgba(255,255,255,0.14); }
+    body.light-mode .step-btn { color:#1e293b; background:rgba(0,0,0,0.05); border-color:rgba(0,0,0,0.1); }
+    .step-dots { display:flex; gap:7px; align-items:center; }
+    .step-dot { width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,0.2); transition:all 240ms ease; }
+    .step-dot.on { background:#6dd8ff; width:26px; border-radius:6px; }
+
+    .glossary dt { font-weight:800; color:var(--aim-heading); font-size:14px; }
+    .glossary dd { color:var(--aim-text); font-size:13.5px; margin:2px 0 12px; line-height:1.55; }
+
+    .fallback-panel { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; gap:14px; }
+    .fallback-panel.show { display:flex; }
+    .fallback-panel p { color:rgba(255,255,255,0.78); font-size:14px; max-width:440px; line-height:1.6; }
+    body.light-mode .fallback-panel p { color:#475569; }
+  </style>
+</head>
+<body>
+
+  <nav class="aim-nav fixed top-0 left-0 right-0 z-50 py-5">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <a href="https://www.aim.com.au" target="_blank"><img src="../assets/aimlogo_white.png" alt="AIM" class="h-8 sm:h-10"></a>
+      <a href="../index.html" class="aim-back">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Bootcamp
+      </a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+        <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main class="relative z-10 max-w-5xl mx-auto px-6 pt-28 pb-20">
+    <div class="pill mb-6 fade-up"><span class="w-2 h-2 rounded-full bg-[#6dd8ff] inline-block"></span> Shared Module &middot; How AI Works</div>
+    <h1 class="text-3xl sm:text-5xl font-bold mb-4 fade-up" style="animation-delay:100ms">
+      How AI <span class="gradient-text">Sees</span> an Image
+    </h1>
+    <p class="lead text-lg mb-8 fade-up" style="animation-delay:200ms">
+      Just like it chops text into tokens, AI chops a picture into <b>patches</b>, turns each patch into a list of <b>numbers</b> (the colours), and passes them through a <b>neural network</b> that decides what the picture shows. Pick an image and watch it happen in 3D.
+    </p>
+
+    <!-- CONTROLS -->
+    <section class="glass rounded-2xl p-6 md:p-7 mb-6 fade-up" style="animation-delay:280ms">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="w-9 h-9 rounded-xl bg-[#6dd8ff]/12 border border-[#6dd8ff]/25 flex items-center justify-center"><i data-lucide="image" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+        <div>
+          <h2 class="text-base font-bold text-[var(--aim-heading)]">1. Pick a picture</h2>
+          <p class="text-xs text-[var(--aim-muted)]">These are simple sample images, drawn in your browser.</p>
+        </div>
+      </div>
+      <div id="presets" class="flex flex-wrap gap-2 mb-5"></div>
+      <div class="flex flex-wrap items-center gap-6">
+        <div>
+          <p class="text-[11px] text-[var(--aim-muted)] mb-1.5">The picture</p>
+          <canvas id="srcImg" class="src-img" width="256" height="256"></canvas>
+        </div>
+        <div>
+          <p class="text-[11px] text-[var(--aim-muted)] mb-1.5">Split into 64 patches (8&times;8)</p>
+          <div id="patchGrid" class="patch-grid"></div>
+        </div>
+        <button class="run-btn" id="runBtn"><i data-lucide="play" class="w-4 h-4"></i> See it processed</button>
+      </div>
+    </section>
+
+    <!-- VIEW SWITCHER -->
+    <section class="mb-3 fade-up" style="animation-delay:360ms">
+      <div class="tabs-row" id="tabs">
+        <button class="tab-btn active" data-view="pipeline"><i data-lucide="route" class="w-4 h-4"></i> Patch pipeline</button>
+        <button class="tab-btn" data-view="attention"><i data-lucide="grid-3x3" class="w-4 h-4"></i> Patch attention</button>
+        <button class="tab-btn" data-view="layers"><i data-lucide="layers" class="w-4 h-4"></i> Feature layers</button>
+      </div>
+    </section>
+
+    <!-- 3D STAGE -->
+    <section class="glass rounded-2xl p-3 sm:p-4 mb-2 fade-up" style="animation-delay:420ms">
+      <div class="stage-wrap" id="stageWrap">
+        <canvas id="scene"></canvas>
+        <div class="scene-badge" id="backendBadge"><span class="w-2 h-2 rounded-full inline-block" style="background:#6dd8ff"></span> <span id="backendText">starting 3D…</span></div>
+        <div class="scene-legend" id="legend"></div>
+        <div class="caption-bar" id="caption">Loading the scene…</div>
+        <div class="scene-hint" id="hint"></div>
+        <div class="fallback-panel" id="fallback"></div>
+      </div>
+      <div class="step-controls" id="stepControls">
+        <button class="step-btn" id="prevBtn" title="Previous stage"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <button class="step-btn" id="playBtn" title="Play"><i data-lucide="play" class="w-5 h-5"></i></button>
+        <button class="step-btn" id="nextBtn" title="Next stage"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+        <div class="step-dots" id="stepDots"></div>
+        <span class="text-sm font-bold text-[var(--aim-heading)] ml-1" id="stageName"></span>
+      </div>
+    </section>
+
+    <!-- EXPLAINER -->
+    <section class="mb-10 fade-up" style="animation-delay:460ms">
+      <div class="rounded-2xl p-5 md:p-6" style="background:linear-gradient(135deg, rgba(109,216,255,0.07), transparent); border:1px solid rgba(109,216,255,0.16)">
+        <div class="flex items-start gap-3">
+          <span class="w-9 h-9 rounded-xl bg-[#6dd8ff]/12 border border-[#6dd8ff]/25 flex items-center justify-center flex-shrink-0"><i data-lucide="sparkles" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+          <div>
+            <h3 class="text-base font-bold text-[var(--aim-heading)] mb-1" id="explainTitle">What's happening</h3>
+            <p class="text-[var(--aim-text)] text-sm leading-relaxed" id="explainBody">Pick a picture and press “See it processed”.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KEY INSIGHTS -->
+    <section class="mb-12 fade-up">
+      <h2 class="text-xl font-semibold text-[var(--aim-heading)] mb-6 flex items-center gap-3">
+        <span class="w-8 h-8 rounded-lg bg-[#6dd8ff]/10 border border-[#6dd8ff]/20 flex items-center justify-center"><i data-lucide="key-round" class="w-4 h-4 text-[#6dd8ff]"></i></span>
+        Four things to take away
+      </h2>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">A picture is just numbers</h3><p class="text-xs text-[var(--aim-text)]">Every pixel is three numbers — how much red, green and blue. A small photo is millions of numbers. AI only ever does maths on those numbers.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">It works in patches, not pixels</h3><p class="text-xs text-[var(--aim-text)]">Modern image AI cuts the picture into a grid of patches (like image "tokens"), then looks at the patches together — the same idea as tokens in text.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">It finds patterns, then a label</h3><p class="text-xs text-[var(--aim-text)]">Layers build up from edges and colours to shapes and objects, ending in a best-guess label with a confidence score — never certainty.</p></div>
+        <div class="glass rounded-xl p-5"><h3 class="text-sm font-bold text-[var(--aim-heading)] mb-2">Confidence isn't correctness</h3><p class="text-xs text-[var(--aim-text)]">"Stop sign, 91%" is a probability, not proof. Odd lighting, angles or unusual images can fool it — always sanity-check what it claims to see.</p></div>
+      </div>
+    </section>
+
+    <!-- GLOSSARY -->
+    <section class="mb-12 fade-up">
+      <div class="glass rounded-2xl p-6 md:p-7">
+        <h2 class="text-base font-bold text-[var(--aim-heading)] mb-4 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4 text-[#6dd8ff]"></i> Mini glossary</h2>
+        <dl class="glossary grid sm:grid-cols-2 gap-x-8">
+          <div><dt>Pixel</dt><dd>The smallest dot in an image, stored as three numbers: red, green and blue (RGB).</dd></div>
+          <div><dt>Patch</dt><dd>A small square block of the image the model treats as one unit — the image equivalent of a token.</dd></div>
+          <div><dt>Feature</dt><dd>A pattern the network learns to spot — an edge, a colour, a texture, and later whole shapes.</dd></div>
+          <div><dt>Attention</dt><dd>How each patch weighs up the other patches, so the model links related regions of the picture.</dd></div>
+          <div><dt>Classification</dt><dd>Choosing the most likely label for the whole image from the patterns found.</dd></div>
+          <div><dt>Confidence</dt><dd>The probability the model assigns to its answer — high confidence is not the same as being right.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- NAV -->
+    <section class="flex flex-col sm:flex-row gap-3 justify-between fade-up">
+      <a href="how-ai-reads-your-words.html" class="aim-btn"><i data-lucide="arrow-left" class="w-4 h-4"></i> How AI reads your words</a>
+      <a href="hallucination-spotter.html" class="aim-btn">Why AI makes things up <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </section>
+  </main>
+
+  <footer class="border-t border-[var(--aim-panel)] py-8">
+    <div class="max-w-6xl mx-auto px-6 text-center text-xs text-[var(--aim-muted)]">
+      AIM AI Bootcamp for Small Business
+    </div>
+  </footer>
+
+  <script>lucide.createIcons();</script>
+
+  <script>
+  /* Theme toggle */
+  (function(){
+    var KEY='cos_ai_theme'; var saved=localStorage.getItem(KEY);
+    if(saved==='light') document.body.classList.add('light-mode'); updateIcon();
+    window.toggleTheme=function(){ document.body.classList.toggle('light-mode'); var l=document.body.classList.contains('light-mode'); localStorage.setItem(KEY,l?'light':'dark'); updateIcon(); };
+    function updateIcon(){ var l=document.body.classList.contains('light-mode'); document.querySelectorAll('.theme-icon-dark').forEach(function(e){e.style.display=l?'none':'block';}); document.querySelectorAll('.theme-icon-light').forEach(function(e){e.style.display=l?'block':'none';}); }
+  })();
+  (function(){ var nav=document.querySelector('.aim-nav'); if(!nav)return; window.addEventListener('scroll',function(){ nav.classList.toggle('scrolled', window.scrollY>10); }); })();
+  </script>
+
+  <!-- ===================== IMAGE ENGINE (classic, no AI) ===================== -->
+  <script>
+  window.AIVISION = (function(){
+    'use strict';
+    var G=8, S=256;
+
+    function drawStop(x){ x.fillStyle='#9aa3ad'; x.fillRect(0,0,S,S); var cx=S/2,cy=S/2,R=S*0.40; x.beginPath(); for(var i=0;i<8;i++){var a=Math.PI/8+i*Math.PI/4,px=cx+R*Math.cos(a),py=cy+R*Math.sin(a); i?x.lineTo(px,py):x.moveTo(px,py);} x.closePath(); x.fillStyle='#c1121f'; x.fill(); x.lineWidth=S*0.03; x.strokeStyle='#fff'; x.stroke(); x.fillStyle='#fff'; x.font='bold '+Math.round(S*0.17)+'px Arial'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('STOP',cx,cy+S*0.01); }
+    function drawHouse(x){ x.fillStyle='#8ec5ff'; x.fillRect(0,0,S,S); x.fillStyle='#6abf69'; x.fillRect(0,S*0.68,S,S*0.32); x.fillStyle='#ffd84d'; x.beginPath(); x.arc(S*0.2,S*0.2,S*0.09,0,7); x.fill(); x.fillStyle='#ead9b0'; x.fillRect(S*0.30,S*0.42,S*0.40,S*0.30); x.fillStyle='#b0463a'; x.beginPath(); x.moveTo(S*0.26,S*0.44); x.lineTo(S*0.5,S*0.23); x.lineTo(S*0.74,S*0.44); x.closePath(); x.fill(); x.fillStyle='#6b4423'; x.fillRect(S*0.46,S*0.56,S*0.09,S*0.16); x.fillStyle='#bfe3ff'; x.fillRect(S*0.34,S*0.48,S*0.085,S*0.085); x.fillRect(S*0.58,S*0.48,S*0.085,S*0.085); }
+    function drawCat(x){ x.fillStyle='#ffd9a0'; x.fillRect(0,0,S,S); var cx=S/2,cy=S*0.56; x.fillStyle='#9aa0a6'; x.beginPath(); x.moveTo(cx-S*0.22,cy-S*0.16); x.lineTo(cx-S*0.30,cy-S*0.40); x.lineTo(cx-S*0.05,cy-S*0.26); x.closePath(); x.fill(); x.beginPath(); x.moveTo(cx+S*0.22,cy-S*0.16); x.lineTo(cx+S*0.30,cy-S*0.40); x.lineTo(cx+S*0.05,cy-S*0.26); x.closePath(); x.fill(); x.beginPath(); x.arc(cx,cy,S*0.26,0,7); x.fill(); x.fillStyle='#2e7d32'; x.beginPath(); x.arc(cx-S*0.10,cy-S*0.03,S*0.038,0,7); x.arc(cx+S*0.10,cy-S*0.03,S*0.038,0,7); x.fill(); x.fillStyle='#e57399'; x.beginPath(); x.moveTo(cx,cy+S*0.05); x.lineTo(cx-S*0.03,cy+S*0.09); x.lineTo(cx+S*0.03,cy+S*0.09); x.closePath(); x.fill(); x.strokeStyle='#5b6066'; x.lineWidth=2; x.beginPath(); x.moveTo(cx-S*0.05,cy+S*0.08); x.lineTo(cx-S*0.24,cy+S*0.04); x.moveTo(cx-S*0.05,cy+S*0.10); x.lineTo(cx-S*0.24,cy+S*0.12); x.moveTo(cx+S*0.05,cy+S*0.08); x.lineTo(cx+S*0.24,cy+S*0.04); x.moveTo(cx+S*0.05,cy+S*0.10); x.lineTo(cx+S*0.24,cy+S*0.12); x.stroke(); }
+    function drawBeach(x){ var g=x.createLinearGradient(0,0,0,S*0.55); g.addColorStop(0,'#bfe6ff'); g.addColorStop(1,'#eaf7ff'); x.fillStyle=g; x.fillRect(0,0,S,S*0.55); x.fillStyle='#1f9bc0'; x.fillRect(0,S*0.50,S,S*0.22); x.fillStyle='#f0d79b'; x.fillRect(0,S*0.72,S,S*0.28); x.fillStyle='#ffd34d'; x.beginPath(); x.arc(S*0.74,S*0.2,S*0.085,0,7); x.fill(); }
+
+    var PRESETS=[
+      { label:'Stop sign', draw:drawStop, preds:[['stop sign',0.91],['traffic sign',0.05],['red sign',0.02],['billboard',0.01],['clock',0.01]] },
+      { label:'House', draw:drawHouse, preds:[['house',0.88],['building',0.06],['cottage',0.03],['barn',0.02],['shed',0.01]] },
+      { label:'Cat', draw:drawCat, preds:[['cat',0.86],['kitten',0.07],['fox',0.04],['dog',0.02],['tiger',0.01]] },
+      { label:'Beach', draw:drawBeach, preds:[['beach',0.84],['coastline',0.08],['ocean',0.05],['landscape',0.02],['desert',0.01]] }
+    ];
+
+    function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+    function build(idx){
+      var cv=document.createElement('canvas'); cv.width=cv.height=S; var ctx=cv.getContext('2d');
+      PRESETS[idx].draw(ctx);
+      var img=ctx.getImageData(0,0,S,S).data, ps=S/G, patches=[];
+      for(var r=0;r<G;r++) for(var c=0;c<G;c++){
+        var R=0,Gr=0,B=0,n=0;
+        for(var y=r*ps;y<(r+1)*ps;y+=4) for(var x2=c*ps;x2<(c+1)*ps;x2+=4){ var i=((y|0)*S+(x2|0))*4; R+=img[i];Gr+=img[i+1];B+=img[i+2];n++; }
+        patches.push({r:r,c:c,idx:r*G+c,avg:[Math.round(R/n),Math.round(Gr/n),Math.round(B/n)]});
+      }
+      return { canvas:cv, patches:patches, G:G, S:S, ps:ps, preds:PRESETS[idx].preds, label:PRESETS[idx].label };
+    }
+    function features(p){ var rnd=mulberry(p.avg[0]*7+p.avg[1]*13+p.avg[2]*17+p.r*131+p.c*137+1); var v=[]; for(var i=0;i<8;i++) v.push(Math.round((rnd()*2-1)*100)/100); return v; }
+    function attention(patches){
+      var n=patches.length, M=[];
+      for(var i=0;i<n;i++){ var a=patches[i], row=[], sum=0;
+        for(var j=0;j<n;j++){ var b=patches[j];
+          var cd=Math.sqrt(Math.pow(a.avg[0]-b.avg[0],2)+Math.pow(a.avg[1]-b.avg[1],2)+Math.pow(a.avg[2]-b.avg[2],2));
+          var sd=Math.sqrt(Math.pow(a.r-b.r,2)+Math.pow(a.c-b.c,2));
+          var w=Math.exp(-cd/55)*Math.exp(-sd*0.30); if(i===j) w*=1.1; row.push(w); sum+=w;
+        }
+        for(var k=0;k<n;k++) row[k]=row[k]/sum; M.push(row);
+      }
+      return M;
+    }
+    return { PRESETS:PRESETS, build:build, features:features, attention:attention, G:G, S:S };
+  })();
+
+  /* ---------- UI wiring ---------- */
+  (function(){
+    var V=window.AIVISION;
+    var state={ view:'pipeline', idx:0, canvas:null, patches:[], feats:[], attn:[], preds:[], G:V.G, S:V.S, ps:0, label:'' };
+    window.AIVISION_STATE=state;
+
+    var elPresets=document.getElementById('presets'), elSrc=document.getElementById('srcImg'),
+        elGrid=document.getElementById('patchGrid'), elTabs=document.getElementById('tabs'), elStep=document.getElementById('stepControls');
+
+    V.PRESETS.forEach(function(p,i){
+      var b=document.createElement('button'); b.className='preset-chip'+(i===0?' active':'');
+      var cv=document.createElement('canvas'); cv.width=cv.height=64; p.draw(scaleCtx(cv.getContext('2d'),64,V.S));
+      b.appendChild(cv); var t=document.createElement('span'); t.textContent=p.label; b.appendChild(t);
+      b.onclick=function(){ document.querySelectorAll('.preset-chip').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); state.idx=i; run(); };
+      elPresets.appendChild(b);
+    });
+    function scaleCtx(ctx,size,S){ ctx.scale(size/S,size/S); return ctx; }
+
+    function buildState(){
+      var d=V.build(state.idx);
+      state.canvas=d.canvas; state.patches=d.patches; state.ps=d.ps; state.preds=d.preds; state.label=d.label;
+      state.feats=d.patches.map(function(p){return V.features(p);});
+      state.attn=V.attention(d.patches);
+    }
+    function renderDom(){
+      var ctx=elSrc.getContext('2d'); ctx.clearRect(0,0,V.S,V.S); ctx.drawImage(state.canvas,0,0);
+      elGrid.innerHTML='';
+      state.patches.forEach(function(p){
+        var c=document.createElement('canvas'); c.width=c.height=16; var cx=c.getContext('2d');
+        cx.drawImage(state.canvas, p.c*state.ps, p.r*state.ps, state.ps, state.ps, 0,0,16,16);
+        elGrid.appendChild(c);
+      });
+    }
+    function setView(v){ state.view=v; document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.toggle('active',b.dataset.view===v);}); elStep.style.display=(v==='pipeline')?'flex':'none'; push3D(); }
+    elTabs.addEventListener('click',function(e){ var b=e.target.closest('.tab-btn'); if(b) setView(b.dataset.view); });
+    function push3D(){ if(window.AI3D&&window.AI3D.render){ window.AI3D.render(state.view,state); } else { window.__ai3dPending=function(){ window.AI3D.render(state.view,state); }; } }
+    function run(){ buildState(); renderDom(); push3D(); }
+    window.AIVISION_RUN=run;
+    document.getElementById('runBtn').onclick=run;
+    document.getElementById('prevBtn').onclick=function(){ window.AI3D&&window.AI3D.step&&window.AI3D.step(-1); };
+    document.getElementById('nextBtn').onclick=function(){ window.AI3D&&window.AI3D.step&&window.AI3D.step(1); };
+    document.getElementById('playBtn').onclick=function(){ window.AI3D&&window.AI3D.play&&window.AI3D.play(); };
+
+    var SVGS={
+      pipeline:'<svg viewBox="0 0 240 120" width="250"><rect x="12" y="34" width="52" height="52" rx="4" fill="#2e3d7d" stroke="#6dd8ff"/><g fill="none" stroke="#6dd8ff" stroke-width="1"><line x1="96" y1="40" x2="96" y2="86"/><line x1="118" y1="40" x2="118" y2="86"/><line x1="84" y1="52" x2="130" y2="52"/><line x1="84" y1="74" x2="130" y2="74"/></g><rect x="84" y="40" width="46" height="46" rx="3" fill="none" stroke="#6dd8ff"/><g fill="#9fe1ff"><rect x="158" y="44" width="5" height="26" rx="1.5"/><rect x="166" y="36" width="5" height="34" rx="1.5"/><rect x="174" y="52" width="5" height="18" rx="1.5"/></g><rect x="204" y="44" width="26" height="9" rx="2" fill="#6dd8ff"/></svg>',
+      attention:'<svg viewBox="0 0 240 120" width="200"><g>'+gridSvg()+'</g></svg>',
+      layers:'<svg viewBox="0 0 240 120" width="240"><g stroke="#6f86c9" stroke-width="0.6" stroke-opacity="0.5"><line x1="70" y1="30" x2="130" y2="24"/><line x1="70" y1="60" x2="130" y2="60"/><line x1="70" y1="90" x2="130" y2="96"/><line x1="130" y1="60" x2="190" y2="60"/></g><g fill="#6dd8ff"><circle cx="70" cy="30" r="5"/><circle cx="70" cy="60" r="5"/><circle cx="70" cy="90" r="5"/></g><g fill="#e4a4e1"><circle cx="130" cy="24" r="5"/><circle cx="130" cy="60" r="5"/><circle cx="130" cy="96" r="5"/></g><rect x="182" y="54" width="30" height="11" rx="2" fill="#6dd8ff"/></svg>'
+    };
+    function gridSvg(){ var s=''; for(var r=0;r<4;r++)for(var c=0;c<4;c++){ s+='<rect x="'+(70+c*22)+'" y="'+(20+r*22)+'" width="18" height="18" rx="2" fill="'+(r===1&&c===1?'#ffb76b':'#2e3d7d')+'" stroke="#6dd8ff" stroke-width="0.8"/>'; } return s; }
+    window.AIVISION_FALLBACK=function(msg){ var fb=document.getElementById('fallback'); fb.innerHTML=(SVGS[state.view]||'')+'<p>'+(msg||'')+'</p>'; fb.classList.add('show'); document.getElementById('caption').style.display='none'; document.getElementById('backendText').textContent='static preview'; };
+    window.AIVISION_FALLBACK_HIDE=function(){ document.getElementById('fallback').classList.remove('show'); document.getElementById('caption').style.display=''; };
+
+    buildState(); renderDom(); setView('pipeline');
+    setTimeout(function(){ if(!window.AI3D){ window.AIVISION_FALLBACK('The interactive 3D could not load — the 3D library may be blocked on this network, or the browser is offline. The picture and patches above still work, and it runs fully on the live course site.'); } }, 9000);
+  })();
+  </script>
+
+  <!-- ===================== 3D ENGINE (three.js WebGL2 renderer) ===================== -->
+  <script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+  const COL={ blue:0x6dd8ff, pink:0xe4a4e1, blueS:0x9fe1ff, dim:0x4a5a8f, line:0x6f86c9, amber:0xffb76b, white:0xffffff };
+  const canvas=document.getElementById('scene'), wrap=document.getElementById('stageWrap');
+  const elCap=document.getElementById('caption'), elLegend=document.getElementById('legend'), elHint=document.getElementById('hint'), elStageName=document.getElementById('stageName'), elDots=document.getElementById('stepDots');
+
+  let renderer,scene,camera,controls,clock,group,beamGroup;
+  let view='pipeline', data=null;
+  let pulses=[], nodesC=[], layerPts=[], waveX=-9;
+  const tmp=new THREE.Vector3();
+  const camPos=new THREE.Vector3(0,1.5,12), camTo=new THREE.Vector3(0,1.5,12), camLook=new THREE.Vector3(0,0,0), camLookTo=new THREE.Vector3(0,0,0);
+
+  function disposeGroup(g){ if(!g) return; g.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{ if(m.map)m.map.dispose(); m.dispose&&m.dispose(); });} }); scene.remove(g); }
+  function setLegend(items){ elLegend.innerHTML=items.map(it=>`<span class="lg"><span class="dot" style="background:${it.c}"></span>${it.t}</span>`).join(''); }
+  function cap(html){ elCap.innerHTML=html; }
+  function trim(s,n){ s=String(s); return s.length>n? s.slice(0,n-1)+'…':s; }
+
+  function label(text, opts={}){
+    const fs=opts.fs||44, padX=opts.padX||22, padY=opts.padY||14;
+    const cv=document.createElement('canvas'), ctx=cv.getContext('2d');
+    ctx.font=`700 ${fs}px 'Fira Code', monospace`; const tw=Math.ceil(ctx.measureText(text).width);
+    const dpr=2, w=tw+padX*2, h=fs+padY*2, r=14; cv.width=w*dpr; cv.height=h*dpr; ctx.scale(dpr,dpr);
+    if(opts.bg!==false){ ctx.fillStyle=opts.bg||'rgba(14,20,48,0.92)'; ctx.strokeStyle=opts.border||'rgba(109,216,255,0.55)'; ctx.lineWidth=opts.lw||2.5; ctx.beginPath(); ctx.moveTo(r,0); ctx.arcTo(w,0,w,h,r); ctx.arcTo(w,h,0,h,r); ctx.arcTo(0,h,0,0,r); ctx.arcTo(0,0,w,0,r); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    ctx.font=`700 ${fs}px 'Fira Code', monospace`; ctx.fillStyle=opts.color||'#fff'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText(text,w/2,h/2+1);
+    const tex=new THREE.CanvasTexture(cv); tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=4;
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false})); const sc=opts.scale||0.011; sp.scale.set(w*sc,h*sc,1); return sp;
+  }
+  function glow(color,size){ const cv=document.createElement('canvas'); cv.width=cv.height=128; const ctx=cv.getContext('2d'); const g=ctx.createRadialGradient(64,64,0,64,64,64); const c=new THREE.Color(color); g.addColorStop(0,`rgba(${c.r*255|0},${c.g*255|0},${c.b*255|0},0.95)`); g.addColorStop(0.4,`rgba(${c.r*255|0},${c.g*255|0},${c.b*255|0},0.4)`); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,128,128); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending})); sp.scale.set(size,size,1); return sp; }
+  function dotTex(){ const cv=document.createElement('canvas'); cv.width=cv.height=64; const c=cv.getContext('2d'); const g=c.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.5,'rgba(255,255,255,0.6)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(0,0,64,64); const t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; return t; }
+
+  function fullTex(){ const t=new THREE.CanvasTexture(data.canvas); t.colorSpace=THREE.SRGBColorSpace; return t; }
+  function patchTex(p){ const ps=data.ps; const c=document.createElement('canvas'); c.width=c.height=ps; const ctx=c.getContext('2d'); ctx.drawImage(data.canvas, p.c*ps, p.r*ps, ps, ps, 0,0,ps,ps); const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; t.magFilter=THREE.NearestFilter; return t; }
+  function avgColor(p){ return new THREE.Color(p.avg[0]/255,p.avg[1]/255,p.avg[2]/255); }
+  function repPatch(){ let bi=0,bs=-1; data.patches.forEach((p,i)=>{ const s=Math.max(...p.avg)-Math.min(...p.avg)+p.avg[0]*0.15; if(s>bs){bs=s;bi=i;} }); return data.patches[bi]; }
+  function bars(vec,x,y,color){ const g=new THREE.Group(); vec.forEach((v,i)=>{ const h=Math.max(0.08,Math.abs(v)*0.9); const m=new THREE.Mesh(new THREE.BoxGeometry(0.12,h,0.12), new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.35,roughness:0.5})); m.position.set(x-0.5+i*0.14,(v>=0?h/2:-h/2),0); g.add(m); }); return g; }
+
+  /* ====== VIEW 1 — PATCH PIPELINE ====== */
+  const STAGES=[
+    {name:'Image', cap:'AI starts with the raw picture — to a computer, just a wall of numbers.'},
+    {name:'Patches', cap:'Step 1 — the image is cut into a grid of <b>patches</b> (image "tokens").'},
+    {name:'Numbers', cap:'Step 2 — each patch is just <b>numbers</b>: how much red, green and blue.'},
+    {name:'Features', cap:'Step 3 — those numbers become a <b>feature vector</b> capturing the patch\'s pattern.'},
+    {name:'Prediction', cap:'Step 4 — the network weighs all patches and outputs its best-guess <b>label</b>.'}
+  ];
+  const STAGEX=[0,9,18,27,36];
+  let stage=0, playTimer=null;
+
+  function buildPipeline(){
+    group=new THREE.Group(); scene.add(group); pulses=[];
+    const G=data.G, sp=4.0/G;
+    /* Stage 0 — whole image */
+    const img=new THREE.Mesh(new THREE.PlaneGeometry(4,4), new THREE.MeshBasicMaterial({map:fullTex()})); img.position.set(STAGEX[0],0,0); group.add(img);
+    /* Stage 1 — patch grid */
+    data.patches.forEach(p=>{ const t=new THREE.Mesh(new THREE.PlaneGeometry(sp*0.92,sp*0.92), new THREE.MeshBasicMaterial({map:patchTex(p)})); t.position.set(STAGEX[1]+(p.c-(G-1)/2)*sp, ((G-1)/2-p.r)*sp, 0); group.add(t); });
+    /* Stage 2 — one patch is numbers */
+    const rp=repPatch();
+    const big=new THREE.Mesh(new THREE.PlaneGeometry(2,2), new THREE.MeshBasicMaterial({map:patchTex(rp)})); big.position.set(STAGEX[2],0.6,0); group.add(big);
+    const rgb=label('R '+rp.avg[0]+'  G '+rp.avg[1]+'  B '+rp.avg[2], {fs:34,scale:0.0095,color:'#9fe1ff'}); rgb.position.set(STAGEX[2],-1.2,0); group.add(rgb);
+    const cap2=label('one patch = a block of pixels', {fs:26,scale:0.008,bg:false,color:'#cfe8ff'}); cap2.position.set(STAGEX[2],-1.9,0); group.add(cap2);
+    /* Stage 3 — feature vector for that patch */
+    group.add(bars(data.feats[rp.idx], STAGEX[3], 0, COL.blue));
+    const flab=label('feature vector', {fs:26,scale:0.008,bg:false,color:'#cfe8ff'}); flab.position.set(STAGEX[3],-1.4,0); group.add(flab);
+    /* Stage 4 — prediction */
+    const py0=(data.preds.length-1)*0.95/2;
+    data.preds.forEach((pr,i)=>{ const y=py0-i*0.95, top=i===0, len=Math.max(0.6,pr[1]*7);
+      const bar=new THREE.Mesh(new THREE.BoxGeometry(len,0.42,0.42), new THREE.MeshStandardMaterial({color:top?COL.blue:COL.dim,emissive:top?COL.blue:0x223344,emissiveIntensity:top?0.5:0.15,roughness:0.5})); bar.position.set(STAGEX[4]+len/2,y,0); group.add(bar);
+      const lab=label(pr[0],{fs:32,scale:0.0095,color:top?'#0e1430':'#fff',bg:top?'rgba(109,216,255,0.95)':'rgba(14,20,48,0.9)',border:top?'rgba(109,216,255,1)':'rgba(255,255,255,0.25)'}); lab.position.set(STAGEX[4]-0.3,y,0); group.add(lab);
+      const pct=label(Math.round(pr[1]*100)+'%',{fs:26,scale:0.009,color:'#9fe1ff',bg:false}); pct.position.set(STAGEX[4]+len+0.9,y,0); group.add(pct);
+    });
+    setLegend([{c:'#6dd8ff',t:'patch / feature'},{c:'#9fe1ff',t:'numbers'},{c:'#ffb76b',t:'top label'}]);
+    elHint.textContent='Use ◀ ▶ or Play to step through';
+    renderDotsP(); gotoStage(stage>STAGES.length-1?0:stage,true);
+  }
+  function gotoStage(s,instant){ stage=Math.max(0,Math.min(STAGES.length-1,s)); camTo.set(STAGEX[stage],0.4,9.5); camLookTo.set(STAGEX[stage],0,0); if(instant){camPos.copy(camTo);camLook.copy(camLookTo);} elStageName.textContent=(stage+1)+'/'+STAGES.length+' · '+STAGES[stage].name; cap(STAGES[stage].cap); renderDotsP(); }
+  function renderDotsP(){ if(view!=='pipeline'){elDots.innerHTML='';return;} elDots.innerHTML=STAGES.map((s,i)=>`<span class="step-dot ${i===stage?'on':''}"></span>`).join(''); }
+  function step(d){ stopPlay(); gotoStage(stage+d); }
+  function play(){ if(playTimer){stopPlay();return;} gotoStage(0); playTimer=setInterval(()=>{ if(stage>=STAGES.length-1) stopPlay(); else gotoStage(stage+1); },2100); }
+  function stopPlay(){ if(playTimer){clearInterval(playTimer);playTimer=null;} }
+
+  /* ====== VIEW 2 — PATCH ATTENTION ====== */
+  function buildAttention(){
+    group=new THREE.Group(); scene.add(group); nodesC=[]; pulses=[];
+    beamGroup=new THREE.Group(); group.add(beamGroup);
+    const G=data.G, sp=0.56, tile=0.52;
+    data.patches.forEach(p=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(tile,tile), new THREE.MeshBasicMaterial({map:patchTex(p),transparent:true})); m.position.set((p.c-(G-1)/2)*sp, ((G-1)/2-p.r)*sp, 0); m.userData={i:p.idx}; group.add(m); nodesC.push(m); });
+    setLegend([{c:'#6dd8ff',t:'patch'},{c:'#ffb76b',t:'attends to →'}]);
+    elHint.textContent='Drag to orbit · click a patch';
+    cap('Each patch looks at the others. <b>Click a patch</b> to see which regions it links to (usually similar colours).');
+    selectNode(repPatch().idx);
+    if(camera) camera.position.set(0,0,7.2); if(controls){ controls.target.set(0,0,0); controls.update(); }
+  }
+  function selectNode(i){
+    while(beamGroup.children.length){ const o=beamGroup.children.pop(); if(o.geometry)o.geometry.dispose(); if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m.map)m.map.dispose();m.dispose&&m.dispose();});} beamGroup.remove(o); }
+    pulses=[];
+    const sel=nodesC.find(n=>n.userData.i===i); if(!sel) return;
+    const order=data.attn[i].map((w,j)=>[j,w]).filter(x=>x[0]!==i).sort((a,b)=>b[1]-a[1]);
+    const top=order.slice(0,7).map(x=>x[0]); const topSet=new Set(top);
+    nodesC.forEach(n=>{ const k=n.userData.i; const on=k===i, rel=topSet.has(k); n.material.opacity=on?1:(rel?0.95:0.32); n.scale.setScalar(on?1.35:(rel?1.1:1)); });
+    const selPos=sel.position;
+    top.forEach(k=>{ const nd=nodesC.find(n=>n.userData.i===k); const w=data.attn[i][k];
+      const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([selPos,nd.position]), new THREE.LineBasicMaterial({color:COL.amber,transparent:true,opacity:Math.min(0.9,0.3+w*2)})); beamGroup.add(ln);
+      const pl=glow(COL.amber,0.32); pl.userData={a:selPos,b:nd.position,t:Math.random(),sp:0.6+w*2}; beamGroup.add(pl); pulses.push(pl);
+    });
+    const p=data.patches[i];
+    cap('Patch at <b>row '+(p.r+1)+', col '+(p.c+1)+'</b> attends most to nearby patches of a similar colour — that\'s how AI groups a picture into regions.');
+  }
+
+  /* ====== VIEW 3 — FEATURE LAYERS ====== */
+  function buildLayers(){
+    group=new THREE.Group(); scene.add(group); pulses=[]; layerPts=[]; waveX=-9;
+    const G=data.G;
+    /* input layer: image as a grid of coloured dots (in Y-Z plane at x=-8) */
+    const inPos=[], inCol=[];
+    data.patches.forEach(p=>{ const y=((G-1)/2-p.r)*0.46, z=(p.c-(G-1)/2)*0.46; inPos.push(-8,y,z); const c=avgColor(p); inCol.push(c.r,c.g,c.b); });
+    addPoints(inPos, inCol, 0.34);
+    /* hidden layers */
+    const h1Pos=[],h1Col=[]; for(let k=0;k<18;k++){ h1Pos.push(-2.5,(k-8.5)*0.58,0); h1Col.push(0.29,0.35,0.56); } addPoints(h1Pos,h1Col,0.44);
+    const h2Pos=[],h2Col=[]; for(let k=0;k<14;k++){ h2Pos.push(2.5,(k-6.5)*0.58,0); h2Col.push(0.29,0.35,0.56); } addPoints(h2Pos,h2Col,0.44);
+    /* output */
+    const outN=data.preds.length, outPos=[], outCol=[];
+    for(let k=0;k<outN;k++){ const y=(k-(outN-1)/2)*0.95, top=k===0; outPos.push(8,y,0); outCol.push(top?0.43:0.29, top?0.85:0.35, top?1:0.56); }
+    addPoints(outPos,outCol,0.52);
+    data.preds.forEach((pr,k)=>{ const y=(k-(outN-1)/2)*0.95, top=k===0; const l=label(pr[0],{fs:30,scale:0.008,color:top?'#0e1430':'#fff',bg:top?'rgba(109,216,255,0.95)':'rgba(14,20,48,0.9)',border:top?'#6dd8ff':'rgba(255,255,255,0.25)'}); l.position.set(9.5,y,0); group.add(l); });
+    /* connections (light, subset) */
+    connectArrays(inPos,h1Pos,5); connectArrays(h1Pos,h2Pos,1); connectArrays(h2Pos,outPos,1);
+    const il=label('your image, as dots',{fs:26,scale:0.0075,bg:false,color:'#cfe8ff'}); il.position.set(-8,-2.9,0); group.add(il);
+    setLegend([{c:'#6dd8ff',t:'input / output'},{c:'#ffb76b',t:'signal firing'},{c:'#4a5a8f',t:'hidden neuron'}]);
+    elHint.textContent='Drag to orbit · signal fires left → right';
+    cap('Your image enters on the <b>left</b> as coloured dots, flows through hidden <b>layers</b>, and becomes a label on the <b>right</b>.');
+    if(camera) camera.position.set(3,2.5,15); if(controls){ controls.target.set(0,0,0); controls.update(); }
+  }
+  function addPoints(pos,col,size){ const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); const m=new THREE.PointsMaterial({size,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,map:dotTex()}); const pts=new THREE.Points(g,m); pts.userData={base:col.slice()}; group.add(pts); layerPts.push(pts); }
+  function connectArrays(a,b,stride){ const segs=[]; for(let i=0;i<a.length;i+=3){ if(((i/3)%stride)!==0) continue; for(let j=0;j<b.length;j+=3){ segs.push(a[i],a[i+1],a[i+2], b[j],b[j+1],b[j+2]); } } lineSeg(segs); }
+  function lineSeg(segs){ const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(segs,3)); group.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:COL.line,transparent:true,opacity:0.12}))); }
+  function updateLayers(dt){ waveX+=dt*6; if(waveX>10) waveX=-10; const fire=new THREE.Color(COL.amber), tmpC=new THREE.Color();
+    layerPts.forEach(pts=>{ const pos=pts.geometry.getAttribute('position'), col=pts.geometry.getAttribute('color'), base=pts.userData.base;
+      for(let k=0;k<pos.count;k++){ const d=Math.abs(pos.getX(k)-waveX), f=Math.max(0,1-d/2.4); tmpC.setRGB(base[k*3],base[k*3+1],base[k*3+2]).lerp(fire,f*0.9); col.setXYZ(k,tmpC.r,tmpC.g,tmpC.b); }
+      col.needsUpdate=true;
+    });
+  }
+
+  /* ====== CORE ====== */
+  function buildView(){ disposeGroup(group); group=null; pulses=[]; nodesC=[]; layerPts=[];
+    if(!data||!data.patches.length){ cap('Pick a picture and press “See it processed”.'); return; }
+    if(view==='pipeline') buildPipeline(); else if(view==='attention') buildAttention(); else buildLayers();
+  }
+  function onResize(){ const w=wrap.clientWidth,h=wrap.clientHeight; if(!w||!h)return; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h,false); }
+  function loop(){ const dt=Math.min(0.05,clock.getDelta());
+    if(view==='pipeline'){ camPos.lerp(camTo,0.06); camLook.lerp(camLookTo,0.06); camera.position.copy(camPos); camera.lookAt(camLook); }
+    else if(controls){ controls.update(); }
+    pulses.forEach(p=>{ p.userData.t+=dt*(p.userData.sp||0.4); if(p.userData.t>1)p.userData.t-=1; if(p.userData.a){ p.position.copy(p.userData.a).lerp(p.userData.b,p.userData.t); } });
+    if(view==='layers') updateLayers(dt);
+    renderer.render(scene,camera);
+  }
+
+  function init(){
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2)); renderer.setClearColor(0x000000,0); renderer.outputColorSpace=THREE.SRGBColorSpace;
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(50, wrap.clientWidth/wrap.clientHeight, 0.1, 200); camera.position.copy(camPos);
+    scene.add(new THREE.AmbientLight(0xffffff,0.95));
+    const d1=new THREE.DirectionalLight(0xbcd6ff,0.85); d1.position.set(4,8,10); scene.add(d1);
+    controls=new OrbitControls(camera,canvas); controls.enableDamping=true; controls.dampingFactor=0.08; controls.enablePan=false; controls.minDistance=3; controls.maxDistance=80; controls.enabled=false;
+    clock=new THREE.Clock();
+    document.getElementById('backendText').textContent='Rendering: '+(renderer.capabilities.isWebGL2?'WebGL2':'WebGL');
+    const _pv=new THREE.Vector3();
+    canvas.addEventListener('pointerdown',ev=>{ if(view!=='attention'||!nodesC.length)return; const r=canvas.getBoundingClientRect(), px=ev.clientX-r.left, py=ev.clientY-r.top; let bestI=-1,bestD=Infinity; for(const nd of nodesC){ nd.getWorldPosition(_pv); _pv.project(camera); const sx=(_pv.x*0.5+0.5)*r.width, sy=(-_pv.y*0.5+0.5)*r.height; const dd=Math.hypot(sx-px,sy-py); if(dd<bestD){bestD=dd;bestI=nd.userData.i;} } if(bestI>=0&&bestD<Math.max(60,r.width*0.06)) selectNode(bestI); });
+    window.addEventListener('resize',onResize); new ResizeObserver(onResize).observe(wrap); onResize();
+    renderer.setAnimationLoop(loop);
+    window.AI3D={ render(v,st){ view=v; data=st; window.AIVISION_FALLBACK_HIDE&&window.AIVISION_FALLBACK_HIDE(); controls.enabled=(v!=='pipeline'); controls.autoRotate=(v==='layers'); controls.autoRotateSpeed=0.5; if(v==='pipeline'){stage=0;} buildView(); }, step(d){ if(view==='pipeline') step(d); }, play(){ if(view==='pipeline') play(); }, onTheme(){} };
+    if(window.__ai3dPending){ window.__ai3dPending(); window.__ai3dPending=null; }
+  }
+  try{ init(); }catch(err){ console.error('[AI3D] init failed:',err); if(window.AIVISION_FALLBACK) window.AIVISION_FALLBACK('Your browser could not start the 3D engine ('+(err&&err.message?err.message:'unknown')+'). The picture and patches above still work.'); }
+  </script>
+
+</body>
+</html>

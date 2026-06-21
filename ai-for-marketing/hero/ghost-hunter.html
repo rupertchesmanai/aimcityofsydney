@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ghost Hunter | AIM AI Bootcamp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/city-theme.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    html.light-pending body { background: #060810 !important; }
+    body { padding-bottom: 0 !important; overflow: hidden; background: #060810; }
+
+    #three-canvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; display: block; cursor: crosshair;
+    }
+
+    /* Vignette */
+    #vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 38%, rgba(4,6,16,0.88) 100%);
+    }
+
+    /* Lens flare */
+    #lens-flare {
+      position: fixed; z-index: 2; pointer-events: none;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(210,235,255,0.75) 0%, rgba(150,200,255,0.35) 35%, transparent 70%);
+      transform: translate(-50%, -50%);
+      filter: blur(5px);
+      display: none;
+      mix-blend-mode: screen;
+      transition: opacity 200ms ease;
+    }
+
+    .overlay {
+      position: fixed; inset: 0; z-index: 10;
+      pointer-events: none; display: flex;
+      flex-direction: column; justify-content: space-between;
+    }
+    .aim-nav {
+      pointer-events: all; position: relative !important;
+      background: rgba(6,8,16,0.72) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+    }
+
+    /* ── HUD ── */
+    #hud {
+      position: fixed; top: 68px; left: 0; right: 0;
+      z-index: 10; pointer-events: none;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 0 18px; gap: 10px;
+    }
+    .hud-box {
+      background: rgba(5,8,22,0.78);
+      border: 1px solid rgba(255,255,255,0.09);
+      backdrop-filter: blur(16px);
+      border-radius: 12px; padding: 9px 15px;
+      font-family: 'DM Mono', monospace;
+    }
+    .hud-label {
+      font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(255,255,255,0.32); margin-bottom: 2px;
+    }
+    .hud-value {
+      font-size: 22px; font-family: 'Syne', sans-serif; font-weight: 700; color: #fff;
+      line-height: 1;
+    }
+    .hud-value.streak-hot { color: #f97316; text-shadow: 0 0 14px rgba(249,115,22,0.65); }
+
+    #hud-left { display: flex; flex-direction: column; gap: 8px; }
+    #hud-right { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+
+    .round-badge {
+      font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.13em;
+      text-transform: uppercase; color: #00c0af;
+      background: rgba(0,192,175,0.12); border: 1px solid rgba(0,192,175,0.28);
+      border-radius: 6px; padding: 5px 11px;
+    }
+
+    #jar-row {
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(5,8,22,0.78); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px; padding: 6px 12px; backdrop-filter: blur(16px);
+      max-width: 200px; flex-wrap: wrap;
+    }
+    .jar-lbl {
+      font-size: 9px; letter-spacing: 0.11em; color: rgba(255,255,255,0.28);
+      font-family: 'DM Mono', monospace; text-transform: uppercase; margin-right: 4px;
+    }
+    .ghost-jar { font-size: 15px; animation: jarPop 350ms cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes jarPop {
+      0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    /* ── Verdict Panel ── */
+    #verdict-panel {
+      position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+      z-index: 20; display: none; flex-direction: column; align-items: center; gap: 10px;
+      animation: fadeUp 250ms ease;
+    }
+    #verdict-panel.visible { display: flex; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    .verdict-label {
+      font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: rgba(255,255,255,0.5);
+    }
+    .verdict-buttons { display: flex; gap: 12px; }
+    .verdict-btn {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+      letter-spacing: 0.05em; border-radius: 12px; padding: 13px 30px;
+      cursor: pointer; pointer-events: all; border: 2px solid;
+      transition: all 140ms ease; text-transform: uppercase; min-width: 140px;
+    }
+    .verdict-btn.fact {
+      color: #6dd8ff; background: rgba(109,216,255,0.1); border-color: rgba(109,216,255,0.38);
+    }
+    .verdict-btn.fact:hover {
+      background: rgba(109,216,255,0.2); border-color: #6dd8ff;
+      box-shadow: 0 0 22px rgba(109,216,255,0.45);
+    }
+    .verdict-btn.hallucination {
+      color: #fb923c; background: rgba(251,146,60,0.1); border-color: rgba(251,146,60,0.38);
+    }
+    .verdict-btn.hallucination:hover {
+      background: rgba(251,146,60,0.2); border-color: #fb923c;
+      box-shadow: 0 0 22px rgba(251,146,60,0.45);
+    }
+
+    /* ── Flash & Feedback ── */
+    #flash {
+      position: fixed; inset: 0; z-index: 50; pointer-events: none;
+      opacity: 0; transition: opacity 120ms ease;
+    }
+    #flash.g { background: rgba(34,197,94,0.22); }
+    #flash.r { background: rgba(239,68,68,0.28); }
+
+    #feedback-text {
+      position: fixed; top: 44%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 35; pointer-events: none;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem;
+      opacity: 0; transition: opacity 180ms ease;
+      text-shadow: 0 0 28px currentColor; white-space: nowrap;
+    }
+    #feedback-text.visible { opacity: 1; }
+
+    /* ── Screen shake ── */
+    @keyframes shake {
+      0%{transform:translate(0,0)}15%{transform:translate(-5px,0)}30%{transform:translate(5px,0)}
+      45%{transform:translate(-4px,0)}60%{transform:translate(4px,0)}75%{transform:translate(-2px,0)}
+      90%{transform:translate(2px,0)}100%{transform:translate(0,0)}
+    }
+    #three-canvas.shake { animation: shake 320ms ease; }
+
+    /* ── Modals ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(3,5,14,0.92); backdrop-filter: blur(14px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-box {
+      background: rgba(8,12,28,0.99);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 22px; padding: 40px 34px; max-width: 500px; width: 100%;
+      text-align: center; font-family: 'DM Mono', monospace;
+    }
+    .modal-box h2 {
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: clamp(1.5rem, 4vw, 2.1rem); color: #fff; margin: 0 0 10px;
+    }
+    .modal-box p {
+      color: rgba(255,255,255,0.52); font-size: 0.84rem; line-height: 1.72; margin: 0 0 20px;
+    }
+    .modal-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+    .modal-btn {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+      letter-spacing: 0.06em; border-radius: 12px; padding: 13px 30px;
+      cursor: pointer; border: none; transition: all 180ms ease;
+      display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase;
+    }
+    .modal-btn.primary {
+      background: linear-gradient(135deg, #00c0af 0%, #6dd8ff 100%);
+      color: #030810; box-shadow: 0 4px 22px rgba(0,192,175,0.38);
+    }
+    .modal-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,192,175,0.52); }
+    .modal-btn.secondary {
+      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.65);
+      border: 1px solid rgba(255,255,255,0.14); margin-left: 8px;
+    }
+    .modal-btn.secondary:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+    /* Tutorial steps */
+    .tut-step { display: none; flex-direction: column; align-items: center; gap: 14px; }
+    .tut-step.active { display: flex; }
+
+    /* Insight modal */
+    .insight-quote {
+      font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 600;
+      color: #6dd8ff; line-height: 1.55;
+      background: rgba(109,216,255,0.07); border: 1px solid rgba(109,216,255,0.18);
+      border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;
+      text-align: left;
+    }
+
+    /* Results */
+    .tier-badge {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem;
+      background: linear-gradient(110deg,#fbbf24,#f97316);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 8px; display: block;
+    }
+    .stat-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px; padding: 14px 10px;
+    }
+    .stat-val { font-size: 1.7rem; font-weight: 700; color: #fff; font-family: 'Syne', sans-serif; }
+    .stat-lbl { font-size: 9px; letter-spacing: 0.12em; color: rgba(255,255,255,0.32); text-transform: uppercase; margin-top: 2px; }
+
+    /* Loading */
+    #loading-overlay {
+      position: fixed; inset: 0; z-index: 100; background: #060810;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    }
+    #loading-overlay h1 {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.2rem; color: #fff; margin: 0;
+    }
+    #loading-text {
+      font-family: 'DM Mono', monospace; font-size: 0.78rem;
+      color: rgba(255,255,255,0.38); letter-spacing: 0.1em;
+    }
+    .loading-bar {
+      width: 220px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;
+    }
+    .loading-bar-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg,#00c0af,#6dd8ff);
+      border-radius: 2px; transition: width 600ms ease;
+    }
+
+    /* Mobile hint */
+    #mobile-hint {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      z-index: 15; pointer-events: none;
+      font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.09em;
+      color: rgba(255,255,255,0.32); text-transform: uppercase;
+      background: rgba(5,8,22,0.6); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 20px; padding: 6px 18px;
+      opacity: 1; transition: opacity 1s ease;
+    }
+    #mobile-hint.fade-out { opacity: 0; }
+
+    /* Particle burst */
+    .particle-burst { position: fixed; pointer-events: none; z-index: 30; }
+    .particle {
+      position: absolute; width: 7px; height: 7px; border-radius: 50%;
+      animation: pOut var(--dur, 500ms) ease-out both;
+    }
+    @keyframes pOut {
+      0%   { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: var(--tx) var(--ty) scale(0); opacity: 0; }
+    }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+<!-- ══ Loading ══ -->
+<div id="loading-overlay">
+  <span style="font-size:3.5rem;">👻</span>
+  <h1>Ghost Hunter</h1>
+  <div id="loading-text">Darkening the office...</div>
+  <div class="loading-bar"><div class="loading-bar-fill" id="loading-fill"></div></div>
+</div>
+
+<!-- ══ Canvas ══ -->
+<canvas id="three-canvas"></canvas>
+<div id="vignette"></div>
+<div id="lens-flare"></div>
+<div id="flash"></div>
+<div id="feedback-text"></div>
+
+<!-- ══ HUD (hidden until game start) ══ -->
+<div id="hud" style="display:none;">
+  <div id="hud-left">
+    <div class="hud-box">
+      <div class="hud-label">Score</div>
+      <div class="hud-value" id="score-val">0 / 0</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">Streak</div>
+      <div class="hud-value" id="streak-val">0</div>
+    </div>
+  </div>
+  <div id="hud-right">
+    <div class="round-badge" id="round-badge">Round 1 — Easy</div>
+    <div id="jar-row">
+      <span class="jar-lbl">Caught</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Verdict Panel ══ -->
+<div id="verdict-panel">
+  <div class="verdict-label">What is this statement?</div>
+  <div class="verdict-buttons">
+    <button class="verdict-btn fact" id="btn-fact">Fact ✓</button>
+    <button class="verdict-btn hallucination" id="btn-hallucination">Hallucination ✗</button>
+  </div>
+</div>
+
+<!-- ══ AIM Nav ══ -->
+<div class="overlay">
+  <nav class="aim-nav">
+    <div id="nav-root"></div>
+  </nav>
+</div>
+
+<!-- ══ Mobile Hint ══ -->
+<div id="mobile-hint" style="display:none;">Drag to aim flashlight · Tap to catch ghosts</div>
+
+<!-- ══ Tutorial Modal ══ -->
+<div class="modal-backdrop" id="tutorial-modal">
+  <div class="modal-box">
+    <div class="tut-step active" id="tut-1">
+      <span class="modal-icon">👻</span>
+      <h2>Ghost Hunter</h2>
+      <p>AI statements float through this dark office — some are <strong style="color:#6dd8ff;">facts</strong>, some are <strong style="color:#fb923c;">hallucinations</strong>. Your mission: spot the difference before anyone gets fooled.</p>
+      <button class="modal-btn primary" onclick="tutNext(1)">Next →</button>
+    </div>
+    <div class="tut-step" id="tut-2">
+      <span class="modal-icon">🔦</span>
+      <h2>Shine Your Flashlight</h2>
+      <p>Move your mouse (or finger) to aim the flashlight.<br><br>
+        <strong style="color:#6dd8ff;">Facts</strong> glow steady blue when illuminated.<br>
+        <strong style="color:#fb923c;">Hallucinations</strong> shimmer red and distort — they can't hold their shape under scrutiny.</p>
+      <button class="modal-btn primary" onclick="tutNext(2)">Got it →</button>
+    </div>
+    <div class="tut-step" id="tut-3">
+      <span class="modal-icon">🎯</span>
+      <h2>Catch Them!</h2>
+      <p>Click any ghost to catch it, then choose: <strong>Fact</strong> or <strong>Hallucination</strong>.<br><br>Build a streak of 3+ correct answers to power up your flashlight beam!</p>
+      <button class="modal-btn primary" onclick="startGame()">Start Hunting! 👻</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Round Insight Modal ══ -->
+<div class="modal-backdrop" id="insight-modal" style="display:none;">
+  <div class="modal-box">
+    <span class="modal-icon">💡</span>
+    <h2 id="insight-title">Round Complete!</h2>
+    <div class="insight-quote" id="insight-text"></div>
+    <button class="modal-btn primary" id="insight-btn" onclick="nextRound()">Next Round →</button>
+  </div>
+</div>
+
+<!-- ══ Results Modal ══ -->
+<div class="modal-backdrop" id="results-modal" style="display:none;">
+  <div class="modal-box">
+    <span class="modal-icon" id="res-emoji">🏆</span>
+    <h2>Hunt Complete!</h2>
+    <span class="tier-badge" id="res-tier">Truth Detective</span>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val" id="res-score">0/0</div><div class="stat-lbl">Correct</div></div>
+      <div class="stat-card"><div class="stat-val" id="res-acc">0%</div><div class="stat-lbl">Accuracy</div></div>
+      <div class="stat-card"><div class="stat-val" id="res-streak">0</div><div class="stat-lbl">Best Streak</div></div>
+      <div class="stat-card"><div class="stat-val" id="res-best">0</div><div class="stat-lbl">All-Time Best</div></div>
+    </div>
+    <p id="res-msg" style="color:rgba(255,255,255,0.5);font-size:0.82rem;line-height:1.7;margin-bottom:18px;"></p>
+    <div>
+      <button class="modal-btn primary" onclick="restartGame()">Play Again 👻</button>
+      <button class="modal-btn secondary" id="share-btn" onclick="shareResults()">Share Results</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+document.getElementById('nav-root').innerHTML = `
+<div class="flex items-center justify-between px-5 py-3">
+  <div class="flex items-center gap-3">
+    <a href="../index.html" style="font-family:'DM Mono',monospace;color:#fff;text-decoration:none;font-size:0.8rem;opacity:0.55;display:flex;align-items:center;gap:6px;transition:opacity 200ms ease;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back
+    </a>
+    <div style="width:1px;height:18px;background:rgba(255,255,255,0.14)"></div>
+    <span style="font-family:'Syne',sans-serif;font-weight:800;color:#fff;font-size:0.9rem;">AIM</span>
+    <span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:rgba(255,255,255,0.38);">/ Ghost Hunter</span>
+  </div>
+  <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.13em;text-transform:uppercase;color:rgba(255,255,255,0.3);">AI Literacy Game</span>
+</div>`;
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const STATEMENTS = [
+  { text: "ChatGPT was released by OpenAI in November 2022", fact: true },
+  { text: "Claude was created by Google DeepMind in 2023", fact: false },
+  { text: "AI hallucination means the model confidently generates false information", fact: true },
+  { text: "Large language models understand the meaning of words like humans do", fact: false },
+  { text: "GPT stands for Generative Pre-trained Transformer", fact: true },
+  { text: "AI models can access the internet in real-time by default", fact: false },
+  { text: "Prompt engineering is the practice of crafting effective AI instructions", fact: true },
+  { text: "AI models store a copy of every document they were trained on", fact: false },
+  { text: "Temperature in AI controls the randomness of outputs", fact: true },
+  { text: "AI can reliably fact-check its own responses", fact: false },
+  { text: "Tokens are the basic units that language models process", fact: true },
+  { text: "Larger AI models are always more accurate than smaller ones", fact: false },
+  { text: "Fine-tuning adapts a pre-trained model for specific tasks", fact: true },
+  { text: "AI-generated images always contain hidden watermarks required by law", fact: false },
+  { text: "Context window is the maximum amount of text an AI can process at once", fact: true },
+  { text: "AI models learn and improve from each conversation they have", fact: false },
+  { text: "Bias in AI can reflect biases present in training data", fact: true },
+  { text: "All AI companies are legally required to open-source their models", fact: false },
+  { text: "Zero-shot prompting means asking AI to do something without examples", fact: true },
+  { text: "AI models can accurately predict future events with high certainty", fact: false },
+  { text: "RAG stands for Retrieval-Augmented Generation", fact: true },
+  { text: "AI chatbots have genuine emotions and feelings", fact: false },
+  { text: "Chain-of-thought prompting improves reasoning in complex tasks", fact: true },
+  { text: "Deleting a ChatGPT conversation removes it from the model's knowledge", fact: false },
+];
+
+const ROUNDS = [
+  { label: "Round 1 — Easy",   count: 5, speed: 0.38 },
+  { label: "Round 2 — Medium", count: 6, speed: 0.72 },
+  { label: "Round 3 — Hard",   count: 7, speed: 1.08 },
+];
+
+const INSIGHTS = [
+  "Hallucinations happen because AI generates the most statistically likely text — not necessarily the most accurate.",
+  "The most dangerous hallucinations sound perfectly reasonable. Always verify specific claims, names, dates, and statistics.",
+  "Critical thinking is your superpower. AI is a powerful tool, but human verification is essential.",
+];
+
+const TIERS = [
+  { min: 91, label: "Ghost Buster",       emoji: "🏆", msg: "Outstanding! You can spot an AI hallucination from a mile away. You're ready to use AI like a pro." },
+  { min: 76, label: "Truth Detective",    emoji: "🔍", msg: "Excellent work! Strong critical thinking skills. Keep verifying AI claims before you trust them." },
+  { min: 51, label: "Fact Checker",       emoji: "✅", msg: "Good effort! You caught most hallucinations. Always double-check specific names, dates, and statistics." },
+  { min: 0,  label: "Hallucination Novice", emoji: "👻", msg: "AI hallucinations are tricky! The key: always verify specific claims, especially numbers and proper nouns." },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let gameActive  = false;
+let roundIdx    = 0;
+let ghostsLeft  = 0;
+let score       = 0;
+let attempted   = 0;
+let streak      = 0;
+let bestStreak  = 0;
+let usedIdx     = new Set();
+let ghostMeshes = [];
+let selected    = null;
+let jarsCount   = 0;
+
+// ─── THREE SETUP ──────────────────────────────────────────────────────────────
+const canvas  = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.75;
+
+const scene  = new THREE.Scene();
+scene.background = new THREE.Color(0x060810);
+scene.fog = new THREE.FogExp2(0x060810, 0.075);
+
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 80);
+camera.position.set(0, 2.6, 9.5);
+camera.lookAt(0, 1.2, 0);
+
+// ─── OFFICE ───────────────────────────────────────────────────────────────────
+function mat(col, emCol = 0x000000, emI = 0) {
+  return new THREE.MeshStandardMaterial({ color: col, emissive: emCol, emissiveIntensity: emI, roughness: 0.92, metalness: 0.04 });
+}
+
+// Floor
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(22, 18), mat(0x090c1a));
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+// Grid
+const grid = new THREE.GridHelper(22, 22, 0x0f1422, 0x0c1020);
+grid.position.y = 0.005;
+scene.add(grid);
+
+// Back wall
+const backWall = new THREE.Mesh(new THREE.PlaneGeometry(22, 11), mat(0x07091a));
+backWall.position.set(0, 5.5, -8);
+scene.add(backWall);
+
+// Left wall
+const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(18, 11), mat(0x060817));
+leftWall.rotation.y = Math.PI / 2; leftWall.position.set(-11, 5.5, 1);
+scene.add(leftWall);
+
+// Right wall
+const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(18, 11), mat(0x060817));
+rightWall.rotation.y = -Math.PI / 2; rightWall.position.set(11, 5.5, 1);
+scene.add(rightWall);
+
+// Ceiling
+const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(22, 18), mat(0x040610));
+ceiling.rotation.x = Math.PI / 2; ceiling.position.y = 11;
+scene.add(ceiling);
+
+// Desk
+const deskTop = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.1, 1.3), mat(0x1c0e06));
+deskTop.position.set(-1.5, 1.1, -2.2);
+scene.add(deskTop);
+[[−2.9,−1.5],[−0.1,−1.5],[−2.9,−2.8],[−0.1,−2.8]].forEach(([x,z]) => {
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.1, 0.09), mat(0x150c06));
+  leg.position.set(x, 0.55, z); scene.add(leg);
+});
+
+// Monitor frame
+const monFrame = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.86, 0.05), mat(0x0d0d0e));
+monFrame.position.set(-1.5, 1.8, -2.52); scene.add(monFrame);
+
+// Monitor screen (canvas texture applied later)
+const monScreenGeo = new THREE.PlaneGeometry(1.18, 0.74);
+const monScreenMat = new THREE.MeshStandardMaterial({
+  color: 0x081828, emissive: 0x0a3565, emissiveIntensity: 0.9, roughness: 0.2,
+});
+const monScreen = new THREE.Mesh(monScreenGeo, monScreenMat);
+monScreen.position.set(-1.5, 1.8, -2.5); scene.add(monScreen);
+
+// Monitor stand/base
+const monStand = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.32, 0.05), mat(0x111));
+monStand.position.set(-1.5, 1.39, -2.52); scene.add(monStand);
+const monBase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.3), mat(0x111));
+monBase.position.set(-1.5, 1.22, -2.52); scene.add(monBase);
+
+// Keyboard
+const kb = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.025, 0.35), mat(0x0e0e12));
+kb.position.set(-1.5, 1.16, -1.65); scene.add(kb);
+
+// Chair
+const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.07, 0.8), mat(0x0a0a16));
+chairSeat.position.set(-1.5, 0.72, -0.75); scene.add(chairSeat);
+const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.0, 0.06), mat(0x0c0c1a));
+chairBack.position.set(-1.5, 1.22, -1.15); scene.add(chairBack);
+const chairPole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.68, 6), mat(0x121216));
+chairPole.position.set(-1.5, 0.36, -0.75); scene.add(chairPole);
+
+// Bookshelf
+const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.4, 3.8, 0.44), mat(0x110c06));
+shelf.position.set(4.2, 1.9, -6.2); scene.add(shelf);
+const bookCols = [0x8b1a1a, 0x1a5c8b, 0x2d8b1a, 0x8b7d1a, 0x5a1a8b, 0x8b4a1a, 0x1a4a8b];
+for (let row = 0; row < 3; row++) {
+  let bx = 3.55;
+  for (let b = 0; b < 6; b++) {
+    const bw = 0.09 + Math.random() * 0.07;
+    const bh = 0.44 + Math.random() * 0.12;
+    const book = new THREE.Mesh(
+      new THREE.BoxGeometry(bw, bh, 0.35),
+      new THREE.MeshStandardMaterial({ color: bookCols[(b + row) % bookCols.length], roughness: 0.9 })
+    );
+    book.position.set(bx + bw/2, 0.55 + row * 1.22, -6.2);
+    bx += bw + 0.01;
+    scene.add(book);
+  }
+}
+
+// Filing cabinet
+const cabinet = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.2, 0.6), mat(0x111118));
+cabinet.position.set(2.4, 0.6, -2.5); scene.add(cabinet);
+
+// Window (on back wall, right side)
+const winFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.0, 0.06), mat(0x0e1220));
+winFrame.position.set(3.5, 4.5, -7.98); scene.add(winFrame);
+const winPane = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.1, 1.72),
+  new THREE.MeshStandardMaterial({ color: 0x0d1e44, emissive: 0x102040, emissiveIntensity: 1.1, transparent: true, opacity: 0.7, roughness: 0 })
+);
+winPane.position.set(3.5, 4.5, -7.96); scene.add(winPane);
+
+// Moonlight shaft (transparent cone)
+const shaftMesh = new THREE.Mesh(
+  new THREE.ConeGeometry(1.4, 6, 8, 1, true),
+  new THREE.MeshBasicMaterial({ color: 0x1a3060, transparent: true, opacity: 0.035, side: THREE.DoubleSide, depthWrite: false })
+);
+shaftMesh.position.set(3.5, 1.5, -4.5);
+shaftMesh.rotation.z = -0.25;
+scene.add(shaftMesh);
+
+// Hanging light fixture (dim)
+const fixtureBody = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.14, 0.12, 8), mat(0x151515));
+fixtureBody.position.set(0, 9.2, -2); scene.add(fixtureBody);
+const fixtureWire = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 1.4, 4), mat(0x111111));
+fixtureWire.position.set(0, 9.9, -2); scene.add(fixtureWire);
+
+// Scattered papers on desk
+for (let p = 0; p < 3; p++) {
+  const paper = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.4 + Math.random()*0.3, 0.28 + Math.random()*0.15),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 1 })
+  );
+  paper.rotation.x = -Math.PI/2;
+  paper.rotation.z = (Math.random()-0.5)*0.6;
+  paper.position.set(-2.5 + p*0.55 + Math.random()*0.2, 1.16, -1.9 + Math.random()*0.3);
+  scene.add(paper);
+}
+
+// ─── LIGHTING ─────────────────────────────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0x050818, 0.45);
+scene.add(ambient);
+
+const moonLight = new THREE.DirectionalLight(0x1a3060, 0.2);
+moonLight.position.set(8, 10, 3);
+scene.add(moonLight);
+
+const monLight = new THREE.PointLight(0x0a3d80, 1.3, 3.2);
+monLight.position.set(-1.5, 1.82, -2.0);
+scene.add(monLight);
+
+// Flashlight
+const flashlight = new THREE.SpotLight(0xc8deff, 0, 35, Math.PI/7, 0.28, 1.6);
+flashlight.position.copy(camera.position);
+scene.add(flashlight);
+scene.add(flashlight.target);
+flashlight.target.position.set(0, 1.2, -2);
+
+// ─── DUST PARTICLES ───────────────────────────────────────────────────────────
+const DUST_N = 320;
+const dPos = new Float32Array(DUST_N * 3);
+const dVel = [];
+for (let i = 0; i < DUST_N; i++) {
+  dPos[i*3]   = (Math.random()-0.5)*16;
+  dPos[i*3+1] = Math.random()*8;
+  dPos[i*3+2] = -8 + Math.random()*14;
+  dVel.push({ x:(Math.random()-0.5)*0.004, y:0.001+Math.random()*0.002, z:(Math.random()-0.5)*0.003 });
+}
+const dGeo = new THREE.BufferGeometry();
+dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+const dMat = new THREE.PointsMaterial({ color: 0xc8b890, size: 0.025, transparent: true, opacity: 0.3, sizeAttenuation: true, depthWrite: false });
+scene.add(new THREE.Points(dGeo, dMat));
+
+// ─── MONITOR CANVAS TEXTURE ───────────────────────────────────────────────────
+const monCvs = document.createElement('canvas');
+monCvs.width = 256; monCvs.height = 160;
+const monCtx = monCvs.getContext('2d');
+const monTex = new THREE.CanvasTexture(monCvs);
+monScreenMat.emissiveMap = monTex;
+monScreenMat.map = monTex;
+
+const MON_TEXTS = ['AI PROCESSING...','LOADING MODEL...','INFERENCE: 97%','TOKENS: 2048','HALLUCINATION?','CONFIDENCE: LOW','>>> THINKING...','CONTEXT: 4096','ERROR: VERIFY'];
+let monIdx = 0, monTimer = 0;
+
+function updateMonitor(dt) {
+  monTimer += dt;
+  if (monTimer > 2.2) { monTimer = 0; monIdx = (monIdx+1) % MON_TEXTS.length; }
+  const fl = 0.65 + Math.random()*0.35;
+  monCtx.fillStyle = '#030e1c';
+  monCtx.fillRect(0, 0, 256, 160);
+  monCtx.font = 'bold 17px monospace';
+  monCtx.textAlign = 'center';
+  monCtx.fillStyle = `rgba(0,195,255,${fl})`;
+  monCtx.fillText(MON_TEXTS[monIdx], 128, 56);
+  monCtx.font = '11px monospace';
+  monCtx.fillStyle = `rgba(0,160,200,${fl*0.55})`;
+  monCtx.fillText(`> ${(Math.random()*100).toFixed(1)}% complete`, 128, 82);
+  monCtx.fillStyle = `rgba(0,120,180,${fl*0.4})`;
+  monCtx.fillText(`█████████░ processing`, 128, 110);
+  monTex.needsUpdate = true;
+}
+
+// ─── GHOST SYSTEM ─────────────────────────────────────────────────────────────
+function makeGhostTex(text, isFact) {
+  const W = 520, H = 220;
+  const c = document.createElement('canvas'); c.width=W; c.height=H;
+  const x = c.getContext('2d');
+
+  // Panel bg
+  const bg = x.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0, isFact ? 'rgba(8,24,72,0.88)' : 'rgba(56,14,8,0.88)');
+  bg.addColorStop(1, isFact ? 'rgba(4,12,38,0.88)' : 'rgba(36,6,4,0.88)');
+  x.fillStyle = bg; x.roundRect(3,3,W-6,H-6,14); x.fill();
+
+  // Border
+  const bdr = x.createLinearGradient(0,0,W,H);
+  bdr.addColorStop(0, isFact ? 'rgba(100,200,255,0.65)' : 'rgba(249,115,22,0.55)');
+  bdr.addColorStop(1, isFact ? 'rgba(80,160,255,0.3)' : 'rgba(200,60,10,0.3)');
+  x.strokeStyle = bdr; x.lineWidth = 2.5;
+  x.roundRect(3,3,W-6,H-6,14); x.stroke();
+
+  // Ghost icon
+  x.font = '26px serif'; x.fillText('👻', 14, 40);
+
+  // Fact/Hallucination label
+  x.font = 'bold 10px DM Mono, monospace';
+  x.letterSpacing = '1px';
+  x.fillStyle = isFact ? 'rgba(100,200,255,0.55)' : 'rgba(249,115,22,0.55)';
+  x.textAlign = 'right';
+  x.fillText(isFact ? 'FACT?' : 'HALLUCINATION?', W-14, 38);
+  x.letterSpacing = '0px';
+
+  // Word-wrap text
+  x.font = 'bold 20px DM Mono, monospace';
+  x.textAlign = 'center';
+  x.fillStyle = 'rgba(255,255,255,0.92)';
+  const words = text.split(' ');
+  const lines = []; let line = '';
+  for (const w of words) {
+    const t = line ? line+' '+w : w;
+    if (x.measureText(t).width > W-60) { lines.push(line); line=w; }
+    else line = t;
+  }
+  lines.push(line);
+  const lh = 30, sy = H/2 - (lines.length*lh)/2 + 18;
+  lines.forEach((l,i) => x.fillText(l, W/2, sy + i*lh));
+
+  return new THREE.CanvasTexture(c);
+}
+
+function pickStmt() {
+  const pool = STATEMENTS.filter((_,i) => !usedIdx.has(i));
+  if (!pool.length) { usedIdx.clear(); return pickStmt(); }
+  const item = pool[Math.floor(Math.random()*pool.length)];
+  usedIdx.add(STATEMENTS.indexOf(item));
+  return item;
+}
+
+function spawnGhost() {
+  if (!gameActive || ghostsLeft <= 0) return;
+  const stmt = pickStmt();
+  const tex  = makeGhostTex(stmt.text, stmt.fact);
+  const m = new THREE.MeshStandardMaterial({
+    map: tex, transparent: true, opacity: 0,
+    emissive: new THREE.Color(stmt.fact ? 0x082050 : 0x2e0808),
+    emissiveIntensity: 0.25,
+    emissiveMap: tex,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.48), m);
+  mesh.position.set((Math.random()-0.5)*8, 1.5+Math.random()*2.8, -2-Math.random()*4.5);
+  mesh.rotation.y = (Math.random()-0.5)*0.35;
+
+  const sp = ROUNDS[roundIdx].speed;
+  mesh.userData = {
+    stmt, fact: stmt.fact,
+    driftType: Math.floor(Math.random()*3),
+    phase: Math.random()*Math.PI*2,
+    baseY: mesh.position.y, baseX: mesh.position.x,
+    speed: sp*(0.82+Math.random()*0.36),
+    alive: true, opacity: 0, illuminated: false, shimT: 0,
+  };
+  scene.add(mesh);
+  ghostMeshes.push(mesh);
+  ghostsLeft--;
+
+  // Fade in
+  const fi = setInterval(() => {
+    if (!mesh.userData.alive) { clearInterval(fi); return; }
+    mesh.userData.opacity = Math.min(mesh.userData.opacity+0.05, 0.82);
+    mesh.material.opacity = mesh.userData.opacity;
+    if (mesh.userData.opacity >= 0.82) clearInterval(fi);
+  }, 28);
+}
+
+function despawnGhost(mesh, correct) {
+  mesh.userData.alive = false;
+  // CSS particle burst at screen position
+  const wp = new THREE.Vector3(); mesh.getWorldPosition(wp);
+  const v = wp.clone().project(camera);
+  const sx = (v.x*0.5+0.5)*window.innerWidth;
+  const sy = (-v.y*0.5+0.5)*window.innerHeight;
+  burst(sx, sy, correct ? '#22c55e' : '#ef4444');
+
+  const fo = setInterval(() => {
+    mesh.material.opacity -= 0.07;
+    if (mesh.material.opacity <= 0) {
+      clearInterval(fo); scene.remove(mesh);
+      mesh.geometry.dispose(); mesh.material.dispose();
+      ghostMeshes = ghostMeshes.filter(g=>g!==mesh);
+    }
+  }, 30);
+}
+
+// ─── PARTICLES ────────────────────────────────────────────────────────────────
+function burst(sx, sy, color) {
+  const wrap = document.createElement('div');
+  wrap.className = 'particle-burst';
+  wrap.style.cssText = `left:${sx}px;top:${sy}px;`;
+  for (let i=0; i<14; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.background = color;
+    const a = (i/14)*Math.PI*2;
+    const d = 45+Math.random()*65;
+    p.style.setProperty('--tx', `translateX(${Math.cos(a)*d}px)`);
+    p.style.setProperty('--ty', `translateY(${Math.sin(a)*d}px)`);
+    p.style.setProperty('--dur', `${300+Math.random()*350}ms`);
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(()=>wrap.remove(), 900);
+}
+
+// ─── MOUSE / TOUCH ────────────────────────────────────────────────────────────
+const mouse2 = new THREE.Vector2(0,0);
+const raycaster = new THREE.Raycaster();
+let mScreen = { x: window.innerWidth/2, y: window.innerHeight/2 };
+const lensFlareEl = document.getElementById('lens-flare');
+
+function handlePointer(x, y) {
+  mScreen = {x,y};
+  mouse2.x = (x/window.innerWidth)*2-1;
+  mouse2.y = -(y/window.innerHeight)*2+1;
+}
+document.addEventListener('mousemove', e=>handlePointer(e.clientX,e.clientY), {passive:true});
+document.addEventListener('touchmove', e=>{
+  if(e.touches[0]) handlePointer(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:true});
+
+canvas.addEventListener('click', handleClick);
+canvas.addEventListener('touchend', e=>{
+  e.preventDefault();
+  if(e.changedTouches[0]) {
+    handlePointer(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    handleClick();
+  }
+}, {passive:false});
+
+function handleClick() {
+  if (!gameActive || selected) return;
+  raycaster.setFromCamera(mouse2, camera);
+  const hits = raycaster.intersectObjects(ghostMeshes);
+  if (hits.length > 0 && hits[0].object.userData.alive) {
+    selected = hits[0].object;
+    document.getElementById('verdict-panel').classList.add('visible');
+  }
+}
+
+// ─── VERDICT ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-fact').onclick = ()=>verdict(true);
+document.getElementById('btn-hallucination').onclick = ()=>verdict(false);
+
+function verdict(playerSaysFact) {
+  if (!selected) return;
+  const g = selected; selected = null;
+  document.getElementById('verdict-panel').classList.remove('visible');
+
+  const correct = playerSaysFact === g.userData.fact;
+  attempted++;
+
+  if (correct) {
+    score++; // SOUND: playSound('correct')
+    streak++; if (streak>bestStreak) bestStreak=streak;
+    if (streak>=3) { flashlight.angle=Math.PI/5.5; flashlight.intensity=Math.min(flashlight.intensity+0.15,2.6); }
+    addJar();
+    feedback('✓ Correct!', '#22c55e', 'g');
+  } else {
+    // SOUND: playSound('wrong')
+    streak=0; flashlight.angle=Math.PI/7;
+    feedback('✗ Wrong!', '#ef4444', 'r');
+    canvas.classList.add('shake'); setTimeout(()=>canvas.classList.remove('shake'), 340);
+  }
+
+  despawnGhost(g, correct);
+  refreshHUD();
+
+  setTimeout(() => {
+    if (!gameActive) return;
+    if (ghostsLeft<=0 && ghostMeshes.length===0) { endRound(); return; }
+    if (ghostMeshes.length<3 && ghostsLeft>0) spawnGhost();
+  }, 850);
+}
+
+function feedback(txt, color, cls) {
+  const el = document.getElementById('feedback-text');
+  el.textContent=txt; el.style.color=color; el.classList.add('visible');
+  const fl = document.getElementById('flash');
+  fl.className=cls; fl.style.opacity='1';
+  setTimeout(()=>{ fl.style.opacity='0'; setTimeout(()=>fl.className='',180); },320);
+  setTimeout(()=>el.classList.remove('visible'),1300);
+}
+
+function refreshHUD() {
+  document.getElementById('score-val').textContent = `${score} / ${attempted}`;
+  const sel = document.getElementById('streak-val');
+  sel.textContent = streak;
+  sel.className = 'hud-value' + (streak>=3?' streak-hot':'');
+  document.getElementById('round-badge').textContent = ROUNDS[roundIdx].label;
+}
+
+function addJar() {
+  jarsCount++;
+  const j = document.createElement('span'); j.className='ghost-jar'; j.textContent='🫙';
+  document.getElementById('jar-row').appendChild(j);
+}
+
+// ─── ROUND FLOW ───────────────────────────────────────────────────────────────
+function startRound() {
+  ghostsLeft = ROUNDS[roundIdx].count;
+  ghostMeshes.forEach(g=>{g.userData.alive=false;scene.remove(g);g.geometry.dispose();g.material.dispose();});
+  ghostMeshes=[];
+  refreshHUD();
+  const init = Math.min(3, ghostsLeft);
+  for(let i=0;i<init;i++) setTimeout(()=>{if(gameActive)spawnGhost();}, i*550);
+}
+
+function endRound() {
+  gameActive=false;
+  ghostMeshes.forEach(g=>{g.userData.alive=false;scene.remove(g);g.geometry.dispose();g.material.dispose();});
+  ghostMeshes=[];
+  if(roundIdx<2) {
+    const m=document.getElementById('insight-modal');
+    document.getElementById('insight-title').textContent=`Round ${roundIdx+1} Complete!`;
+    document.getElementById('insight-text').textContent=INSIGHTS[roundIdx];
+    document.getElementById('insight-btn').textContent=`Round ${roundIdx+2} →`;
+    m.style.display='flex';
+  } else {
+    showResults();
+  }
+}
+
+window.nextRound = function() {
+  document.getElementById('insight-modal').style.display='none';
+  roundIdx++; gameActive=true; startRound();
+};
+
+function showResults() {
+  const acc = attempted>0 ? Math.round((score/attempted)*100) : 0;
+  const tier = TIERS.find(t=>acc>=t.min)||TIERS[TIERS.length-1];
+  const prev = parseInt(localStorage.getItem('gh_best_score')||'0');
+  const best = Math.max(prev, score);
+  localStorage.setItem('gh_best_score', best);
+
+  document.getElementById('res-emoji').textContent=tier.emoji;
+  document.getElementById('res-tier').textContent=tier.label;
+  document.getElementById('res-score').textContent=`${score}/${attempted}`;
+  document.getElementById('res-acc').textContent=`${acc}%`;
+  document.getElementById('res-streak').textContent=bestStreak;
+  document.getElementById('res-best').textContent=best;
+  document.getElementById('res-msg').textContent=tier.msg;
+  document.getElementById('results-modal').style.display='flex';
+  document.getElementById('hud').style.display='none';
+}
+
+window.restartGame = function() {
+  document.getElementById('results-modal').style.display='none';
+  score=0;attempted=0;streak=0;bestStreak=0;roundIdx=0;jarsCount=0;
+  usedIdx.clear(); ghostMeshes.forEach(g=>scene.remove(g)); ghostMeshes=[];
+  flashlight.angle=Math.PI/7; flashlight.intensity=1.8;
+  const jr=document.getElementById('jar-row');
+  jr.innerHTML='<span class="jar-lbl">Caught</span>';
+  document.getElementById('hud').style.display='flex';
+  gameActive=true; startRound();
+};
+
+window.shareResults = function() {
+  const acc = attempted>0?Math.round((score/attempted)*100):0;
+  const tier = TIERS.find(t=>acc>=t.min)||TIERS[TIERS.length-1];
+  const txt=`👻 Ghost Hunter — AI Literacy Game\n${tier.emoji} ${tier.label}\nScore: ${score}/${attempted} (${acc}% accuracy)\nBest streak: ${bestStreak}\nPlay at AIM AI Bootcamp!`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const b=document.getElementById('share-btn');
+    b.textContent='✓ Copied!'; setTimeout(()=>b.textContent='Share Results',2000);
+  }).catch(()=>alert(txt));
+};
+
+// ─── TUTORIAL ─────────────────────────────────────────────────────────────────
+window.tutNext = function(step) {
+  document.getElementById(`tut-${step}`).classList.remove('active');
+  document.getElementById(`tut-${step+1}`).classList.add('active');
+};
+
+window.startGame = function() {
+  localStorage.setItem('gh_tutorial_done','1');
+  document.getElementById('tutorial-modal').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  gameActive=true; startRound();
+  if('ontouchstart' in window){
+    const h=document.getElementById('mobile-hint');
+    h.style.display='block';
+    setTimeout(()=>{h.classList.add('fade-out');setTimeout(()=>h.remove(),1000);},4000);
+  }
+};
+
+// ─── GHOST MAINTENANCE ────────────────────────────────────────────────────────
+setInterval(()=>{
+  if(!gameActive) return;
+  if(ghostMeshes.length<3 && ghostsLeft>0) spawnGhost();
+  if(ghostsLeft<=0 && ghostMeshes.length===0) { endRound(); }
+}, 1800);
+
+// ─── FLICKER ──────────────────────────────────────────────────────────────────
+let flickTimer=0, flickActive=false, flickT=0;
+function doFlicker(){flickActive=true;flickT=0;}
+
+// ─── RENDER LOOP ──────────────────────────────────────────────────────────────
+const clock=new THREE.Clock(); let tot=0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  tot+=dt;
+
+  // Flashlight follow mouse
+  raycaster.setFromCamera(mouse2, camera);
+  const ray=raycaster.ray;
+  const tgt=ray.origin.clone().addScaledVector(ray.direction,13);
+  flashlight.target.position.lerp(tgt,0.11);
+  flashlight.target.updateMatrixWorld();
+
+  // Lens flare
+  lensFlareEl.style.left=mScreen.x+'px';
+  lensFlareEl.style.top=mScreen.y+'px';
+
+  // Camera parallax
+  const cpx = mouse2.x*0.5;
+  const cpy = 2.6+mouse2.y*0.35;
+  camera.position.x += (cpx-camera.position.x)*0.05;
+  camera.position.y += (cpy-camera.position.y)*0.05;
+  camera.lookAt(0,1.2,0);
+  flashlight.position.copy(camera.position);
+
+  // Flicker
+  flickTimer+=dt;
+  if(flickTimer>9+Math.random()*4){flickTimer=0;doFlicker();}
+  if(flickActive){
+    flickT+=dt*7;
+    ambient.intensity=0.45-Math.sin(flickT*14)*0.22;
+    if(flickT>Math.PI){flickActive=false;ambient.intensity=0.45;}
+  }
+
+  // Ghost animation
+  for(const g of ghostMeshes){
+    if(!g.userData.alive) continue;
+    const u=g.userData, t=tot;
+    // Motion
+    switch(u.driftType){
+      case 0:
+        g.position.y=u.baseY+Math.sin(t*u.speed*0.9+u.phase)*0.45;
+        g.position.x=u.baseX+Math.sin(t*u.speed*0.55+u.phase)*0.65; break;
+      case 1:
+        g.position.x=u.baseX+Math.sin(t*u.speed*1.0+u.phase)*1.3;
+        g.position.y=u.baseY+Math.cos(t*u.speed*0.65+u.phase)*0.32; break;
+      case 2:
+        g.position.y=u.baseY+Math.sin(t*u.speed*1.2+u.phase)*0.52;
+        g.position.x=u.baseX+Math.cos(t*u.speed*0.75+u.phase)*0.9;
+        g.position.z=-3+Math.sin(t*u.speed*0.45+u.phase)*0.9; break;
+    }
+    g.rotation.y=Math.sin(t*0.55+u.phase)*0.13;
+
+    // Illumination test
+    const wp=new THREE.Vector3(); g.getWorldPosition(wp);
+    const ld=wp.clone().sub(flashlight.position).normalize();
+    const fd=flashlight.target.position.clone().sub(flashlight.position).normalize();
+    const ang=ld.angleTo(fd);
+    const inBeam=ang<flashlight.angle && wp.distanceTo(flashlight.position)<30;
+    u.illuminated=inBeam;
+
+    if(inBeam){
+      u.shimT+=dt*(u.fact?2.5:8);
+      if(u.fact){
+        // Stable blue glow
+        g.material.emissiveIntensity=0.85+Math.sin(u.shimT*1.8)*0.1;
+        g.material.emissive.setHex(0x1845a0);
+        g.material.opacity=Math.min(u.opacity+0.12,0.96);
+      } else {
+        // Red shimmer + positional glitch
+        const sh=Math.sin(u.shimT*11)*0.2;
+        g.material.emissiveIntensity=0.7+Math.abs(sh);
+        g.material.emissive.setHex(0x901010);
+        g.material.opacity=Math.min(u.opacity+0.1,0.92);
+        g.position.x+=(Math.random()-0.5)*0.018;
+        g.position.y+=(Math.random()-0.5)*0.012;
+      }
+    } else {
+      // Dark, barely visible
+      g.material.emissiveIntensity=0.07+Math.sin(tot*2.2+u.phase)*0.04;
+      g.material.emissive.setHex(0x08101e);
+      g.material.opacity=u.opacity*0.88;
+    }
+  }
+
+  // Dust
+  const dp=dGeo.attributes.position.array;
+  for(let i=0;i<DUST_N;i++){
+    dp[i*3]+=dVel[i].x; dp[i*3+1]+=dVel[i].y; dp[i*3+2]+=dVel[i].z;
+    if(dp[i*3+1]>8) dp[i*3+1]=0;
+    if(Math.abs(dp[i*3])>9) dp[i*3]*=-0.9;
+    if(Math.abs(dp[i*3+2])>8) dp[i*3+2]*=-0.9;
+  }
+  dGeo.attributes.position.needsUpdate=true;
+  dMat.opacity=0.28+flashlight.intensity*0.04;
+
+  // Window pulse
+  winPane.material.emissiveIntensity=1.0+Math.sin(tot*0.35)*0.18;
+
+  // Monitor
+  updateMonitor(dt);
+
+  // Shaft shaft slow rotation
+  shaftMesh.rotation.y=Math.sin(tot*0.08)*0.06;
+
+  renderer.render(scene, camera);
+}
+
+// ─── RESIZE ───────────────────────────────────────────────────────────────────
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+// ─── LOADING SEQUENCE ─────────────────────────────────────────────────────────
+const loadFill=document.getElementById('loading-fill');
+const loadTxt =document.getElementById('loading-text');
+const STEPS=[
+  [25,'Darkening the office...'],
+  [55,'Summoning ghosts...'],
+  [80,'Charging flashlight...'],
+  [100,'Ready to hunt!'],
+];
+let lsi=0;
+function advLoad(){
+  if(lsi>=STEPS.length) return;
+  const [pct,txt]=STEPS[lsi++];
+  loadFill.style.width=pct+'%'; loadTxt.textContent=txt;
+  if(lsi<STEPS.length) setTimeout(advLoad,680);
+  else setTimeout(()=>{
+    const ol=document.getElementById('loading-overlay');
+    ol.style.transition='opacity 600ms ease'; ol.style.opacity='0';
+    setTimeout(()=>{
+      ol.style.display='none';
+      lensFlareEl.style.display='block';
+      // Fade in flashlight
+      flashlight.intensity=0;
+      let fi=0; const fiv=setInterval(()=>{
+        fi+=0.09; flashlight.intensity=Math.min(fi,1.8);
+        if(fi>=1.8) clearInterval(fiv);
+      },35);
+      // Skip tutorial if already done
+      if(localStorage.getItem('gh_tutorial_done')){
+        document.getElementById('tutorial-modal').style.display='none';
+        document.getElementById('hud').style.display='flex';
+        gameActive=true; startRound();
+      }
+    },650);
+  },500);
+}
+
+animate();
+setTimeout(advLoad,250);
+</script>
+</body>
+</html>

@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Neural Playground | AIM AI Bootcamp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/city-theme.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+html.light-pending body { background: #050a18 !important; }
+body { padding-bottom: 0 !important; overflow: hidden; }
+
+/* ── SCANLINE EFFECT (Phase 4 — CSS only) ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.03) 3px,
+    rgba(0,0,0,0.03) 4px
+  );
+  animation: scanlines 12s linear infinite;
+}
+@keyframes scanlines {
+  from { background-position: 0 0; }
+  to   { background-position: 0 -400px; }
+}
+
+#three-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0; display: block;
+  transition: filter 800ms ease;
+}
+#three-canvas.processing-bg {
+  filter: hue-rotate(18deg) brightness(0.96);
+}
+
+/* Vignette */
+#vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(5,10,24,0.75) 100%);
+  transition: opacity 800ms ease;
+}
+#vignette.processing-vignette { opacity: 1.35; }
+
+/* Main overlay */
+.overlay {
+  position: fixed; inset: 0; z-index: 10;
+  pointer-events: none; display: flex;
+  flex-direction: column; justify-content: space-between;
+}
+
+/* Nav */
+.aim-nav {
+  pointer-events: all; position: relative !important;
+  background: rgba(5,10,24,0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Bottom panel */
+.bottom-panel {
+  pointer-events: all; padding: 0 24px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+
+/* Title block */
+.hero-title-block { text-align: center; animation: fadeUp 900ms ease both; }
+.hero-title-block .pill {
+  margin-bottom: 10px; font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 14px; border-radius: 999px;
+  background: rgba(167,139,250,0.12); color: #a78bfa;
+  border: 1px solid rgba(167,139,250,0.25);
+  text-transform: uppercase;
+}
+.hero-title-block h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+  font-weight: 800; line-height: 1.1; color: #fff;
+  margin: 0 0 6px; letter-spacing: -0.02em;
+}
+.hero-title-block h1 span {
+  background: linear-gradient(110deg, #6dd8ff 0%, #a78bfa 45%, #34d399 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-title-block p {
+  font-size: clamp(0.78rem, 1.8vw, 0.92rem); color: rgba(255,255,255,0.55);
+  font-family: 'DM Mono', monospace; font-weight: 300; letter-spacing: 0.01em;
+  margin: 0; max-width: 600px;
+}
+
+/* Info cards */
+.block-cards {
+  display: flex; gap: 10px; justify-content: center;
+  flex-wrap: wrap; animation: fadeUp 900ms ease 200ms both;
+  width: 100%; max-width: 820px;
+}
+.block-card {
+  flex: 1; min-width: 160px; max-width: 240px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 13px 16px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  position: relative; overflow: hidden;
+}
+.block-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+  transition: opacity 400ms ease;
+}
+.block-card.input-layer  { border-color: rgba(109,216,255,0.28); }
+.block-card.hidden-layer { border-color: rgba(167,139,250,0.28); }
+.block-card.output-layer { border-color: rgba(251,191,36,0.28); }
+.block-card.input-layer::before  { background: radial-gradient(ellipse at top left, rgba(109,216,255,0.1) 0%, transparent 70%); opacity: 1; }
+.block-card.hidden-layer::before { background: radial-gradient(ellipse at top left, rgba(167,139,250,0.1) 0%, transparent 70%); opacity: 1; }
+.block-card.output-layer::before { background: radial-gradient(ellipse at top left, rgba(251,191,36,0.1) 0%, transparent 70%); opacity: 1; }
+.block-label { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
+.block-label.input-layer  { color: #6dd8ff; }
+.block-label.hidden-layer { color: #a78bfa; }
+.block-label.output-layer { color: #fbbf24; }
+.block-desc-head { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.7); margin-bottom: 2px; }
+.block-desc { font-size: 10px; color: rgba(255,255,255,0.4); font-family: 'DM Mono', monospace; line-height: 1.5; }
+
+/* ── INPUT HISTORY CHIPS ── */
+.history-chips {
+  display: flex; gap: 6px; align-items: center;
+  overflow-x: auto; max-width: 680px; width: 100%;
+  padding-bottom: 2px; scrollbar-width: none;
+}
+.history-chips::-webkit-scrollbar { display: none; }
+.history-chip {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px; padding: 3px 10px;
+  font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 400;
+  color: rgba(255,255,255,0.35); cursor: pointer;
+  transition: all 200ms ease; white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+.history-chip:hover {
+  background: rgba(109,216,255,0.08);
+  border-color: rgba(109,216,255,0.25);
+  color: rgba(109,216,255,0.7);
+}
+.history-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.18); letter-spacing: 0.08em;
+  text-transform: uppercase; flex-shrink: 0; white-space: nowrap;
+}
+
+/* ── PRESET PROMPT BUTTONS (Phase 4) ── */
+.preset-prompts {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  max-width: 680px; width: 100%;
+}
+.preset-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.18); letter-spacing: 0.08em;
+  text-transform: uppercase; flex-shrink: 0; white-space: nowrap;
+}
+.preset-btn {
+  flex-shrink: 0;
+  background: rgba(109,216,255,0.06);
+  border: 1px solid rgba(109,216,255,0.18);
+  border-radius: 999px; padding: 4px 12px;
+  font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 400;
+  color: rgba(109,216,255,0.6); cursor: pointer;
+  transition: all 200ms ease; white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+.preset-btn:hover {
+  background: rgba(109,216,255,0.14);
+  border-color: rgba(109,216,255,0.4);
+  color: rgba(109,216,255,0.9);
+  transform: translateY(-1px);
+}
+.preset-btn:active { transform: translateY(0); }
+
+/* ── INPUT AREA ── */
+.input-area {
+  width: 100%; max-width: 680px;
+  display: flex; flex-direction: column; gap: 8px;
+  animation: fadeUp 900ms ease 300ms both;
+}
+
+.input-row {
+  display: flex; gap: 8px; align-items: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px; padding: 8px 10px;
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  transition: border-color 400ms ease, box-shadow 400ms ease;
+}
+.input-row:focus-within {
+  border-color: rgba(109,216,255,0.5);
+  box-shadow: 0 0 0 2px rgba(109,216,255,0.12), 0 4px 24px rgba(109,216,255,0.1);
+}
+.input-row.processing {
+  animation: borderPulse 1s ease-in-out infinite;
+}
+@keyframes borderPulse {
+  0%,100% { border-color: rgba(109,216,255,0.4); box-shadow: 0 0 0 2px rgba(109,216,255,0.08); }
+  50%      { border-color: rgba(167,139,250,0.6); box-shadow: 0 0 0 3px rgba(167,139,250,0.15); }
+}
+
+#neural-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 300;
+  color: rgba(255,255,255,0.9); caret-color: #6dd8ff;
+  padding: 4px 6px; min-width: 0;
+}
+#neural-input::placeholder { color: rgba(255,255,255,0.25); }
+
+.send-btn {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #00bfae 0%, #00c0af 100%);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 10px 20px; font-family: 'Syne', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+  cursor: pointer; transition: opacity 200ms ease, transform 100ms ease;
+  white-space: nowrap; min-height: 44px;
+}
+.send-btn:hover:not(:disabled) { opacity: 0.88; }
+.send-btn:active:not(:disabled) { transform: scale(0.96); }
+.send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Progress / status bar */
+.processing-status {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,0.4); letter-spacing: 0.08em;
+  height: 14px; transition: opacity 300ms ease;
+}
+.processing-status.hidden { opacity: 0; pointer-events: none; }
+.status-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #6dd8ff; flex-shrink: 0;
+  animation: pulseDot 1.2s ease-in-out infinite;
+}
+.status-dot.done { background: #34d399; animation: none; }
+
+/* ── RESPONSE AREA (Phase 3 enhanced) ── */
+.response-area {
+  width: 100%; max-width: 680px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 14px; padding: 12px 16px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  min-height: 64px; display: flex; flex-direction: column;
+  gap: 8px; transition: opacity 400ms ease, border-color 400ms ease;
+  animation: fadeUp 900ms ease 400ms both;
+}
+.response-area.empty { opacity: 0.4; }
+.response-area.streaming {
+  border-color: rgba(251,191,36,0.3);
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.08);
+}
+.response-body {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.response-text {
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 300;
+  color: rgba(255,255,255,0.65); line-height: 1.65; flex: 1;
+  white-space: pre-wrap;
+}
+.response-text.placeholder { color: rgba(255,255,255,0.22); font-style: italic; }
+.response-cursor {
+  display: inline-block; width: 7px; height: 12px;
+  background: #fbbf24; vertical-align: middle;
+  margin-left: 2px; border-radius: 1px;
+  animation: blinkCursor 0.9s ease-in-out infinite;
+}
+.response-cursor.hidden { display: none; }
+@keyframes blinkCursor { 0%,100%{opacity:1} 50%{opacity:0} }
+.response-actions {
+  display: flex; gap: 6px; align-items: flex-start; flex-shrink: 0;
+}
+.clear-btn, .copy-btn {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 7px; padding: 3px 9px;
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.35); cursor: pointer; transition: all 200ms ease;
+  text-transform: uppercase; white-space: nowrap;
+}
+.clear-btn:hover, .copy-btn:hover {
+  background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6);
+}
+.copy-btn { display: none; }
+.copy-btn.visible { display: block; }
+.copy-btn.copied {
+  border-color: rgba(52,211,153,0.35); color: #34d399;
+}
+.response-meta {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.2); letter-spacing: 0.06em;
+}
+.response-meta.hidden { display: none; }
+.response-gen-time { color: rgba(52,211,153,0.5); }
+
+/* ── STATS PANEL (Phase 3) ── */
+.stats-panel {
+  position: fixed; top: 90px; right: 18px; z-index: 20;
+  display: flex; flex-direction: column; gap: 5px;
+  pointer-events: none;
+  animation: fadeUp 1s ease 1.2s both;
+}
+.stat-item {
+  display: flex; align-items: baseline; gap: 5px;
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.18); letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.stat-val {
+  font-weight: 500; color: rgba(109,216,255,0.4);
+  min-width: 28px; text-align: right;
+  transition: color 300ms ease;
+}
+.stat-val.flash { color: rgba(251,191,36,0.7); }
+
+/* Loading overlay */
+#loading-overlay {
+  position: fixed; inset: 0; z-index: 100; background: #050a18;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px; transition: opacity 700ms ease;
+}
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 2px solid rgba(109,216,255,0.12);
+  border-top-color: #6dd8ff;
+  border-radius: 50%; animation: spin 900ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: rgba(255,255,255,0.3); letter-spacing: 0.15em; text-transform: uppercase;
+}
+
+/* Scroll hint */
+.scroll-hint {
+  position: fixed; bottom: 20px; right: 20px; z-index: 20;
+  font-family: 'DM Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.22);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 6px;
+  animation: fadeUp 1s ease 1.8s both; pointer-events: none;
+}
+
+/* Messages counter in nav */
+.msg-counter {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,0.3); letter-spacing: 0.08em;
+  display: flex; align-items: center; gap: 5px;
+}
+.msg-counter-num {
+  font-weight: 500; color: #6dd8ff;
+  transition: color 400ms ease;
+}
+
+/* Phase dot */
+.phase-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #a78bfa; animation: pulseDot 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseDot { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Camera shake keyframe */
+@keyframes camShake {
+  0%   { transform: translate(0,0); }
+  20%  { transform: translate(-2px, 1px); }
+  40%  { transform: translate(2px, -1px); }
+  60%  { transform: translate(-1px, 2px); }
+  80%  { transform: translate(1px, -1px); }
+  100% { transform: translate(0,0); }
+}
+.shake { animation: camShake 280ms ease; }
+
+/* ── EDUCATIONAL TOOLTIP (Phase 4) ── */
+#edu-overlay {
+  position: fixed; bottom: 24px; left: 24px; z-index: 50;
+  max-width: 320px; width: calc(100vw - 48px);
+  background: rgba(10,16,40,0.92);
+  border: 1px solid rgba(109,216,255,0.25);
+  border-radius: 16px; padding: 16px 18px;
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(109,216,255,0.08);
+  display: none; flex-direction: column; gap: 10px;
+  animation: slideInLeft 400ms cubic-bezier(0.34,1.56,0.64,1) both;
+  pointer-events: all;
+}
+#edu-overlay.visible { display: flex; }
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.edu-header {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.edu-bulb {
+  flex-shrink: 0; width: 28px; height: 28px;
+  background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+}
+.edu-bulb svg { width: 14px; height: 14px; stroke: #fbbf24; }
+.edu-content { flex: 1; }
+.edu-step {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: rgba(109,216,255,0.5); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.edu-text {
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 300;
+  color: rgba(255,255,255,0.7); line-height: 1.6;
+}
+.edu-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.edu-dots { display: flex; gap: 4px; }
+.edu-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); transition: background 300ms ease;
+}
+.edu-dot.active { background: #6dd8ff; }
+.edu-dismiss-btn {
+  background: rgba(109,216,255,0.1); border: 1px solid rgba(109,216,255,0.25);
+  border-radius: 8px; padding: 5px 14px;
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em;
+  color: rgba(109,216,255,0.8); cursor: pointer;
+  transition: all 200ms ease;
+}
+.edu-dismiss-btn:hover { background: rgba(109,216,255,0.18); color: #6dd8ff; }
+
+/* ── EDU REPLAY BUTTON (?) ── */
+#edu-replay-btn {
+  position: fixed; bottom: 24px; left: 24px; z-index: 49;
+  width: 32px; height: 32px;
+  background: rgba(10,16,40,0.85); border: 1px solid rgba(109,216,255,0.2);
+  border-radius: 50%; display: none; align-items: center; justify-content: center;
+  cursor: pointer; pointer-events: all;
+  font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
+  color: rgba(109,216,255,0.5); transition: all 200ms ease;
+  backdrop-filter: blur(12px);
+}
+#edu-replay-btn:hover { border-color: rgba(109,216,255,0.5); color: #6dd8ff; }
+#edu-replay-btn.visible { display: flex; }
+
+/* ── SESSION STATS SUMMARY (Phase 4) ── */
+#session-summary {
+  position: fixed; top: 90px; left: 18px; z-index: 20;
+  max-width: 240px;
+  background: rgba(10,16,40,0.8); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 10px 14px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  display: none; flex-direction: column; gap: 6px;
+  pointer-events: all;
+  animation: fadeUp 600ms ease both;
+}
+#session-summary.visible { display: flex; }
+.summary-title {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 2px;
+}
+.summary-line {
+  font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 300;
+  color: rgba(255,255,255,0.5); line-height: 1.5;
+}
+.summary-line strong { color: rgba(109,216,255,0.7); font-weight: 500; }
+.share-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 7px; padding: 4px 10px; margin-top: 2px;
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: rgba(255,255,255,0.3); cursor: pointer;
+  transition: all 200ms ease; text-align: center;
+}
+.share-btn:hover { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.6); }
+.share-btn.copied { border-color: rgba(52,211,153,0.3); color: #34d399; }
+
+/* ── TUTORIAL OVERLAY (Phase 4) ── */
+#tutorial-overlay {
+  position: fixed; inset: 0; z-index: 80;
+  display: none; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+#tutorial-overlay.visible { display: flex; }
+
+.tutorial-spotlight {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.78);
+  pointer-events: all;
+}
+
+.tutorial-card {
+  position: relative; z-index: 2;
+  background: rgba(10,16,40,0.96);
+  border: 1px solid rgba(167,139,250,0.35);
+  border-radius: 20px; padding: 28px 32px;
+  max-width: 400px; width: calc(100vw - 48px);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(167,139,250,0.1);
+  animation: fadeUp 400ms ease both;
+  pointer-events: all;
+}
+.tutorial-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.25);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.tutorial-icon svg { width: 22px; height: 22px; stroke: #a78bfa; }
+.tutorial-step-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(167,139,250,0.5); margin-bottom: 8px;
+}
+.tutorial-title {
+  font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
+  color: #fff; margin-bottom: 10px;
+}
+.tutorial-body {
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 300;
+  color: rgba(255,255,255,0.55); line-height: 1.65; margin-bottom: 20px;
+}
+.tutorial-progress {
+  display: flex; gap: 5px; justify-content: center; margin-bottom: 20px;
+}
+.tutorial-prog-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,0.12); transition: background 300ms ease;
+}
+.tutorial-prog-dot.active { background: #a78bfa; }
+.tutorial-actions { display: flex; gap: 10px; justify-content: center; }
+.tutorial-skip-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 9px 18px;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.3); cursor: pointer; transition: all 200ms ease;
+}
+.tutorial-skip-btn:hover { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.5); }
+.tutorial-next-btn {
+  background: linear-gradient(135deg, #a78bfa 0%, #6dd8ff 100%);
+  border: none; border-radius: 10px; padding: 9px 22px;
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.04em; color: #fff; cursor: pointer;
+  transition: opacity 200ms ease, transform 100ms ease;
+}
+.tutorial-next-btn:hover { opacity: 0.88; }
+.tutorial-next-btn:active { transform: scale(0.97); }
+
+/* ── MOBILE HINT (Phase 4) ── */
+#mobile-hint {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 30; display: none;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: rgba(255,255,255,0.3); letter-spacing: 0.08em;
+  text-transform: uppercase; text-align: center;
+  background: rgba(10,16,40,0.7); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 999px; padding: 6px 16px;
+  pointer-events: none; white-space: nowrap;
+  animation: fadeOut 5s ease 3s both;
+}
+@keyframes fadeOut {
+  0%   { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Light mode */
+body.light-mode #three-canvas { filter: brightness(0.88) contrast(1.05); }
+body.light-mode .hero-title-block p { color: rgba(0,0,0,0.5); }
+body.light-mode #loading-overlay { background: #eef1f8; }
+body.light-mode .loading-text { color: rgba(0,0,0,0.35); }
+body.light-mode .loading-spinner { border-color: rgba(46,61,125,0.12); border-top-color: #2e3d7d; }
+body.light-mode .scroll-hint { color: rgba(0,0,0,0.18); }
+body.light-mode .block-card { background: rgba(255,255,255,0.72); }
+body.light-mode .block-desc { color: rgba(0,0,0,0.45); }
+body.light-mode .block-desc-head { color: rgba(0,0,0,0.65); }
+body.light-mode .aim-nav { background: rgba(240,243,255,0.75) !important; }
+body.light-mode .input-row { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12); }
+body.light-mode #neural-input { color: rgba(0,0,0,0.85); }
+body.light-mode #neural-input::placeholder { color: rgba(0,0,0,0.3); }
+body.light-mode .response-area { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); }
+body.light-mode .response-text { color: rgba(0,0,0,0.6); }
+body.light-mode .msg-counter { color: rgba(0,0,0,0.35); }
+body.light-mode .history-chip { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); color: rgba(0,0,0,0.35); }
+body.light-mode .stat-item { color: rgba(0,0,0,0.2); }
+body.light-mode .stat-val { color: rgba(46,61,125,0.45); }
+body.light-mode #edu-overlay { background: rgba(240,243,255,0.95); }
+body.light-mode .edu-text { color: rgba(0,0,0,0.6); }
+body.light-mode #session-summary { background: rgba(240,243,255,0.9); }
+body.light-mode .summary-line { color: rgba(0,0,0,0.5); }
+
+@media (max-width: 640px) {
+  .block-cards { gap: 8px; }
+  .block-card { padding: 10px 12px; min-width: 130px; }
+  .bottom-panel { padding: 0 12px 16px; gap: 8px; }
+  .hero-title-block h1 { font-size: 1.3rem; }
+  .input-area { max-width: 100%; }
+  .response-area { max-width: 100%; }
+  .stats-panel { display: none; }
+  #mobile-hint { display: block; }
+  #edu-overlay { max-width: calc(100vw - 24px); left: 12px; bottom: 12px; }
+  .send-btn { min-height: 48px; padding: 12px 18px; }
+}
+@media (max-height: 620px) {
+  .block-cards { display: none; }
+  .response-area { display: none; }
+  .history-chips { display: none; }
+}
+  </style>
+  <script>try{if(document.cookie.indexOf('cos_ai_reset=1')!==-1){for(var _ri=localStorage.length-1;_ri>=0;_ri--){var _rk=localStorage.key(_ri);if(_rk&&_rk.indexOf('cos_ai_')===0)localStorage.removeItem(_rk);}document.cookie='cos_ai_reset=;path=/;max-age=0';}}catch(e){}</script>
+  <script>try{if(localStorage.getItem('cos_ai_theme')==='light')document.documentElement.classList.add('light-pending')}catch(e){}</script>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Initialising neural network</div>
+</div>
+
+<!-- VIGNETTE -->
+<div id="vignette"></div>
+
+<!-- CANVAS -->
+<canvas id="three-canvas"></canvas>
+
+<!-- STATS PANEL -->
+<div class="stats-panel" id="stats-panel">
+  <div class="stat-item">
+    <span class="stat-label">TOKENS</span>
+    <span class="stat-val" id="stat-tokens">0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">NODES</span>
+    <span class="stat-val" id="stat-nodes">0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">SIGNALS</span>
+    <span class="stat-val" id="stat-signals">0</span>
+  </div>
+</div>
+
+<!-- SESSION SUMMARY (Phase 4) -->
+<div id="session-summary">
+  <div class="summary-title">This Session</div>
+  <div class="summary-line" id="summary-line">Loading...</div>
+  <button class="share-btn" id="share-btn" onclick="shareStats()">Copy Summary</button>
+</div>
+
+<!-- EDUCATIONAL TOOLTIP (Phase 4) -->
+<div id="edu-overlay">
+  <div class="edu-header">
+    <div class="edu-bulb">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21h6M12 3a6 6 0 0 1 6 6c0 2.4-1.4 4.5-3.5 5.6L14 17H10l-.5-2.4C7.4 13.5 6 11.4 6 9a6 6 0 0 1 6-6z"/>
+      </svg>
+    </div>
+    <div class="edu-content">
+      <div class="edu-step" id="edu-step">Insight 1 of 4</div>
+      <div class="edu-text" id="edu-text"></div>
+    </div>
+  </div>
+  <div class="edu-footer">
+    <div class="edu-dots" id="edu-dots">
+      <div class="edu-dot active"></div>
+      <div class="edu-dot"></div>
+      <div class="edu-dot"></div>
+      <div class="edu-dot"></div>
+    </div>
+    <button class="edu-dismiss-btn" id="edu-dismiss-btn" onclick="dismissEdu()">Got it</button>
+  </div>
+</div>
+
+<!-- EDU REPLAY BUTTON -->
+<button id="edu-replay-btn" onclick="replayEdu()" title="Replay insight">?</button>
+
+<!-- TUTORIAL OVERLAY (Phase 4) -->
+<div id="tutorial-overlay">
+  <div class="tutorial-spotlight" id="tutorial-spotlight" onclick="skipTutorial()"></div>
+  <div class="tutorial-card" id="tutorial-card">
+    <div class="tutorial-icon" id="tutorial-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+      </svg>
+    </div>
+    <div class="tutorial-step-label" id="tutorial-step-label">Step 1 of 3</div>
+    <div class="tutorial-title" id="tutorial-title"></div>
+    <div class="tutorial-body" id="tutorial-body"></div>
+    <div class="tutorial-progress" id="tutorial-progress">
+      <div class="tutorial-prog-dot active"></div>
+      <div class="tutorial-prog-dot"></div>
+      <div class="tutorial-prog-dot"></div>
+    </div>
+    <div class="tutorial-actions">
+      <button class="tutorial-skip-btn" onclick="skipTutorial()">Skip</button>
+      <button class="tutorial-next-btn" id="tutorial-next-btn" onclick="nextTutorialStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE HINT (Phase 4) -->
+<div id="mobile-hint">Tap to explore, type to interact</div>
+
+<!-- OVERLAY -->
+<div class="overlay">
+  <!-- NAV -->
+  <nav class="aim-nav py-4 sm:py-5">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <a href="https://www.aim.com.au" target="_blank">
+        <img src="../../assets/aimlogo_white.png" alt="AIM" class="h-8 sm:h-10">
+      </a>
+      <div class="flex items-center gap-5">
+        <div class="msg-counter" id="msg-counter" style="display:none">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages: <span class="msg-counter-num" id="msg-count">0</span>
+        </div>
+        <a href="../index.html" class="aim-back">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Course
+        </a>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+        <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- BOTTOM PANEL -->
+  <div class="bottom-panel">
+
+    <!-- Info cards -->
+    <div class="block-cards">
+      <div class="block-card input-layer">
+        <div class="block-label input-layer">Input Layer</div>
+        <div class="block-desc-head">Where words enter</div>
+        <div class="block-desc">Each token becomes a signal, flowing into the network</div>
+      </div>
+      <div class="block-card hidden-layer">
+        <div class="block-label hidden-layer">Hidden Layers</div>
+        <div class="block-desc-head">Pattern recognition</div>
+        <div class="block-desc">The AI finds meaning, context, and relationships</div>
+      </div>
+      <div class="block-card output-layer">
+        <div class="block-label output-layer">Output Layer</div>
+        <div class="block-desc-head">The response forms</div>
+        <div class="block-desc">Predictions assemble into coherent text</div>
+      </div>
+    </div>
+
+    <!-- Title block -->
+    <div class="hero-title-block">
+      <div class="pill">
+        <span class="phase-dot"></span>
+        Interactive Lesson
+      </div>
+      <h1>The <span>Neural Playground</span></h1>
+      <p>Watch AI think in real time — each word you type becomes a signal flowing through layers of pattern recognition</p>
+    </div>
+
+    <!-- Response area (Phase 3 enhanced) -->
+    <div class="response-area empty" id="response-area">
+      <div class="response-body">
+        <div class="response-text placeholder" id="response-text">The AI's response will appear here after processing...<span class="response-cursor hidden" id="response-cursor"></span></div>
+        <div class="response-actions">
+          <button class="copy-btn" id="copy-btn" onclick="copyResponse()">Copy</button>
+          <button class="clear-btn" id="clear-btn" onclick="clearResponse()">Clear</button>
+        </div>
+      </div>
+      <div class="response-meta hidden" id="response-meta">
+        <span class="response-gen-time" id="response-gen-time"></span>
+      </div>
+    </div>
+
+    <!-- Input area -->
+    <div class="input-area">
+
+      <!-- Preset prompts (Phase 4) -->
+      <div class="preset-prompts" id="preset-prompts">
+        <span class="preset-label">Try:</span>
+        <button class="preset-btn" onclick="usePreset('Write me an email')">Write me an email</button>
+        <button class="preset-btn" onclick="usePreset('Explain how AI works')">Explain how AI works</button>
+        <button class="preset-btn" onclick="usePreset('Brainstorm marketing ideas')">Brainstorm marketing ideas</button>
+      </div>
+
+      <!-- History chips -->
+      <div class="history-chips" id="history-chips" style="display:none">
+        <span class="history-label">Re-run:</span>
+      </div>
+
+      <div class="input-row" id="input-row">
+        <input
+          type="text"
+          id="neural-input"
+          placeholder="Type a sentence to see the AI think..."
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="200"
+        />
+        <button class="send-btn" id="send-btn" onclick="handleSend()">Send</button>
+      </div>
+      <div class="processing-status hidden" id="proc-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Processing through Layer 1...</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Scroll hint -->
+<div class="scroll-hint">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+  Drag to rotate &middot; Scroll to zoom
+</div>
+
+<!-- THEME SCRIPT -->
+<script>
+(function(){
+  var KEY = 'cos_ai_theme';
+  var saved = localStorage.getItem(KEY);
+  if (saved === 'light') document.body.classList.add('light-mode');
+  updateIcon();
+  window.toggleTheme = function(){
+    document.body.classList.toggle('light-mode');
+    var isLight = document.body.classList.contains('light-mode');
+    localStorage.setItem(KEY, isLight ? 'light' : 'dark');
+    updateIcon();
+  };
+  function updateIcon(){
+    var isLight = document.body.classList.contains('light-mode');
+    document.querySelectorAll('.theme-icon-dark').forEach(function(el){ el.style.display = isLight ? 'none' : 'block'; });
+    document.querySelectorAll('.theme-icon-light').forEach(function(el){ el.style.display = isLight ? 'block' : 'none'; });
+  }
+  if (saved === 'light' && !document.body.classList.contains('light-mode')) document.body.classList.add('light-mode');
+})();
+lucide.createIcons();
+</script>
+
+<!-- UI CONTROLLER (non-module, so Three.js module can call window functions) -->
+<script>
+/* ═══════ API CONFIGURATION ═══════
+   Set OPUS_API_KEY to enable live AI responses.
+   When empty, demo mode uses local mock responses.
+*/
+var OPUS_API_KEY = '';
+var OPUS_MODEL   = 'claude-opus-4-7';
+var USE_AI       = OPUS_API_KEY.length > 0;
+
+/* ═══════ CONTEXT-AWARE DEMO RESPONSES ═══════ */
+function buildDemoResponse(text) {
+  var lower   = text.toLowerCase();
+  var words   = text.trim().split(/\s+/);
+  var topic   = words.slice(0, 4).join(' ');
+
+  if (/\bemail\b|\bwrite\b|\bdraft\b|\bmessage\b/.test(lower)) {
+    var subject = words.filter(function(w){ return w.length > 4; }).slice(0,2).join(' ') || topic;
+    return 'Here\'s a draft approach for your email:\n\nSubject: ' + subject + '\n\nOpen with empathy for the recipient\'s situation. Follow with your key message about "' + topic + '". Close with a clear call to action — make it easy for them to say yes.\n\nKeep it under 150 words. Brevity shows respect for their time.';
+  }
+
+  if (/\bidea\b|\bbrainstorm\b|\bcreat\b|\binvent\b/.test(lower)) {
+    return 'Brainstorming around "' + topic + '" — here are three angles worth exploring:\n\n1. Flip the assumption: what if the opposite approach worked better?\n2. Borrow from another industry — how would a hospitality brand solve this?\n3. Constraint-driven: if you had half the budget, what would you prioritise?\n\nThe best ideas often live at the intersection of these three lenses.';
+  }
+
+  if (/\bexplain\b|\bwhat is\b|\bhow does\b|\bwhat are\b/.test(lower)) {
+    return '"' + topic + '" works by processing information through layers of pattern recognition — much like the neural network you just watched.\n\nAt its core, it involves breaking complex inputs into smaller pieces, finding patterns, and assembling a coherent output. Each layer adds a different level of understanding, from raw signals to nuanced meaning.\n\nThe key insight: complexity emerges from simple rules applied at scale.';
+  }
+
+  if (/\bmarket\b|\bsocial\b|\bbrand\b|\badvert\b|\bcampaign\b/.test(lower)) {
+    return 'For a marketing approach around "' + topic + '" — lead with the customer\'s pain, not your product\'s features.\n\nChannel strategy: start where your audience already gathers. Test two message angles: one rational (saves time/money) and one emotional (how it makes them feel). Let data pick the winner.\n\nMeasure reach, but optimise for conversion. A smaller engaged audience beats a large passive one every time.';
+  }
+
+  if (/\bstrateg\b|\bplan\b|\bgoal\b|\bobj/.test(lower)) {
+    return 'A strong strategy for "' + topic + '" starts with a clear picture of where you are now versus where you want to be.\n\nWork backwards from the outcome: what needs to be true for this to succeed? Identify the two or three highest-leverage actions, sequence them, and assign ownership.\n\nReview weekly, adapt monthly. The strategy that stays rigid rarely survives contact with reality.';
+  }
+
+  if (/\bdata\b|\banalys\b|\bmetric\b|\breport\b|\binsight\b/.test(lower)) {
+    return 'Analysing "' + topic + '" — the first question is: what decision does this data need to support?\n\nWithout a clear decision, even rich data leads to description rather than insight. Look for the delta: not just what the number is, but how it\'s changing and why.\n\nThe most actionable analyses answer "so what?" before the reader has to ask.';
+  }
+
+  return 'Your prompt about "' + topic + '" activated ' + (20 + Math.floor(Math.random() * 30)) + ' attention patterns across the network.\n\nThe model found strong contextual signals in your phrasing, cross-referenced learned associations, and weighted the most likely response paths. What you see here is the output layer\'s highest-confidence prediction — assembled token by token, much like the particles you just watched travel through the network.';
+}
+
+/* ═══════ SESSION STATE ═══════ */
+var messageCount   = 0;
+var typewriterTimer = null;
+var isProcessing    = false;
+var inputHistory    = [];
+var lastResponseFull = '';
+var procStartTime    = 0;
+
+// Stats counters
+var statTokensTotal  = 0;
+var statNodesSet     = new Set();
+var statSignalsTotal = 0;
+
+function updateStats() {
+  document.getElementById('stat-tokens').textContent  = statTokensTotal;
+  document.getElementById('stat-nodes').textContent   = statNodesSet.size;
+  document.getElementById('stat-signals').textContent = statSignalsTotal;
+}
+
+function flashStatVal(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('flash');
+  setTimeout(function(){ el.classList.remove('flash'); }, 350);
+}
+
+/* ═══════ PHASE 4: EDUCATIONAL TOOLTIPS ═══════ */
+var eduTooltips = [
+  "You just watched tokenisation — your words were split into pieces and fed into the input layer, just like real LLMs do.",
+  "The hidden layers found patterns in your input — like recognising that 'write an email' means you want a professional, structured response.",
+  "Each node that lit up represents a computation — real AI models have billions of these, running in parallel on GPUs.",
+  "The output layer assembled the most likely next words, one at a time — that's why the response appeared word by word, just like ChatGPT."
+];
+var eduCurrentIdx = 0;
+var eduShownThisSession = false;
+
+function showEduTooltip(idx) {
+  var overlay = document.getElementById('edu-overlay');
+  var stepEl  = document.getElementById('edu-step');
+  var textEl  = document.getElementById('edu-text');
+  var dotsEl  = document.getElementById('edu-dots');
+
+  eduCurrentIdx = idx % eduTooltips.length;
+  stepEl.textContent  = 'Insight ' + (eduCurrentIdx + 1) + ' of ' + eduTooltips.length;
+  textEl.textContent  = eduTooltips[eduCurrentIdx];
+
+  // Update dots
+  var dots = dotsEl.querySelectorAll('.edu-dot');
+  dots.forEach(function(d, i){ d.classList.toggle('active', i === eduCurrentIdx); });
+
+  overlay.classList.add('visible');
+
+  // Hide replay btn while tooltip is showing
+  document.getElementById('edu-replay-btn').classList.remove('visible');
+}
+
+function dismissEdu() {
+  var overlay = document.getElementById('edu-overlay');
+  overlay.classList.remove('visible');
+  // Mark as shown in localStorage
+  try { localStorage.setItem('np_edu_shown', '1'); } catch(e) {}
+  // Show replay btn
+  document.getElementById('edu-replay-btn').classList.add('visible');
+}
+
+function replayEdu() {
+  showEduTooltip((eduCurrentIdx + 1) % eduTooltips.length);
+}
+
+// Called after each response completes
+function maybeShowEduTooltip() {
+  var tooltipIdx = (messageCount - 1) % eduTooltips.length;
+  // Slight delay so user sees the response first
+  setTimeout(function() {
+    showEduTooltip(tooltipIdx);
+  }, 1200);
+}
+
+/* ═══════ PHASE 4: SESSION SUMMARY ═══════ */
+function updateSessionSummary() {
+  if (messageCount < 3) return;
+  var summaryEl = document.getElementById('session-summary');
+  var lineEl    = document.getElementById('summary-line');
+  summaryEl.classList.add('visible');
+  lineEl.innerHTML =
+    '<strong>' + messageCount + '</strong> messages &nbsp;·&nbsp; ' +
+    '<strong>' + statNodesSet.size + '</strong> nodes activated &nbsp;·&nbsp; ' +
+    '<strong>' + statTokensTotal + '</strong> tokens generated';
+}
+
+function shareStats() {
+  var text = 'Neural Playground session: ' + messageCount + ' messages sent, ' +
+    statNodesSet.size + ' nodes activated, ' + statTokensTotal + ' tokens generated. ' +
+    'Try it at aim.com.au';
+  try {
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('share-btn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = 'Copy Summary'; btn.classList.remove('copied'); }, 2000);
+    });
+  } catch(e) {}
+}
+
+/* ═══════ PHASE 4: TUTORIAL ═══════ */
+var tutorialStep = 0;
+var tutorialSteps = [
+  {
+    icon: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    label: 'Step 1 of 3',
+    title: 'Welcome to the Neural Playground',
+    body: 'This is a neural network — a simplified model of how AI processes text. The glowing nodes and flowing particles represent real computations happening inside large language models like ChatGPT.',
+  },
+  {
+    icon: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    label: 'Step 2 of 3',
+    title: 'Type anything to begin',
+    body: 'Type any sentence in the input field below and press Send. The AI will process your text and generate a response — just like a real language model.',
+  },
+  {
+    icon: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+    label: 'Step 3 of 3',
+    title: 'Watch the signal flow',
+    body: 'Watch the signal particles flow from left to right through each layer — that\'s AI thinking! Blue = input, purple = pattern finding, gold = response forming. Each flash is a computation.',
+  }
+];
+
+function initTutorial() {
+  try {
+    if (localStorage.getItem('np_tutorial_done') === '1') return;
+  } catch(e) {}
+  // Show after loading completes
+  setTimeout(showTutorialStep, 1800);
+}
+
+function showTutorialStep() {
+  var overlay = document.getElementById('tutorial-overlay');
+  var step    = tutorialSteps[tutorialStep];
+  if (!step) { skipTutorial(); return; }
+
+  overlay.classList.add('visible');
+
+  document.getElementById('tutorial-icon').innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;stroke:#a78bfa">' + step.icon + '</svg>';
+  document.getElementById('tutorial-step-label').textContent = step.label;
+  document.getElementById('tutorial-title').textContent = step.title;
+  document.getElementById('tutorial-body').textContent  = step.body;
+
+  // Update progress dots
+  var dots = document.getElementById('tutorial-progress').querySelectorAll('.tutorial-prog-dot');
+  dots.forEach(function(d, i){ d.classList.toggle('active', i === tutorialStep); });
+
+  // Last step: change Next button
+  var nextBtn = document.getElementById('tutorial-next-btn');
+  if (tutorialStep === tutorialSteps.length - 1) {
+    nextBtn.textContent = "Let's try it!";
+  } else {
+    nextBtn.textContent = 'Next';
+  }
+}
+
+function nextTutorialStep() {
+  tutorialStep++;
+  if (tutorialStep >= tutorialSteps.length) {
+    skipTutorial();
+    // Focus input
+    setTimeout(function(){ document.getElementById('neural-input').focus(); }, 200);
+  } else {
+    showTutorialStep();
+  }
+}
+
+function skipTutorial() {
+  document.getElementById('tutorial-overlay').classList.remove('visible');
+  try { localStorage.setItem('np_tutorial_done', '1'); } catch(e) {}
+}
+
+/* ═══════ HISTORY CHIPS ═══════ */
+function pushHistory(text) {
+  inputHistory = inputHistory.filter(function(h){ return h !== text; });
+  inputHistory.unshift(text);
+  if (inputHistory.length > 5) inputHistory.pop();
+  renderHistoryChips();
+}
+
+function renderHistoryChips() {
+  var container = document.getElementById('history-chips');
+  if (!container) return;
+  var existingChips = container.querySelectorAll('.history-chip');
+  existingChips.forEach(function(c){ c.remove(); });
+
+  if (inputHistory.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'flex';
+
+  inputHistory.forEach(function(text) {
+    var chip = document.createElement('button');
+    chip.className = 'history-chip';
+    chip.textContent = text.length > 22 ? text.slice(0, 20) + '…' : text;
+    chip.title = text;
+    chip.onclick = function() {
+      if (isProcessing) return;
+      document.getElementById('neural-input').value = text;
+      handleSend();
+    };
+    container.appendChild(chip);
+  });
+}
+
+/* ═══════ PHASE 4: PRESET PROMPTS ═══════ */
+function usePreset(text) {
+  if (isProcessing) return;
+  document.getElementById('neural-input').value = text;
+  handleSend();
+}
+
+/* ═══════ SEND HANDLER ═══════ */
+function handleSend() {
+  var input = document.getElementById('neural-input');
+  var text  = input.value.trim();
+  if (!text) return;
+
+  // SOUND: playSound('submit')
+
+  if (typewriterTimer) { clearTimeout(typewriterTimer); typewriterTimer = null; }
+
+  isProcessing = true;
+  messageCount++;
+  procStartTime = performance.now();
+
+  pushHistory(text);
+
+  var counterEl = document.getElementById('msg-counter');
+  counterEl.style.display = 'flex';
+  document.getElementById('msg-count').textContent = messageCount;
+
+  input.disabled = true;
+  document.getElementById('send-btn').disabled = true;
+
+  // Camera shake
+  var canvas = document.getElementById('three-canvas');
+  canvas.classList.remove('shake');
+  void canvas.offsetWidth;
+  canvas.classList.add('shake');
+  setTimeout(function(){ canvas.classList.remove('shake'); }, 300);
+
+  // Processing bg shift
+  canvas.classList.add('processing-bg');
+  document.getElementById('vignette').classList.add('processing-vignette');
+
+  // Input pulse
+  var inputRow = document.getElementById('input-row');
+  inputRow.classList.add('processing');
+
+  // Show status
+  var procStatus = document.getElementById('proc-status');
+  procStatus.classList.remove('hidden');
+  var statusDot  = document.getElementById('status-dot');
+  var statusText = document.getElementById('status-text');
+  statusDot.classList.remove('done');
+  statusText.textContent = 'Processing through Layer 1...';
+
+  // Clear previous response
+  var responseArea   = document.getElementById('response-area');
+  var responseText   = document.getElementById('response-text');
+  var responseMeta   = document.getElementById('response-meta');
+  var copyBtn        = document.getElementById('copy-btn');
+
+  responseArea.classList.remove('empty', 'streaming');
+  responseText.classList.remove('placeholder');
+  responseText.innerHTML = '<span class="response-cursor hidden" id="response-cursor"></span>';
+  responseMeta.classList.add('hidden');
+  copyBtn.classList.remove('visible', 'copied');
+  lastResponseFull = '';
+
+  // Fire signal particles
+  var particleCount = Math.min(60, Math.max(20, Math.floor(text.length / 2.5)));
+
+  // Phase 4: after 3+ messages, increase particle count ("warmed up brain")
+  if (messageCount >= 3) {
+    particleCount = Math.min(80, Math.floor(particleCount * 1.35));
+  }
+
+  if (window._spawnSignalParticles) window._spawnSignalParticles(particleCount, text);
+
+  // Phase 4: camera cinematic zoom
+  if (window._cinematicSubmit) window._cinematicSubmit();
+
+  statSignalsTotal += particleCount;
+  updateStats();
+  flashStatVal('stat-signals');
+
+  var layerLabels = [
+    'Processing through Layer 1...',
+    'Processing through Layer 2...',
+    'Processing through Layer 3...',
+    'Generating response...'
+  ];
+  layerLabels.forEach(function(label, idx) {
+    setTimeout(function() {
+      if (!isProcessing) return;
+      // SOUND: playSound('layer-transition')
+      statusText.textContent = label;
+      if (idx === layerLabels.length - 1) {
+        statusText.textContent = 'Response generated ✓';
+        statusDot.classList.add('done');
+        // SOUND: playSound('response-start')
+      }
+    }, 700 * (idx + 1));
+  });
+
+  var response = buildDemoResponse(text);
+
+  setTimeout(function() {
+    if (!isProcessing) return;
+    responseArea.classList.add('streaming');
+    // Phase 4: camera pull back when response starts
+    if (window._cinematicResponseStart) window._cinematicResponseStart();
+    typewriterResponse(response, function() {
+      isProcessing = false;
+      inputRow.classList.remove('processing');
+      input.disabled = false;
+      document.getElementById('send-btn').disabled = false;
+      input.value = '';
+      input.focus();
+
+      canvas.classList.remove('processing-bg');
+      document.getElementById('vignette').classList.remove('processing-vignette');
+      responseArea.classList.remove('streaming');
+
+      var cur = document.getElementById('response-cursor');
+      if (cur) cur.classList.add('hidden');
+
+      var elapsed = ((performance.now() - procStartTime) / 1000).toFixed(1);
+      var genTimeEl = document.getElementById('response-gen-time');
+      if (genTimeEl) genTimeEl.textContent = 'Generated in ' + elapsed + 's';
+      responseMeta.classList.remove('hidden');
+
+      copyBtn.classList.add('visible');
+
+      // SOUND: playSound('response-complete')
+
+      // Phase 4: camera return
+      if (window._cinematicComplete) window._cinematicComplete();
+
+      setTimeout(function() {
+        procStatus.classList.add('hidden');
+      }, 2000);
+
+      // Phase 4: show educational tooltip
+      maybeShowEduTooltip();
+
+      // Phase 4: update session summary
+      updateSessionSummary();
+    });
+  }, 3000);
+}
+
+/* ═══════ TYPEWRITER (Phase 3 — token-synchronized) ═══════ */
+function typewriterResponse(text, onDone) {
+  var responseText   = document.getElementById('response-text');
+  lastResponseFull   = text;
+
+  responseText.innerHTML = '';
+  var textSpan   = document.createElement('span');
+  var cursorSpan = document.createElement('span');
+  cursorSpan.className = 'response-cursor';
+  cursorSpan.id = 'response-cursor';
+  responseText.appendChild(textSpan);
+  responseText.appendChild(cursorSpan);
+
+  var words = text.split(' ');
+  var i = 0;
+
+  function nextWord() {
+    if (i >= words.length) {
+      if (onDone) onDone();
+      return;
+    }
+
+    textSpan.textContent += (i === 0 ? '' : ' ') + words[i];
+    i++;
+
+    // SOUND: playSound('node-flash')
+
+    statTokensTotal++;
+    updateStats();
+    flashStatVal('stat-tokens');
+
+    if (window._flashOutputNode) window._flashOutputNode();
+
+    typewriterTimer = setTimeout(nextWord, 52 + Math.random() * 40);
+  }
+  nextWord();
+}
+
+/* ═══════ COPY RESPONSE ═══════ */
+function copyResponse() {
+  if (!lastResponseFull) return;
+  try {
+    navigator.clipboard.writeText(lastResponseFull).then(function() {
+      var btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function(){
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  } catch(e) {}
+}
+
+/* ═══════ CLEAR RESPONSE ═══════ */
+function clearResponse() {
+  var responseArea = document.getElementById('response-area');
+  if (typewriterTimer) { clearTimeout(typewriterTimer); typewriterTimer = null; }
+  isProcessing = false;
+  lastResponseFull = '';
+
+  var responseText = document.getElementById('response-text');
+  responseText.innerHTML = 'The AI\'s response will appear here after processing...';
+  responseText.classList.add('placeholder');
+  responseArea.classList.add('empty');
+  responseArea.classList.remove('streaming');
+
+  document.getElementById('response-meta').classList.add('hidden');
+  document.getElementById('copy-btn').classList.remove('visible', 'copied');
+
+  var input = document.getElementById('neural-input');
+  input.disabled = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('input-row').classList.remove('processing');
+  document.getElementById('proc-status').classList.add('hidden');
+  document.getElementById('three-canvas').classList.remove('processing-bg');
+  document.getElementById('vignette').classList.remove('processing-vignette');
+
+  // Camera return if we cancelled
+  if (window._cinematicComplete) window._cinematicComplete();
+}
+
+// Enter key handler
+document.addEventListener('DOMContentLoaded', function() {
+  var input = document.getElementById('neural-input');
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleSend();
+  });
+
+  // Mobile: ensure input visible above keyboard
+  input.addEventListener('focus', function() {
+    setTimeout(function() {
+      input.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 300);
+  });
+
+  // Init tutorial on first visit
+  initTutorial();
+
+  // Check if edu overlay was previously dismissed
+  try {
+    if (localStorage.getItem('np_edu_shown') === '1') {
+      document.getElementById('edu-replay-btn').classList.add('visible');
+    }
+  } catch(e) {}
+});
+</script>
+
+<!-- THREE.JS IMPORTMAP -->
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+
+<!-- 3D SCENE -->
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ─────────────────────────────────────────
+   RENDERER
+───────────────────────────────────────── */
+const canvas = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+/* ─────────────────────────────────────────
+   SCENE + CAMERA
+───────────────────────────────────────── */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050a18);
+scene.fog = new THREE.FogExp2(0x050a18, 0.042);
+
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 300);
+
+// Default camera position (resting state)
+const CAM_DEFAULT = { x: 0, y: 3.5, z: 14 };
+// Zoom-in target (toward input layer)
+const CAM_ZOOM_IN = { x: -3.5, y: 2.0, z: 10.0 };
+// Response start (pull back wide)
+const CAM_WIDE    = { x: 0, y: 4.5, z: 16 };
+
+camera.position.set(CAM_DEFAULT.x, CAM_DEFAULT.y, CAM_DEFAULT.z);
+camera.lookAt(0, 0, 0);
+
+/* ─────────────────────────────────────────
+   ORBIT CONTROLS
+───────────────────────────────────────── */
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.55;
+controls.enablePan = false;
+controls.minDistance = 7;
+controls.maxDistance = 22;
+controls.minPolarAngle = Math.PI * 0.15;
+controls.maxPolarAngle = Math.PI * 0.55;
+controls.target.set(0, 0, 0);
+
+/* ─────────────────────────────────────────
+   PHASE 4: CAMERA CINEMATIC TWEEN SYSTEM
+───────────────────────────────────────── */
+let camTween = null; // current tween state
+let cinematicActive = false;
+
+function tweenCamera(targetPos, duration, onComplete) {
+  // Cancel existing tween
+  if (camTween) camTween.cancelled = true;
+
+  const startPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+  const startTime = performance.now();
+  const tween = { cancelled: false };
+  camTween = tween;
+
+  function step(now) {
+    if (tween.cancelled) return;
+    const t = Math.min((now - startTime) / duration, 1.0);
+    // Ease in-out cubic
+    const e = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+    camera.position.x = startPos.x + (targetPos.x - startPos.x) * e;
+    camera.position.y = startPos.y + (targetPos.y - startPos.y) * e;
+    camera.position.z = startPos.z + (targetPos.z - startPos.z) * e;
+    if (t < 1.0) {
+      requestAnimationFrame(step);
+    } else {
+      camTween = null;
+      if (onComplete) onComplete();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+// Phase 4: Expose cinematic hooks
+window._cinematicSubmit = function() {
+  cinematicActive = true;
+  controls.autoRotate = false;
+  // Zoom toward input layer
+  tweenCamera(CAM_ZOOM_IN, 600);
+};
+
+window._cinematicResponseStart = function() {
+  // Drift back toward wide view as response streams
+  tweenCamera(CAM_WIDE, 800);
+};
+
+window._cinematicComplete = function() {
+  // Return to resting orbit
+  tweenCamera(CAM_DEFAULT, 1200, function() {
+    cinematicActive = false;
+    controls.autoRotate = true;
+  });
+};
+
+/* ─────────────────────────────────────────
+   LIGHTING
+───────────────────────────────────────── */
+const ambient = new THREE.AmbientLight(0x0a1535, 2.2);
+scene.add(ambient);
+
+const hemi = new THREE.HemisphereLight(0x1a3a6a, 0x020408, 0.8);
+scene.add(hemi);
+
+const fillLight = new THREE.DirectionalLight(0x0d2050, 0.4);
+fillLight.position.set(0, 5, 8);
+scene.add(fillLight);
+
+/* ─────────────────────────────────────────
+   COLOUR PALETTE
+───────────────────────────────────────── */
+const LAYER_COLORS = [
+  new THREE.Color(0x6dd8ff), // Layer 0 — input (blue)
+  new THREE.Color(0xa78bfa), // Layer 1 — hidden 1 (purple)
+  new THREE.Color(0x34d399), // Layer 2 — hidden 2 (green)
+  new THREE.Color(0x34d399), // Layer 3 — hidden 2b (green)
+  new THREE.Color(0xfbbf24), // Layer 4 — output (gold)
+];
+
+const LAYER_HEX = [0x6dd8ff, 0xa78bfa, 0x34d399, 0x34d399, 0xfbbf24];
+
+/* ─────────────────────────────────────────
+   NODE LAYOUT
+───────────────────────────────────────── */
+const LAYER_DEFS = [
+  { count: 10, xPos: -4.8 },
+  { count: 16, xPos: -2.0 },
+  { count: 18, xPos:  0.5 },
+  { count: 16, xPos:  2.8 },
+  { count: 10, xPos:  5.0 },
+];
+const TOTAL_NODES = LAYER_DEFS.reduce((s, l) => s + l.count, 0);
+
+function brainRadius(layer) {
+  const t = layer / (LAYER_DEFS.length - 1);
+  const bell = Math.sin(t * Math.PI);
+  return { ry: 1.2 + bell * 2.0, rz: 1.0 + bell * 1.6 };
+}
+
+const nodePositions = [];
+const nodeColors    = [];
+const nodeSizes     = [];
+
+LAYER_DEFS.forEach((ld, layerIdx) => {
+  const { ry, rz } = brainRadius(layerIdx);
+  for (let i = 0; i < ld.count; i++) {
+    const angle   = (i / ld.count) * Math.PI * 2 + (layerIdx * 0.37);
+    const scatter = 0.55 + Math.random() * 0.45;
+    const y = Math.sin(angle) * ry * scatter;
+    const z = Math.cos(angle) * rz * scatter;
+    const x = ld.xPos + (Math.random() - 0.5) * 0.6;
+    nodePositions.push({ x, y, z, layer: layerIdx, indexInLayer: i });
+    nodeColors.push(LAYER_COLORS[layerIdx].clone());
+    nodeSizes.push(0.04 + Math.random() * 0.05);
+  }
+});
+
+/* ─────────────────────────────────────────
+   INSTANCED MESH FOR NODES
+───────────────────────────────────────── */
+const nodeSphereGeo = new THREE.SphereGeometry(1, 10, 8);
+const nodeBaseMat   = new THREE.MeshStandardMaterial({ roughness: 0.25, metalness: 0.1 });
+const nodeInstanced = new THREE.InstancedMesh(nodeSphereGeo, nodeBaseMat, TOTAL_NODES);
+nodeInstanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+const nodeColorArr    = new Float32Array(TOTAL_NODES * 3);
+const nodePulsePhase  = new Float32Array(TOTAL_NODES);
+const nodeFlashStrength = new Float32Array(TOTAL_NODES);
+const nodeFlashScale    = new Float32Array(TOTAL_NODES);
+
+const dummy = new THREE.Object3D();
+
+nodePositions.forEach((np, i) => {
+  dummy.position.set(np.x, np.y, np.z);
+  dummy.scale.setScalar(nodeSizes[i]);
+  dummy.updateMatrix();
+  nodeInstanced.setMatrixAt(i, dummy.matrix);
+
+  const c = nodeColors[i];
+  nodeColorArr[i * 3]     = c.r;
+  nodeColorArr[i * 3 + 1] = c.g;
+  nodeColorArr[i * 3 + 2] = c.b;
+
+  nodePulsePhase[i] = Math.random() * Math.PI * 2;
+  nodeFlashStrength[i] = 0;
+  nodeFlashScale[i]    = 0;
+});
+
+nodeInstanced.instanceMatrix.needsUpdate = true;
+nodePositions.forEach((_, i) => { nodeInstanced.setColorAt(i, nodeColors[i]); });
+if (nodeInstanced.instanceColor) nodeInstanced.instanceColor.needsUpdate = true;
+scene.add(nodeInstanced);
+
+/* ─────────────────────────────────────────
+   BUILD LAYER INDEX + CONNECTIONS
+───────────────────────────────────────── */
+const layerNodes = LAYER_DEFS.map(() => []);
+nodePositions.forEach((np, i) => { layerNodes[np.layer].push(i); });
+
+const connectionPairs = [];
+const connMap = new Map();
+
+layerNodes.forEach((layerA, li) => {
+  if (li >= LAYER_DEFS.length - 1) return;
+  const layerB = layerNodes[li + 1];
+  layerA.forEach(nodeA => {
+    const numConns = 2 + Math.floor(Math.random() * 3);
+    const npA = nodePositions[nodeA];
+    const sorted = layerB.slice().sort((x, y) => {
+      const npX = nodePositions[x], npY = nodePositions[y];
+      const dX = (npX.y - npA.y) ** 2 + (npX.z - npA.z) ** 2;
+      const dY = (npY.y - npA.y) ** 2 + (npY.z - npA.z) ** 2;
+      return dX - dY;
+    });
+    const chosen = new Set();
+    for (let k = 0; k < Math.min(numConns - 1, sorted.length); k++) chosen.add(sorted[k]);
+    if (layerB.length > 0) chosen.add(layerB[Math.floor(Math.random() * layerB.length)]);
+    chosen.forEach(nodeB => {
+      const idx = connectionPairs.length;
+      connectionPairs.push({ a: nodeA, b: nodeB });
+      connMap.set(`${nodeA}-${nodeB}`, idx);
+      connMap.set(`${nodeB}-${nodeA}`, idx);
+    });
+  });
+});
+
+const nodeAdj = Array.from({ length: TOTAL_NODES }, () => []);
+connectionPairs.forEach(pair => {
+  nodeAdj[pair.a].push(pair.b);
+  nodeAdj[pair.b].push(pair.a);
+});
+
+// Synapse LineSegments
+const linePositions = new Float32Array(connectionPairs.length * 2 * 3);
+const lineColors    = new Float32Array(connectionPairs.length * 2 * 3);
+const lineOpacity   = new Float32Array(connectionPairs.length);
+const connFlashBright = new Float32Array(connectionPairs.length);
+
+connectionPairs.forEach((pair, i) => {
+  const npA = nodePositions[pair.a], npB = nodePositions[pair.b];
+  linePositions[i * 6]     = npA.x; linePositions[i * 6 + 1] = npA.y; linePositions[i * 6 + 2] = npA.z;
+  linePositions[i * 6 + 3] = npB.x; linePositions[i * 6 + 4] = npB.y; linePositions[i * 6 + 5] = npB.z;
+  const cA = nodeColors[pair.a], cB = nodeColors[pair.b];
+  lineColors[i * 6]     = cA.r; lineColors[i * 6 + 1] = cA.g; lineColors[i * 6 + 2] = cA.b;
+  lineColors[i * 6 + 3] = cB.r; lineColors[i * 6 + 4] = cB.g; lineColors[i * 6 + 5] = cB.b;
+  lineOpacity[i] = 0.08 + Math.random() * 0.14;
+  connFlashBright[i] = 0;
+});
+
+const synapsesGeo = new THREE.BufferGeometry();
+synapsesGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+synapsesGeo.setAttribute('color',    new THREE.BufferAttribute(lineColors.slice(), 3));
+
+const synapsesMat = new THREE.LineBasicMaterial({
+  vertexColors: true, transparent: true,
+  opacity: 1.0, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const synapses = new THREE.LineSegments(synapsesGeo, synapsesMat);
+scene.add(synapses);
+const synapsesColorAttr = synapsesGeo.attributes.color;
+
+/* ─────────────────────────────────────────
+   AMBIENT MICRO-PARTICLES
+   Phase 4: speed/count increase after 3+ messages
+───────────────────────────────────────── */
+const PARTICLE_COUNT = 200;
+const pPos = new Float32Array(PARTICLE_COUNT * 3);
+const pVel = new Float32Array(PARTICLE_COUNT * 3);
+const pCol = new Float32Array(PARTICLE_COUNT * 3);
+const pBaseVel = new Float32Array(PARTICLE_COUNT * 3); // stored base velocities
+
+const particleColorPool = [
+  new THREE.Color(0x6dd8ff),
+  new THREE.Color(0xa78bfa),
+  new THREE.Color(0x34d399),
+  new THREE.Color(0xfbbf24),
+];
+
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  pPos[i * 3]     = (Math.random() - 0.5) * 20;
+  pPos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+  pPos[i * 3 + 2] = (Math.random() - 0.5) * 14;
+  const vx = (Math.random() - 0.5) * 0.004;
+  const vy = (Math.random() - 0.5) * 0.003;
+  const vz = (Math.random() - 0.5) * 0.004;
+  pVel[i * 3] = vx; pVel[i * 3 + 1] = vy; pVel[i * 3 + 2] = vz;
+  pBaseVel[i * 3] = vx; pBaseVel[i * 3 + 1] = vy; pBaseVel[i * 3 + 2] = vz;
+  const pc = particleColorPool[Math.floor(Math.random() * particleColorPool.length)];
+  pCol[i * 3]     = pc.r * 0.7;
+  pCol[i * 3 + 1] = pc.g * 0.7;
+  pCol[i * 3 + 2] = pc.b * 0.7;
+}
+
+const particleGeo = new THREE.BufferGeometry();
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+particleGeo.setAttribute('color',    new THREE.BufferAttribute(pCol, 3));
+
+const particleMat = new THREE.PointsMaterial({
+  size: 0.045, vertexColors: true, transparent: true,
+  opacity: 0.5, sizeAttenuation: true, depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// Phase 4: Star colour tinting during processing
+const STAR_COUNT = 180;
+const starPos = new Float32Array(STAR_COUNT * 3);
+for (let i = 0; i < STAR_COUNT; i++) {
+  starPos[i * 3]     = (Math.random() - 0.5) * 120;
+  starPos[i * 3 + 1] = (Math.random() - 0.5) * 80;
+  starPos[i * 3 + 2] = (Math.random() - 0.5) * 120;
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({
+  color: 0xffffff, size: 0.04, transparent: true,
+  opacity: 0.18, sizeAttenuation: true, depthWrite: false,
+});
+const starPoints = new THREE.Points(starGeo, starMat);
+scene.add(starPoints);
+
+/* ─────────────────────────────────────────
+   GROUND GLOW
+───────────────────────────────────────── */
+const glowDiscGeo = new THREE.CircleGeometry(7, 80);
+const glowDiscMat = new THREE.MeshBasicMaterial({
+  color: 0x1a3a6a, transparent: true, opacity: 0.18,
+  depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+});
+const glowDisc = new THREE.Mesh(glowDiscGeo, glowDiscMat);
+glowDisc.rotation.x = -Math.PI / 2;
+glowDisc.position.y = -2.8;
+scene.add(glowDisc);
+
+const innerGlowGeo = new THREE.CircleGeometry(3.5, 64);
+const innerGlowMat = new THREE.MeshBasicMaterial({
+  color: 0x2040a0, transparent: true, opacity: 0.12,
+  depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+});
+const innerGlow = new THREE.Mesh(innerGlowGeo, innerGlowMat);
+innerGlow.rotation.x = -Math.PI / 2;
+innerGlow.position.y = -2.75;
+scene.add(innerGlow);
+
+/* ─────────────────────────────────────────
+   SIGNAL PARTICLE SYSTEM (Phase 2)
+───────────────────────────────────────── */
+const MAX_SIGNAL_PARTICLES = 100;
+
+const sigParticles = [];
+for (let i = 0; i < MAX_SIGNAL_PARTICLES; i++) {
+  sigParticles.push({
+    active: false,
+    pathNodes: [],
+    currentSeg: 0,
+    t: 0,
+    speed: 0.4,
+    done: false,
+    alpha: 1.0,
+    trail: [],
+    trailLen: 5,
+    color: new THREE.Color(0x6dd8ff),
+  });
+}
+
+const TRAIL_LEN = 5;
+const SIG_POINT_COUNT = MAX_SIGNAL_PARTICLES * (1 + TRAIL_LEN);
+const sigPosArr = new Float32Array(SIG_POINT_COUNT * 3);
+const sigColArr = new Float32Array(SIG_POINT_COUNT * 3);
+
+const sigGeo = new THREE.BufferGeometry();
+sigGeo.setAttribute('position', new THREE.BufferAttribute(sigPosArr, 3));
+sigGeo.setAttribute('color',    new THREE.BufferAttribute(sigColArr, 3));
+
+const sigMat = new THREE.PointsMaterial({
+  size: 0.13, vertexColors: true, transparent: true,
+  opacity: 1.0, sizeAttenuation: true, depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+const sigPoints = new THREE.Points(sigGeo, sigMat);
+scene.add(sigPoints);
+
+function getFreeSlot() {
+  return sigParticles.find(p => !p.active) || null;
+}
+
+function pickPath() {
+  const path = [];
+  const inputNode = layerNodes[0][Math.floor(Math.random() * layerNodes[0].length)];
+  path.push(inputNode);
+
+  let current = inputNode;
+  for (let li = 0; li < LAYER_DEFS.length - 1; li++) {
+    const nextLayerNodes = layerNodes[li + 1];
+    const nextLayerAdj = nodeAdj[current].filter(n => nodePositions[n].layer === li + 1);
+    let nextNode;
+    if (nextLayerAdj.length > 0) {
+      nextNode = nextLayerAdj[Math.floor(Math.random() * nextLayerAdj.length)];
+    } else {
+      nextNode = nextLayerNodes[Math.floor(Math.random() * nextLayerNodes.length)];
+    }
+    path.push(nextNode);
+    current = nextNode;
+  }
+  return path;
+}
+
+function flashNode(nodeIdx, intensity) {
+  nodeFlashStrength[nodeIdx] = Math.min(1.0, nodeFlashStrength[nodeIdx] + intensity);
+  nodeFlashScale[nodeIdx]    = Math.min(0.4, nodeFlashScale[nodeIdx] + 0.3);
+  // Phase 4: track in stats set
+  if (window.statNodesSet) window.statNodesSet.add(nodeIdx);
+  // SOUND: playSound('node-flash')
+}
+
+function flashConn(nodeA, nodeB, intensity) {
+  const idx = connMap.get(`${nodeA}-${nodeB}`);
+  if (idx !== undefined) {
+    connFlashBright[idx] = Math.min(2.0, connFlashBright[idx] + intensity);
+  }
+}
+
+/* ─────────────────────────────────────────
+   PHASE 3: OUTPUT LAYER NODE FLASH
+───────────────────────────────────────── */
+function flashOutputNode() {
+  const outputNodes = layerNodes[4];
+  if (!outputNodes || outputNodes.length === 0) return;
+
+  const nodeIdx = outputNodes[Math.floor(Math.random() * outputNodes.length)];
+  flashNode(nodeIdx, 0.75);
+
+  if (window.statNodesSet) window.statNodesSet.add(nodeIdx);
+
+  const hidden3Nodes = layerNodes[3];
+  if (hidden3Nodes && hidden3Nodes.length > 0) {
+    const h3Node = hidden3Nodes[Math.floor(Math.random() * hidden3Nodes.length)];
+    flashConn(h3Node, nodeIdx, 0.9);
+  }
+}
+
+window._flashOutputNode = flashOutputNode;
+
+function spawnSignalParticles(count, text) {
+  const words = text ? text.split(/\s+/) : [''];
+  const safeCount = Math.min(count, MAX_SIGNAL_PARTICLES);
+
+  for (let i = 0; i < safeCount; i++) {
+    const slot = getFreeSlot();
+    if (!slot) break;
+
+    const delay = Math.random() * 0.5;
+    const speed = 0.35 + Math.random() * 0.25;
+
+    const wordIdx = Math.floor((i / safeCount) * words.length);
+    const wordHash = words[wordIdx] ? words[wordIdx].charCodeAt(0) % layerNodes[0].length : Math.floor(Math.random() * layerNodes[0].length);
+    const path = pickPath();
+    path[0] = layerNodes[0][wordHash % layerNodes[0].length];
+
+    const startNp = nodePositions[path[0]];
+
+    slot.active = true;
+    slot.pathNodes = path;
+    slot.currentSeg = -1;
+    slot.t = -delay;
+    slot.speed = speed;
+    slot.done = false;
+    slot.alpha = 1.0;
+    slot.trail = [];
+    slot.color.setHex(LAYER_HEX[nodePositions[path[0]].layer]);
+
+    slot._x = startNp.x;
+    slot._y = startNp.y;
+    slot._z = startNp.z;
+  }
+}
+
+window._spawnSignalParticles = spawnSignalParticles;
+
+/* ─────────────────────────────────────────
+   WAVE ANIMATION STATE
+───────────────────────────────────────── */
+const xMin   = Math.min(...nodePositions.map(np => np.x));
+const xMax   = Math.max(...nodePositions.map(np => np.x));
+const xRange = xMax - xMin;
+
+const WAVE_INTERVAL = 4500;
+const WAVE_DURATION = 1500;
+let   waveStartTime = -Infinity;
+let   lastWaveCheck = 0;
+
+/* ─────────────────────────────────────────
+   CLOCK + ANIMATION LOOP
+───────────────────────────────────────── */
+const clock = new THREE.Clock();
+const nodeEmissiveStrength = new Float32Array(TOTAL_NODES);
+const white = new THREE.Color(1, 1, 1);
+
+// Phase 4: processing state tracker (for star colour shift + glow pulse)
+let processingIntensity = 0; // 0..1, animated
+
+// Expose processing state setter for non-module script
+// (We read window.isProcessing from the UI script)
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const delta   = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+  const now     = performance.now();
+
+  // Phase 4: processing intensity animation
+  const isProc = !!window.isProcessing;
+  processingIntensity += (isProc ? 1 : -1) * delta * 1.2;
+  processingIntensity  = Math.max(0, Math.min(1, processingIntensity));
+
+  // Phase 4: star colour tint when processing (blue → purple shift)
+  {
+    const r = 1.0 - processingIntensity * 0.35;
+    const g = 1.0 - processingIntensity * 0.25;
+    const b = 1.0 + processingIntensity * 0.0; // stays white-ish → purple
+    starMat.color.setRGB(r, g, b);
+  }
+
+  // Phase 4: ambient particle speed boost when warmed up (3+ messages)
+  {
+    const msgCount = window.messageCount || 0;
+    const speedMult = msgCount >= 3 ? 1.45 : 1.0;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      pVel[i * 3]     = pBaseVel[i * 3]     * speedMult;
+      pVel[i * 3 + 1] = pBaseVel[i * 3 + 1] * speedMult;
+      pVel[i * 3 + 2] = pBaseVel[i * 3 + 2] * speedMult;
+    }
+  }
+
+  // Trigger wave
+  if (now - lastWaveCheck > WAVE_INTERVAL) {
+    waveStartTime = now;
+    lastWaveCheck = now;
+  }
+
+  const waveProgress = Math.min((now - waveStartTime) / WAVE_DURATION, 1.2);
+  const waveX = xMin + waveProgress * (xRange + 1.5) - 0.75;
+
+  // Decay node flash + scale
+  const FLASH_DECAY = 3.5;
+  const SCALE_DECAY = 5.0;
+  for (let i = 0; i < TOTAL_NODES; i++) {
+    if (nodeFlashStrength[i] > 0) nodeFlashStrength[i] = Math.max(0, nodeFlashStrength[i] - FLASH_DECAY * delta);
+    if (nodeFlashScale[i]    > 0) nodeFlashScale[i]    = Math.max(0, nodeFlashScale[i]    - SCALE_DECAY * delta);
+  }
+
+  // Decay connection flash
+  const CONN_DECAY = 4.0;
+  for (let i = 0; i < connectionPairs.length; i++) {
+    if (connFlashBright[i] > 0) connFlashBright[i] = Math.max(0, connFlashBright[i] - CONN_DECAY * delta);
+  }
+
+  // Update signal particles
+  sigPosArr.fill(0);
+  sigColArr.fill(0);
+  let sigPtIdx = 0;
+
+  sigParticles.forEach(sp => {
+    if (!sp.active) return;
+
+    sp.t += sp.speed * delta;
+
+    if (sp.currentSeg === -1) {
+      if (sp.t >= 0) {
+        sp.currentSeg = 0;
+        sp.t = 0;
+        flashNode(sp.pathNodes[0], 0.8);
+      } else {
+        return;
+      }
+    }
+
+    while (sp.t >= 1.0 && sp.currentSeg < sp.pathNodes.length - 2) {
+      sp.t -= 1.0;
+      sp.currentSeg++;
+      const arrivedNode = sp.pathNodes[sp.currentSeg];
+      flashNode(arrivedNode, 1.0);
+      flashConn(sp.pathNodes[sp.currentSeg - 1], arrivedNode, 1.5);
+      sp.color.setHex(LAYER_HEX[nodePositions[arrivedNode].layer]);
+    }
+
+    if (sp.currentSeg >= sp.pathNodes.length - 1) {
+      sp.alpha -= delta * 2.5;
+      if (sp.alpha <= 0) {
+        sp.active = false;
+        sp.alpha = 0;
+        return;
+      }
+      const lastNp = nodePositions[sp.pathNodes[sp.pathNodes.length - 1]];
+      sp._x = lastNp.x; sp._y = lastNp.y; sp._z = lastNp.z;
+    } else {
+      const nodeA = sp.pathNodes[sp.currentSeg];
+      const nodeB = sp.pathNodes[sp.currentSeg + 1];
+      const npA = nodePositions[nodeA];
+      const npB = nodePositions[nodeB];
+      const t = sp.t;
+
+      const cIdx = connMap.get(`${nodeA}-${nodeB}`);
+      if (cIdx !== undefined) connFlashBright[cIdx] = Math.min(2.0, connFlashBright[cIdx] + 0.8 * delta * sp.speed);
+
+      sp._x = npA.x + (npB.x - npA.x) * t;
+      sp._y = npA.y + (npB.y - npA.y) * t;
+      sp._z = npA.z + (npB.z - npA.z) * t;
+    }
+
+    sp.trail.unshift({ x: sp._x, y: sp._y, z: sp._z });
+    if (sp.trail.length > TRAIL_LEN) sp.trail.pop();
+
+    for (let ti = sp.trail.length - 1; ti >= 0; ti--) {
+      const trailAlpha = sp.alpha * (1 - (ti + 1) / (TRAIL_LEN + 1)) * 0.6;
+      if (sigPtIdx < SIG_POINT_COUNT) {
+        sigPosArr[sigPtIdx * 3]     = sp.trail[ti].x;
+        sigPosArr[sigPtIdx * 3 + 1] = sp.trail[ti].y;
+        sigPosArr[sigPtIdx * 3 + 2] = sp.trail[ti].z;
+        sigColArr[sigPtIdx * 3]     = sp.color.r * trailAlpha;
+        sigColArr[sigPtIdx * 3 + 1] = sp.color.g * trailAlpha;
+        sigColArr[sigPtIdx * 3 + 2] = sp.color.b * trailAlpha;
+        sigPtIdx++;
+      }
+    }
+
+    if (sigPtIdx < SIG_POINT_COUNT) {
+      sigPosArr[sigPtIdx * 3]     = sp._x;
+      sigPosArr[sigPtIdx * 3 + 1] = sp._y;
+      sigPosArr[sigPtIdx * 3 + 2] = sp._z;
+      sigColArr[sigPtIdx * 3]     = sp.color.r * sp.alpha * 2.2;
+      sigColArr[sigPtIdx * 3 + 1] = sp.color.g * sp.alpha * 2.2;
+      sigColArr[sigPtIdx * 3 + 2] = sp.color.b * sp.alpha * 2.2;
+      sigPtIdx++;
+    }
+  });
+
+  sigGeo.attributes.position.needsUpdate = true;
+  sigGeo.attributes.color.needsUpdate    = true;
+
+  // Update nodes
+  nodePositions.forEach((np, i) => {
+    const breathe  = 0.92 + Math.sin(elapsed * 1.2 + nodePulsePhase[i]) * 0.08;
+    const baseSize = nodeSizes[i] * breathe;
+
+    const distFromWave  = np.x - waveX;
+    const waveSigma     = 1.4;
+    const waveIntensity = Math.exp(-(distFromWave * distFromWave) / (2 * waveSigma * waveSigma));
+    const waveActive    = waveProgress > 0 && waveProgress < 1.2;
+    const waveBoost     = waveActive ? waveIntensity : 0;
+
+    nodeEmissiveStrength[i] = waveBoost;
+
+    const flashB = nodeFlashStrength[i];
+    const c      = nodeColors[i].clone();
+    const bright = 1.0 + waveBoost * 1.5 + flashB * 2.5;
+
+    if (flashB > 0.01) {
+      c.lerp(white, flashB * 0.6);
+    }
+    c.multiplyScalar(bright);
+
+    nodeInstanced.setColorAt(i, c);
+
+    const waveScale  = 1.0 + waveBoost * 0.35;
+    const flashScale = 1.0 + nodeFlashScale[i];
+    dummy.position.set(np.x, np.y, np.z);
+    dummy.scale.setScalar(baseSize * waveScale * flashScale);
+    dummy.updateMatrix();
+    nodeInstanced.setMatrixAt(i, dummy.matrix);
+  });
+
+  if (nodeInstanced.instanceColor) nodeInstanced.instanceColor.needsUpdate = true;
+  nodeInstanced.instanceMatrix.needsUpdate = true;
+
+  // Update synapse colours
+  connectionPairs.forEach((pair, i) => {
+    const waveBoostA  = nodeEmissiveStrength[pair.a];
+    const waveBoostB  = nodeEmissiveStrength[pair.b];
+    const baseOpA     = lineOpacity[i];
+    const connFlash   = connFlashBright[i];
+
+    const cA = nodeColors[pair.a].clone().multiplyScalar(baseOpA + waveBoostA * 0.7 + connFlash * 0.6);
+    const cB = nodeColors[pair.b].clone().multiplyScalar(baseOpA + waveBoostB * 0.7 + connFlash * 0.6);
+
+    synapsesColorAttr.array[i * 6]     = cA.r;
+    synapsesColorAttr.array[i * 6 + 1] = cA.g;
+    synapsesColorAttr.array[i * 6 + 2] = cA.b;
+    synapsesColorAttr.array[i * 6 + 3] = cB.r;
+    synapsesColorAttr.array[i * 6 + 4] = cB.g;
+    synapsesColorAttr.array[i * 6 + 5] = cB.b;
+  });
+  synapsesColorAttr.needsUpdate = true;
+
+  // Update ambient particles
+  const pPosAttr = particleGeo.attributes.position;
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    pPosAttr.array[i * 3]     += pVel[i * 3];
+    pPosAttr.array[i * 3 + 1] += pVel[i * 3 + 1];
+    pPosAttr.array[i * 3 + 2] += pVel[i * 3 + 2];
+    if (pPosAttr.array[i * 3]     >  10) pPosAttr.array[i * 3]     = -10;
+    if (pPosAttr.array[i * 3]     < -10) pPosAttr.array[i * 3]     =  10;
+    if (pPosAttr.array[i * 3 + 1] >   5) pPosAttr.array[i * 3 + 1] =  -5;
+    if (pPosAttr.array[i * 3 + 1] <  -5) pPosAttr.array[i * 3 + 1] =   5;
+    if (pPosAttr.array[i * 3 + 2] >   7) pPosAttr.array[i * 3 + 2] =  -7;
+    if (pPosAttr.array[i * 3 + 2] <  -7) pPosAttr.array[i * 3 + 2] =   7;
+  }
+  pPosAttr.needsUpdate = true;
+
+  // Phase 4: Ground glow pulse brighter when processing
+  const glowPulse = 0.14 + Math.sin(elapsed * 0.7) * 0.04 + processingIntensity * 0.12;
+  glowDiscMat.opacity  = glowPulse;
+  innerGlowMat.opacity = 0.08 + Math.sin(elapsed * 0.9 + 1.2) * 0.04 + processingIntensity * 0.1;
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ─────────────────────────────────────────
+   RESIZE
+───────────────────────────────────────── */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+/* ─────────────────────────────────────────
+   HIDE LOADING + START
+   Phase 4: Loading text cycling
+───────────────────────────────────────── */
+const loadingSteps = [
+  'Initialising neural network',
+  'Connecting synapses',
+  'Calibrating layers',
+  'Ready'
+];
+let loadStep = 0;
+const loadingTextEl = document.getElementById('loading-text');
+const loadStepInterval = setInterval(() => {
+  loadStep++;
+  if (loadStep < loadingSteps.length) {
+    loadingTextEl.textContent = loadingSteps[loadStep];
+  } else {
+    clearInterval(loadStepInterval);
+  }
+}, 350);
+
+setTimeout(() => {
+  clearInterval(loadStepInterval);
+  document.getElementById('loading-overlay').classList.add('hidden');
+  animate();
+}, 1400);
+
+</script>
+</body>
+</html>

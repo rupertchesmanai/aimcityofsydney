@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI for Business Bootcamp: Get Smarter with Your Marketing | AIM Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#2e3d7d;--blue-dark:#1a2249;--blue-light:#3a4f99;
+  --accent:#ff4d9a;--accent-soft:rgba(255,77,154,0.15);
+  --teal:#6dd8ff;--coral:#DC5A46;--cream:#F1EEDE;
+  --text:rgba(255,255,255,0.88);--muted:rgba(255,255,255,0.5);
+}
+html,body{height:100%;overflow:hidden;font-family:"Lato",sans-serif;background:var(--blue);color:var(--text)}
+
+/* ── Slide container ── */
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  padding:6vh 8vw;opacity:0;visibility:hidden;
+  transition:opacity 0.6s ease,transform 0.6s ease;
+  transform:translateY(30px);will-change:opacity,transform;
+}
+.slide.active{opacity:1;visibility:visible;transform:translateY(0)}
+.slide.exit-up{opacity:0;transform:translateY(-40px)}
+
+/* ── Backgrounds ── */
+.slide{background:var(--blue)}
+.slide.bg-dark{background:var(--blue-dark)}
+.slide.bg-black{background:#0a0e1a}
+.slide.bg-coral{background:var(--coral)}
+.slide.bg-pink{background:#c2185b}
+.slide.bg-split{background:linear-gradient(90deg,var(--blue) 50%,var(--cream) 50%)}
+
+/* Image overlay slides */
+.slide.has-bg-img{background-size:cover;background-position:center}
+.slide.has-bg-img::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,34,73,0.92),rgba(46,61,125,0.82));z-index:0}
+.slide.has-bg-img>*:not(.cs-thumb){position:relative;z-index:1}
+
+/* ── Typography ── */
+h1{font-size:clamp(2.8rem,6vw,5rem);font-weight:900;line-height:1.08;color:#fff;letter-spacing:-0.02em}
+h2{font-size:clamp(2rem,4vw,3.2rem);font-weight:700;line-height:1.15;color:#fff}
+h3{font-size:clamp(1.4rem,2.5vw,2rem);font-weight:700;color:#fff}
+p,.lead{font-size:clamp(1rem,1.6vw,1.25rem);line-height:1.65;color:var(--text);max-width:52ch}
+.lead{font-size:clamp(1.1rem,1.8vw,1.4rem);color:rgba(255,255,255,0.75)}
+.accent{color:var(--accent)}
+.teal{color:var(--teal)}
+.gradient-text{background:linear-gradient(135deg,#ff4d9a,#ff9a76);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.eyebrow{font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+small{font-size:0.85rem;color:var(--muted)}
+
+/* ── Lists ── */
+ul.checklist{list-style:none;display:flex;flex-direction:column;gap:0.8rem}
+ul.checklist li{display:flex;align-items:flex-start;gap:0.7rem;font-size:clamp(0.95rem,1.4vw,1.15rem);color:var(--text)}
+ul.checklist li::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:0.5em}
+ul.checklist.teal-dots li::before{background:var(--teal)}
+ul.checklist.coral li::before{background:var(--coral)}
+ul.checklist.white-dots li::before{background:#fff}
+
+/* ── Two-column layout ── */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:4vw;align-items:start}
+.cols.v-center{align-items:center}
+
+/* ── Image panels ── */
+.img-panel{border-radius:16px;overflow:hidden;max-height:55vh;aspect-ratio:4/3}
+.img-panel img{width:100%;height:100%;object-fit:cover}
+
+/* ── Activity badge ── */
+.activity-badge{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  padding:0.5rem 1.2rem;border-radius:999px;
+  background:rgba(255,255,255,0.15);font-size:0.8rem;font-weight:700;
+  letter-spacing:0.08em;text-transform:uppercase;color:#fff;margin-bottom:1.5rem;
+}
+.activity-badge .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── Demo badge ── */
+.demo-badge{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  padding:0.5rem 1.2rem;border-radius:999px;
+  background:rgba(255,77,154,0.15);font-size:0.8rem;font-weight:700;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;
+  border:1px solid rgba(255,77,154,0.3);
+}
+
+/* ── Formula / Prompt box ── */
+.formula-box{
+  background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;padding:1.5rem 2rem;font-size:1.1rem;color:var(--accent);
+  font-weight:700;letter-spacing:0.02em;display:inline-block;margin:1.2rem 0;
+}
+
+/* ── Card grid ── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:1.5rem}
+.content-card{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;padding:1.5rem;
+}
+.content-card h4{font-size:1rem;font-weight:700;color:#fff;margin-bottom:0.5rem}
+.content-card p{font-size:0.9rem;color:var(--text);line-height:1.5}
+
+/* ── Tool logos row ── */
+.tool-logos{display:flex;gap:2.5rem;align-items:center;margin-top:2rem;flex-wrap:wrap}
+.tool-logo{display:flex;flex-direction:column;align-items:center;gap:0.6rem}
+.tool-logo img{width:56px;height:56px;border-radius:14px;object-fit:contain;background:rgba(255,255,255,0.08);padding:6px}
+.tool-logo span{font-size:0.75rem;font-weight:700;color:var(--muted);letter-spacing:0.05em}
+.tool-logo-text{width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;color:var(--accent);letter-spacing:0.03em;text-align:center;line-height:1.2}
+
+/* ── Tool compare cards ── */
+.tool-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.3rem 1.5rem;display:flex;flex-direction:column;gap:0.6rem}
+.tool-card h4{font-size:1.05rem;font-weight:700;color:#fff}
+.tool-card .tool-tag{font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:0.2rem}
+.tool-card p{font-size:0.9rem;color:var(--text);line-height:1.5}
+
+/* ── Progress bar ── */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:100;transition:width 0.4s ease;border-radius:0 2px 2px 0}
+
+/* ── Slide counter ── */
+.counter{
+  position:fixed;bottom:2rem;right:2rem;z-index:100;
+  font-size:0.8rem;font-weight:700;color:var(--muted);letter-spacing:0.05em;
+}
+
+/* ── Nav hint ── */
+.nav-hint{
+  position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);z-index:100;
+  font-size:0.75rem;color:var(--muted);opacity:0.6;transition:opacity 0.3s;
+}
+.nav-hint.hidden{opacity:0}
+
+/* ── Logo ── */
+.logo{position:fixed;top:1.5rem;left:2rem;z-index:100;height:2rem;opacity:0.7}
+
+/* ── Staggered children ── */
+.slide.active .stagger>*{animation:fadeUp 0.5s ease both}
+.slide.active .stagger>*:nth-child(1){animation-delay:0.1s}
+.slide.active .stagger>*:nth-child(2){animation-delay:0.2s}
+.slide.active .stagger>*:nth-child(3){animation-delay:0.25s}
+.slide.active .stagger>*:nth-child(4){animation-delay:0.3s}
+.slide.active .stagger>*:nth-child(5){animation-delay:0.35s}
+.slide.active .stagger>*:nth-child(6){animation-delay:0.4s}
+.slide.active .stagger>*:nth-child(7){animation-delay:0.45s}
+.slide.active .stagger>*:nth-child(8){animation-delay:0.5s}
+.slide.active .stagger>*:nth-child(9){animation-delay:0.55s}
+.slide.active .stagger>*:nth-child(10){animation-delay:0.6s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Big number ── */
+.big-num{font-size:clamp(4rem,10vw,8rem);font-weight:900;color:rgba(255,255,255,0.06);position:absolute;bottom:2rem;right:3rem;line-height:1}
+
+/* ── Split-slide text on cream ── */
+.cream-text{color:#423A3A}
+.cream-text h3,.cream-text strong,.cream-text b{color:#2e3d7d}
+.cream-text p,.cream-text li,.cream-text ul.checklist li{color:#423A3A}
+.cream-text ul.checklist li::before{background:#2e3d7d}
+
+/* ── Cheat sheet thumbnail ── */
+.cs-thumb{
+  position:absolute;bottom:1.8rem;left:2rem;z-index:2;
+  width:104px;border-radius:6px;overflow:hidden;
+  box-shadow:0 4px 16px rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.15);
+  opacity:0.85;transition:opacity 0.3s,transform 0.3s;
+}
+.cs-thumb:hover{opacity:1;transform:scale(1.08)}
+.cs-thumb img{width:100%;display:block}
+
+/* ── Cheat sheet gallery ── */
+.cs-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:0.8rem;width:100%}
+.cs-gallery .cs-card{border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);transition:transform 0.3s}
+.cs-gallery .cs-card:hover{transform:scale(1.05)}
+.cs-gallery .cs-card img{width:100%;display:block}
+
+/* ── Week strip ── */
+.week-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1.5rem}
+.week-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1.2rem;text-align:center}
+.week-card .week-num{font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem}
+.week-card h4{font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:0.5rem}
+.week-card p{font-size:0.85rem;color:var(--text);line-height:1.45}
+
+@media(max-width:768px){
+  .slide{padding:4vh 6vw}
+  .cols{grid-template-columns:1fr;gap:2rem}
+  .img-panel{max-height:35vh}
+  h1{font-size:2.2rem}
+  .big-num{font-size:4rem}
+  .card-grid{grid-template-columns:1fr}
+  .cs-thumb{width:73px;bottom:1.2rem;left:1.2rem}
+  .tool-logos{gap:1.5rem}
+  .tool-logo img,.tool-logo-text{width:44px;height:44px}
+  .week-strip{grid-template-columns:1fr 1fr;gap:0.8rem}
+}
+</style>
+</head>
+<body>
+<img src="../../assets/aimlogo_white.png" alt="AIM" class="logo">
+<div class="progress" id="progress"></div>
+<div class="counter" id="counter"></div>
+<div class="nav-hint" id="navHint">Press <kbd>&rarr;</kbd> or click to advance</div>
+
+<div class="deck" id="deck">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S01: TITLE                                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-black has-bg-img active" style="background-image:url('../../assets/img/marketer-briefing.jpg')">
+  <div class="stagger">
+    <div class="cobrand" style="display:flex;align-items:center;gap:1.4rem;margin-bottom:1.6rem">
+      <img src="../../assets/city-of-sydney-logo_white.png" alt="City of Sydney" style="height:3rem;width:auto">
+      <span style="width:1px;height:2.6rem;background:rgba(255,255,255,0.35)"></span>
+      <img src="../../assets/aimlogo_white.png" alt="Australian Institute of Management" style="height:2.2rem;width:auto">
+    </div>
+    <p class="eyebrow">City of Sydney &middot; Australian Institute of Management</p>
+    <h1>AI for Business Bootcamp<br><span class="gradient-text">Get Smarter with Your Marketing</span></h1>
+    <p class="lead" style="margin-top:1.5rem">A hands-on workshop for small business owners, marketers and content creators</p>
+    <div class="tool-logos" style="margin-top:2rem">
+      <div class="tool-logo"><img src="../../assets/ai-tool-logos/ChatGPT.png" alt="ChatGPT"><span>ChatGPT</span></div>
+      <div class="tool-logo"><div class="tool-logo-text">MID<br>JOURNEY</div><span>Midjourney</span></div>
+      <div class="tool-logo"><div class="tool-logo-text" style="font-size:0.55rem">NANO<br>BANANA</div><span>Nano Banana</span></div>
+      <div class="tool-logo"><div class="tool-logo-text">CANVA</div><span>Canva</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S02: WELCOME TO COUNTRY                        -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" style="padding:0;background:#000">
+  <img src="../../shared/CityofSydneyWTC.jpg" alt="City of Sydney Welcome to Country" style="width:100%;height:100%;object-fit:cover">
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S03: PROMISE                                   -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-split">
+  <div class="cols v-center">
+    <div class="stagger">
+      <p class="eyebrow">The Promise</p>
+      <h2>What You'll<br>Leave With</h2>
+    </div>
+    <div class="stagger cream-text" style="padding:2rem">
+      <ul class="checklist">
+        <li>A customer persona you can reuse in every prompt</li>
+        <li>A brand voice block that keeps AI on-brand</li>
+        <li>Real content &mdash; posts, emails and messages</li>
+        <li>A visual prompt and design brief</li>
+        <li>A 30-day campaign plan ready to execute</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S02B: QR CODE — MINI-SITE                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" style="display:flex;align-items:center;justify-content:center;text-align:center">
+  <div class="stagger" style="max-width:52ch">
+    <h2 style="margin-bottom:2rem">Scan to Follow Along</h2>
+    <div style="display:inline-block;background:#fff;border-radius:20px;padding:1.5rem;box-shadow:0 8px 40px rgba(0,0,0,0.3)">
+      <img src="../../assets/AIMgithubqr.jpg" alt="QR code to mini-site" style="width:280px;height:280px;display:block;border-radius:8px">
+    </div>
+    <p style="margin-top:2rem;font-size:clamp(1.1rem,1.8vw,1.4rem);color:#fff;font-weight:700">Connect here to follow along with our<br>online workshops and cheat sheets</p>
+    <div style="margin-top:1.6rem;display:inline-flex;align-items:center;gap:0.7rem;padding:0.7rem 1.6rem;border-radius:999px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2)">
+      <span style="font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Password</span>
+      <span style="font-size:clamp(1.1rem,1.7vw,1.35rem);font-weight:900;color:var(--accent);letter-spacing:0.02em">aimstudent</span>
+    </div>
+  </div>
+</div>
+
+<!-- AGENDA — 4 PARTS / TIMINGS / OUTCOMES -->
+<div class="slide bg-dark" data-part="1">
+  <div class="stagger" style="width:100%">
+    <p class="eyebrow">Today's plan &middot; 3 hours</p>
+    <h2 style="margin-bottom:1.8rem">Agenda &amp; Learning Outcomes</h2>
+    <div style="display:flex;flex-direction:column;gap:0.9rem;max-width:62ch">
+      <div style="display:flex;align-items:center;gap:1.2rem;background:rgba(255,255,255,0.05);border-left:5px solid #6dd8ff;border-radius:10px;padding:1rem 1.3rem">
+        <span style="font-size:1.6rem;font-weight:900;color:#6dd8ff;min-width:2.4rem">1</span>
+        <div style="flex:1"><strong style="color:#fff;font-size:1.1rem">Foundations &amp; Prompting</strong><br><small>By the end: set up your AI marketing stack and write prompts that stay on-brand</small></div>
+        <span style="font-size:0.85rem;font-weight:700;color:var(--muted);white-space:nowrap">0:00 &ndash; 0:45</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:1.2rem;background:rgba(255,255,255,0.05);border-left:5px solid #c98bff;border-radius:10px;padding:1rem 1.3rem">
+        <span style="font-size:1.6rem;font-weight:900;color:#c98bff;min-width:2.4rem">2</span>
+        <div style="flex:1"><strong style="color:#fff;font-size:1.1rem">Audience, Voice &amp; Copy</strong><br><small>By the end: build a reusable persona and brand voice, and generate real content</small></div>
+        <span style="font-size:0.85rem;font-weight:700;color:var(--muted);white-space:nowrap">0:45 &ndash; 1:30</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:1.2rem;background:rgba(255,255,255,0.05);border-left:5px solid #ffb76b;border-radius:10px;padding:1rem 1.3rem">
+        <span style="font-size:1.6rem;font-weight:900;color:#ffb76b;min-width:2.4rem">3</span>
+        <div style="flex:1"><strong style="color:#fff;font-size:1.1rem">Visual Marketing</strong><br><small>By the end: create on-brand images and a repeatable visual workflow with AI</small></div>
+        <span style="font-size:0.85rem;font-weight:700;color:var(--muted);white-space:nowrap">1:30 &ndash; 2:15</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:1.2rem;background:rgba(255,255,255,0.05);border-left:5px solid #36e0b0;border-radius:10px;padding:1rem 1.3rem">
+        <span style="font-size:1.6rem;font-weight:900;color:#36e0b0;min-width:2.4rem">4</span>
+        <div style="flex:1"><strong style="color:#fff;font-size:1.1rem">Campaigns, Trust &amp; Wrap-up</strong><br><small>By the end: plan a 30-day campaign and publish with confidence</small></div>
+        <span style="font-size:0.85rem;font-weight:700;color:var(--muted);white-space:nowrap">2:15 &ndash; 3:00</span>
+      </div>
+    </div>
+    <p style="margin-top:1.4rem;font-size:0.85rem;color:var(--muted)">The progress bar at the top changes colour as we move through each part.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S03: THE NEW MARKETING STACK                   -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="1">
+  <div class="stagger">
+    <p class="eyebrow">Section 1</p>
+    <h2>The New<br>Marketing Stack</h2>
+    <p style="margin-top:1rem">Five AI tools that cover strategy, copy, visuals and design.</p>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-top:2rem;max-width:56ch">
+      <div style="text-align:center">
+        <div style="width:80px;height:80px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto"><img src="../../assets/ai-tool-logos/ChatGPT.png" alt="ChatGPT" style="width:56px;height:56px;object-fit:contain"></div>
+        <p style="margin-top:0.6rem;font-size:0.8rem;font-weight:700;color:#fff">ChatGPT</p>
+        <small>Strategy &amp; copy</small>
+      </div>
+      <div style="text-align:center">
+        <div style="width:80px;height:80px;border-radius:18px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;margin:0 auto;font-weight:900;color:var(--accent);font-size:0.6rem;letter-spacing:0.03em;line-height:1.2;text-align:center">ChatGPT<br>Images</div>
+        <p style="margin-top:0.6rem;font-size:0.8rem;font-weight:700;color:#fff">ChatGPT Images</p>
+        <small>Visual concepts</small>
+      </div>
+      <div style="text-align:center">
+        <div style="width:80px;height:80px;border-radius:18px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;margin:0 auto;font-weight:900;color:var(--accent);font-size:0.55rem;letter-spacing:0.03em;line-height:1.2;text-align:center">MID<br>JOURNEY</div>
+        <p style="margin-top:0.6rem;font-size:0.8rem;font-weight:700;color:#fff">Midjourney</p>
+        <small>Premium imagery</small>
+      </div>
+      <div style="text-align:center">
+        <div style="width:80px;height:80px;border-radius:18px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;margin:0 auto;font-weight:900;color:var(--accent);font-size:0.55rem;letter-spacing:0.03em;line-height:1.2;text-align:center">NANO<br>BANANA<br>2</div>
+        <p style="margin-top:0.6rem;font-size:0.8rem;font-weight:700;color:#fff">Nano Banana 2</p>
+        <small>Fast generation</small>
+      </div>
+      <div style="text-align:center">
+        <div style="width:80px;height:80px;border-radius:18px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;margin:0 auto;font-weight:900;color:var(--accent);font-size:0.7rem;letter-spacing:0.03em">CANVA</div>
+        <p style="margin-top:0.6rem;font-size:0.8rem;font-weight:700;color:#fff">Canva</p>
+        <small>Branded design</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S04: WHAT AI CAN HELP WITH                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="1">
+  <div class="stagger">
+    <p class="eyebrow">The big picture</p>
+    <h2>What AI Can Help<br>With in Marketing</h2>
+    <div style="margin-top:1.2rem;display:flex;flex-direction:column;gap:0.5rem;max-width:48ch">
+      <div class="formula-box" style="background:rgba(255,77,154,0.08);padding:0.8rem 1.5rem;margin:0"><span class="accent">Draft</span> &mdash; first-cut copy, emails, captions, ads</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08);padding:0.8rem 1.5rem;margin:0"><span class="accent">Repurpose</span> &mdash; one idea across every channel</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08);padding:0.8rem 1.5rem;margin:0"><span class="accent">Plan</span> &mdash; calendars, campaigns, sequences</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08);padding:0.8rem 1.5rem;margin:0"><span class="accent">Visualise</span> &mdash; images, mockups, social graphics</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08);padding:0.8rem 1.5rem;margin:0"><span class="accent">Check</span> &mdash; tone, accuracy, brand consistency</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08);padding:0.8rem 1.5rem;margin:0"><span class="accent">Polish</span> &mdash; rewrite, shorten, strengthen CTAs</div>
+    </div>
+  </div>
+  <div class="cs-thumb" style="left:auto;right:2rem"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WhatShouldIUseAIFor.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S05: MARKETING BOTTLENECKS                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide has-bg-img" style="background-image:url('../../assets/img/marketing-planning-table-1.jpg')" data-part="1">
+  <div class="stagger">
+    <p class="eyebrow">The problem</p>
+    <h2>Marketing Bottlenecks<br>for Small Business</h2>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>Social posts take too long to write and design</li>
+      <li>Images are expensive or look amateur</li>
+      <li>Email campaigns never get started</li>
+      <li>Campaign planning happens in your head, not on paper</li>
+      <li>Reviews pile up without a reply</li>
+      <li>Brand voice is inconsistent across channels</li>
+    </ul>
+  </div>
+  <div class="cs-thumb" style="left:auto;right:2rem"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WhatMarketingTask.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S06: SAFE AI FOR MARKETING                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide has-bg-img" style="background-image:url('../../assets/img/black-marker-redacting.jpg')" data-part="1">
+  <div class="stagger">
+    <p class="eyebrow">Safety first</p>
+    <h2>Safe AI<br>for Marketing</h2>
+    <p style="margin-top:1.5rem;max-width:42ch">Never paste into AI tools:</p>
+    <ul class="checklist" style="margin-top:1rem">
+      <li>Private customer data &mdash; names, emails, purchase history</li>
+      <li>Financial details &mdash; revenue, margins, pricing strategy</li>
+      <li>Staff information &mdash; salaries, performance, personal details</li>
+      <li>Confidential strategy &mdash; unreleased plans, partnerships, IP</li>
+    </ul>
+    <p style="margin-top:1.5rem;font-weight:700;color:#fff">Use generic examples. Keep real data out of prompts.</p>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/BeforeYouPasteSafetyChecklist.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S07: PROMPTING BASICS                          -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="1">
+  <div class="stagger">
+    <p class="eyebrow">Prompting</p>
+    <h2>Act &mdash; Explain &mdash; Please</h2>
+    <div style="margin-top:2rem;display:flex;flex-direction:column;gap:1rem;max-width:44ch">
+      <div class="formula-box" style="background:rgba(255,77,154,0.08)"><span class="accent">Act</span> as the expert (social media manager, copywriter, strategist)</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08)"><span class="accent">Explain</span> your business, audience and goal</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08)"><span class="accent">Please</span> ask for the specific output + format</div>
+    </div>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ActExplainPleasePromptFormula.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S08: BAD PROMPT → BETTER PROMPT                -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="1">
+  <div class="stagger">
+    <p class="eyebrow">Better prompting</p>
+    <h2>Bad Prompt &rarr; Better Prompt</h2>
+    <div class="cols" style="margin-top:2rem">
+      <div>
+        <h3 style="font-size:1rem;color:var(--coral);margin-bottom:1rem">WEAK PROMPTS</h3>
+        <ul class="checklist coral">
+          <li>"Make a post"</li>
+          <li>"Write me an email"</li>
+          <li>"Create a campaign"</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size:1rem;margin-bottom:1rem" class="accent">BETTER PROMPTS INCLUDE</h3>
+        <ul class="checklist">
+          <li>Role &mdash; who should the AI act as?</li>
+          <li>Audience &mdash; who are you talking to?</li>
+          <li>Goal &mdash; what action do you want?</li>
+          <li>Platform &mdash; where will this appear?</li>
+          <li>Tone &mdash; how should it sound?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/OneTaskFiveBetterPrompts.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S09: THE MARKETING PROMPT FORMULA              -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide has-bg-img" style="background-image:url('../../assets/img/stacked-prompt-cards-2.jpg')" data-part="1">
+  <div class="stagger">
+    <p class="eyebrow">Your secret weapon</p>
+    <h2>The Marketing<br>Prompt Formula</h2>
+    <div class="formula-box" style="margin-top:1.5rem;font-size:1rem">Role + Business + Audience + Goal + Channel + Tone + Format</div>
+    <p style="margin-top:1.2rem"><em>"Act as a social media strategist for a Sydney boutique targeting millennial women. Write three Instagram carousel captions for our winter sale in a warm, playful tone. Include CTAs and hashtags."</em></p>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TheMarketingPromptFormula.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S10: WHO ARE WE TALKING TO?                    -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-split" data-part="2">
+  <div class="cols v-center">
+    <div class="stagger">
+      <p class="eyebrow">Know your audience</p>
+      <h2>Who Are We<br>Talking To?</h2>
+      <p style="margin-top:1rem" class="lead">Every great prompt starts with<br>a clear customer in mind.</p>
+    </div>
+    <div class="stagger cream-text" style="padding:2rem">
+      <ul class="checklist">
+        <li><strong>Who</strong> &mdash; age, role, lifestyle</li>
+        <li><strong>Wants</strong> &mdash; what they're looking for</li>
+        <li><strong>Worries</strong> &mdash; what holds them back</li>
+        <li><strong>Where</strong> &mdash; which platforms they use</li>
+        <li><strong>Trigger</strong> &mdash; what makes them act now</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WhoAreWeTalkingTo.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S11: PERSONA ACTIVITY                          -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-pink" data-part="2">
+  <div class="stagger">
+    <div class="activity-badge"><span class="dot"></span> Activity &mdash; 5 minutes</div>
+    <h2>Build Your<br>Customer Persona</h2>
+    <p style="margin-top:1.5rem">Create one customer avatar for your business:</p>
+    <ul class="checklist white-dots" style="margin-top:1rem">
+      <li>Give them a name and a short description</li>
+      <li>What do they want from your business?</li>
+      <li>What worries or frustrations do they have?</li>
+      <li>Where do they spend time online?</li>
+      <li>What would make them buy or book today?</li>
+    </ul>
+    <p style="margin-top:1rem"><strong>Output:</strong> a reusable persona paragraph you can paste into any prompt.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S12: SOUND LIKE US                             -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="2">
+  <div class="stagger">
+    <p class="eyebrow">Brand voice</p>
+    <h2>Sound Like Us</h2>
+    <p style="margin-top:1.5rem">Brand voice is the filter for every AI output. Without it, AI writes generic content that sounds like everyone else.</p>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>Pick <span class="accent">3 words</span> that describe how your brand sounds</li>
+      <li>Choose words you <span class="accent">never</span> use</li>
+      <li>Add an example sentence that nails your tone</li>
+      <li>Paste this block into every marketing prompt</li>
+    </ul>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/SoundLikeUs.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S13: BRAND VOICE ACTIVITY                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-pink" data-part="2">
+  <div class="stagger">
+    <div class="activity-badge"><span class="dot"></span> Activity &mdash; 5 minutes</div>
+    <h2>Create Your<br>Brand Voice Block</h2>
+    <p style="margin-top:1.5rem">Write a reusable brand voice prompt block:</p>
+    <ul class="checklist white-dots" style="margin-top:1rem">
+      <li>3 words that describe your tone (e.g. warm, witty, professional)</li>
+      <li>1&ndash;2 words you never use</li>
+      <li>One example sentence that sounds exactly like you</li>
+    </ul>
+    <div class="formula-box" style="margin-top:1.5rem;font-size:0.95rem;color:#fff;max-width:48ch">
+      <span class="accent">Template:</span> "Our brand voice is [word, word, word]. We never say [X]. An example of our tone: [sentence]."
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S14: AVOID AI SLOP                             -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="2">
+  <div class="stagger">
+    <p class="eyebrow">Quality control</p>
+    <h2>Avoid AI Slop</h2>
+    <p style="margin-top:1.5rem">AI without brand voice produces content that is:</p>
+    <div class="cols" style="margin-top:1.5rem">
+      <ul class="checklist coral">
+        <li><strong>Generic</strong> &mdash; could be for any business</li>
+        <li><strong>Vague</strong> &mdash; no real detail or specifics</li>
+        <li><strong>Robotic</strong> &mdash; unnatural sentence patterns</li>
+        <li><strong>Clich&eacute;-heavy</strong> &mdash; "leverage", "unlock", "game-changer"</li>
+        <li><strong>Overexcited</strong> &mdash; too many exclamation marks!!!</li>
+      </ul>
+      <div>
+        <p style="font-weight:700;color:#fff;margin-bottom:1rem">The fix:</p>
+        <ul class="checklist">
+          <li>Always include your persona</li>
+          <li>Always include your brand voice block</li>
+          <li>Always review before publishing</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S15: CHATGPT FOR MARKETING STRATEGY            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="2">
+  <div class="stagger">
+    <p class="eyebrow">ChatGPT &middot; chatgpt.com</p>
+    <h2>ChatGPT for<br>Marketing Strategy</h2>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>Positioning and competitive angles</li>
+      <li>Customer personas and audience research</li>
+      <li>Campaign ideas and content angles</li>
+      <li>Copy for every channel &mdash; social, email, web, ads</li>
+      <li>Content calendars and posting schedules</li>
+    </ul>
+    <p style="margin-top:1.5rem;font-size:0.95rem">ChatGPT is your <span class="accent">marketing brain</span> &mdash; the versatile all-rounder for strategy and words.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S16: CHATGPT DEMO                              -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide has-bg-img" style="background-image:url('../../assets/img/small-marketing-team.jpg')" data-part="2">
+  <div class="stagger">
+    <div class="demo-badge">&#9654; Live Demo</div>
+    <h2>10 Campaign Angles<br>From One Offer</h2>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>Start with one product, service or promotion</li>
+      <li>Ask ChatGPT to generate 10 different campaign angles</li>
+      <li>Pick the 3 strongest and ask for variations</li>
+    </ul>
+    <p style="margin-top:1rem"><em>Watch how one idea becomes a month of content.</em></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S17: ONE IDEA, FIVE POSTS                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="2">
+  <div class="stagger">
+    <p class="eyebrow">Content repurposing</p>
+    <h2>One Idea,<br>Five Posts</h2>
+    <p style="margin-top:1rem">Take one message and repurpose it across every channel:</p>
+    <div class="card-grid" style="grid-template-columns:repeat(5,1fr);gap:0.8rem">
+      <div class="content-card" style="text-align:center;padding:1rem">
+        <h4 style="font-size:0.85rem">Instagram</h4>
+        <p style="font-size:0.8rem">Visual + caption + hashtags</p>
+      </div>
+      <div class="content-card" style="text-align:center;padding:1rem">
+        <h4 style="font-size:0.85rem">Facebook</h4>
+        <p style="font-size:0.8rem">Longer story + CTA + image</p>
+      </div>
+      <div class="content-card" style="text-align:center;padding:1rem">
+        <h4 style="font-size:0.85rem">Email</h4>
+        <p style="font-size:0.8rem">Subject line + body + link</p>
+      </div>
+      <div class="content-card" style="text-align:center;padding:1rem">
+        <h4 style="font-size:0.85rem">Google Profile</h4>
+        <p style="font-size:0.8rem">Update post + offer + photo</p>
+      </div>
+      <div class="content-card" style="text-align:center;padding:1rem">
+        <h4 style="font-size:0.85rem">Video Script</h4>
+        <p style="font-size:0.8rem">15-sec hook + message + CTA</p>
+      </div>
+    </div>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/OneIdeaFivePosts.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S18: REPURPOSING ACTIVITY                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-pink" data-part="2">
+  <div class="stagger">
+    <div class="activity-badge"><span class="dot"></span> Activity &mdash; 5 minutes</div>
+    <h2>Create Five<br>Content Variations</h2>
+    <p style="margin-top:1.5rem">Pick one message, offer or announcement from your business.</p>
+    <ul class="checklist white-dots" style="margin-top:1rem">
+      <li>Use ChatGPT to repurpose it for Instagram, Facebook, email, Google Business Profile and a short video script</li>
+      <li>Include your persona and brand voice in the prompt</li>
+      <li>Compare the outputs &mdash; how well does AI adapt the tone for each channel?</li>
+    </ul>
+    <p style="margin-top:1rem"><strong>Output:</strong> five pieces of content from one idea.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S19: CUSTOMER MESSAGES                         -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="2">
+  <div class="stagger">
+    <p class="eyebrow">Customer engagement</p>
+    <h2>Better Customer<br>Messages</h2>
+    <p style="margin-top:1rem">AI can draft customer-facing messages that sound human:</p>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="content-card">
+        <h4>Welcome emails</h4>
+        <p>Warm first impressions for new customers or subscribers</p>
+      </div>
+      <div class="content-card">
+        <h4>Offers &amp; promotions</h4>
+        <p>Clear, compelling messages with strong calls to action</p>
+      </div>
+      <div class="content-card">
+        <h4>Review replies</h4>
+        <p>Professional responses to both positive and negative reviews</p>
+      </div>
+      <div class="content-card">
+        <h4>Follow-ups</h4>
+        <p>Check-ins, rebooking nudges, thank-you messages</p>
+      </div>
+    </div>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/BetterCustomerMessages.jpg" alt="Cheat Sheet"></div>
+  <div class="cs-thumb" style="left:auto;right:2rem"><img src="../../assets/cheatsheets/cheatsheet_thumbs/StakeholderEmailTemplates.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S20: REVIEW REPLY CHEAT SHEET                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="2">
+  <div class="stagger">
+    <p class="eyebrow">Review management</p>
+    <h2>Review Reply<br>Cheat Sheet</h2>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li><span class="accent">Stay calm</span> &mdash; never reply when angry or defensive</li>
+      <li><span class="accent">Be professional</span> &mdash; short, empathetic, solution-focused</li>
+      <li><span class="accent">Protect privacy</span> &mdash; never share customer details in public replies</li>
+      <li><span class="accent">Thank positives</span> &mdash; brief, genuine, specific</li>
+      <li><span class="accent">Address negatives</span> &mdash; acknowledge, apologise, offer to resolve privately</li>
+    </ul>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ReviewReplyCheatSheet.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S21: THE VISUAL MARKETING PROBLEM              -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide has-bg-img" style="background-image:url('../../assets/img/camera-lens-colourful.jpg')" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">Visual content</p>
+    <h2>The Visual<br>Marketing Problem</h2>
+    <p style="margin-top:1.5rem;max-width:42ch">Small businesses need great visuals, not just great copy. But professional photography and design are expensive and slow.</p>
+    <p style="margin-top:1rem;max-width:42ch">AI image tools have changed the game &mdash; you can now create campaign-quality visuals in minutes.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S22: IMAGE TOOL COMPARISON                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">Choose the right tool</p>
+    <h2>Image Tool<br>Comparison</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1.5rem">
+      <div class="tool-card">
+        <p class="tool-tag">ChatGPT Images</p>
+        <h4>Concepts &amp; Text</h4>
+        <p>Editable visual concepts, text-aware images, iterative refinement</p>
+      </div>
+      <div class="tool-card">
+        <p class="tool-tag">Midjourney</p>
+        <h4>Premium Style</h4>
+        <p>Cinematic, beautiful campaign imagery, moodboards, aspirational visuals</p>
+      </div>
+      <div class="tool-card">
+        <p class="tool-tag">Nano Banana 2</p>
+        <h4>Fast Generation</h4>
+        <p>Quick image creation and editing inside Gemini workflows</p>
+      </div>
+      <div class="tool-card">
+        <p class="tool-tag">Canva</p>
+        <h4>Branded Layout</h4>
+        <p>Final branded social posts, flyers, presentations, resizing, templates</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S23: CHATGPT IMAGES                            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">chatgpt.com</p>
+    <h2>ChatGPT Images</h2>
+    <p style="margin-top:1rem">Best for visual concepts, layouts, text-aware images and iterative edits.</p>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>Generate images directly inside your ChatGPT conversation</li>
+      <li>Handles text in images better than most tools</li>
+      <li>Edit iteratively &mdash; "make it warmer", "add a border", "change the background"</li>
+      <li>Great for mockups, social post concepts and product scene compositions</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S24: MIDJOURNEY                                -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">midjourney.com</p>
+    <h2>Midjourney</h2>
+    <p style="margin-top:1rem">Best for cinematic, beautiful, campaign-quality imagery and moodboards.</p>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>Produces the most visually stunning, stylised images</li>
+      <li>Ideal for brand campaigns, hero banners and aspirational content</li>
+      <li>Works via Discord or the Midjourney web app</li>
+      <li>Strong at architectural, lifestyle, food and product photography styles</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S25: NANO BANANA 2                             -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">Via Google Gemini</p>
+    <h2>Nano Banana 2</h2>
+    <p style="margin-top:1rem">Best for fast image creation and editing inside Gemini workflows.</p>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>Google's latest image generation model, available inside Gemini</li>
+      <li>Fast turnaround &mdash; generate and edit in the same conversation</li>
+      <li>Good for quick social graphics, product mock-ups and visual brainstorming</li>
+      <li>Free tier available through Gemini</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S26: CANVA                                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">canva.com</p>
+    <h2>Canva</h2>
+    <p style="margin-top:1rem">Best for final branded social posts, flyers, presentations, resizing and templates.</p>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li>The finishing layer &mdash; take AI-generated images and make them brand-ready</li>
+      <li>Add your logo, fonts, colours and layout in seconds</li>
+      <li>Resize one design for Instagram, Facebook, LinkedIn, stories and print</li>
+      <li>Magic features: background remover, text effects, AI-assisted design suggestions</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S27: IMAGE PROMPT FORMULA                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide has-bg-img" style="background-image:url('../../assets/img/stacked-prompt-cards-3.jpg')" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">Visual prompting</p>
+    <h2>The Image<br>Prompt Formula</h2>
+    <div class="formula-box" style="margin-top:1.5rem;font-size:1rem">Subject + Setting + Style + Mood + Details + Format</div>
+    <p style="margin-top:1.2rem"><em>"A flat lay of handmade candles on a marble surface, warm golden-hour light, minimalist styling, shallow depth of field, shot from above, square format for Instagram."</em></p>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ImagePromptFormula.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S28: VISUAL WORKFLOW                           -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="3">
+  <div class="stagger">
+    <p class="eyebrow">Putting it together</p>
+    <h2>The Visual Workflow</h2>
+    <div style="margin-top:2rem;display:flex;flex-direction:column;gap:1rem;max-width:48ch">
+      <div class="formula-box" style="background:rgba(255,77,154,0.08)"><span class="accent">1. Brief</span> &mdash; Use ChatGPT to write the visual concept and prompt</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08)"><span class="accent">2. Generate</span> &mdash; Create images with Midjourney, Nano Banana or ChatGPT Images</div>
+      <div class="formula-box" style="background:rgba(255,77,154,0.08)"><span class="accent">3. Polish</span> &mdash; Bring into Canva for branding, text, layout and resizing</div>
+    </div>
+    <p style="margin-top:1.5rem;font-size:0.95rem">ChatGPT brief &rarr; AI image generation &rarr; Canva polish = campaign-ready in minutes.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S29: VISUAL ACTIVITY                           -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-pink" data-part="3">
+  <div class="stagger">
+    <div class="activity-badge"><span class="dot"></span> Activity &mdash; 5 minutes</div>
+    <h2>Create a Campaign<br>Visual Prompt</h2>
+    <p style="margin-top:1.5rem">Think of one image your business needs right now:</p>
+    <ul class="checklist white-dots" style="margin-top:1rem">
+      <li>Write an image prompt using the formula: Subject + Setting + Style + Mood + Details + Format</li>
+      <li>Write a one-line Canva brief: what to add (logo, text, CTA) and what size</li>
+    </ul>
+    <p style="margin-top:1rem"><strong>Output:</strong> one AI image prompt and one Canva design brief ready to use.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S30: 30-DAY CAMPAIGN BUILDER                   -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="4">
+  <div class="stagger">
+    <p class="eyebrow">Campaign planning</p>
+    <h2>The 30-Day<br>Campaign Builder</h2>
+    <div class="week-strip">
+      <div class="week-card">
+        <p class="week-num">Week 1</p>
+        <h4>Awareness</h4>
+        <p>Introduce the problem, share insights, build curiosity</p>
+      </div>
+      <div class="week-card">
+        <p class="week-num">Week 2</p>
+        <h4>Education</h4>
+        <p>Teach, share tips, show expertise, build trust</p>
+      </div>
+      <div class="week-card">
+        <p class="week-num">Week 3</p>
+        <h4>Proof</h4>
+        <p>Testimonials, case studies, results, social proof</p>
+      </div>
+      <div class="week-card">
+        <p class="week-num">Week 4</p>
+        <h4>Action</h4>
+        <p>Offer, CTA, urgency, make it easy to buy or book</p>
+      </div>
+    </div>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/30DayCampaignBuilder.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S31: CAMPAIGN ACTIVITY                         -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-pink" data-part="4">
+  <div class="stagger">
+    <div class="activity-badge"><span class="dot"></span> Activity &mdash; 5 minutes</div>
+    <h2>Build Your<br>30-Day Campaign</h2>
+    <p style="margin-top:1.5rem">Choose one product, service or promotion and plan 4 weeks:</p>
+    <ul class="checklist white-dots" style="margin-top:1rem">
+      <li><strong>Week 1:</strong> What problem does your audience have?</li>
+      <li><strong>Week 2:</strong> What can you teach them?</li>
+      <li><strong>Week 3:</strong> What proof do you have that it works?</li>
+      <li><strong>Week 4:</strong> What's the offer and CTA?</li>
+    </ul>
+    <p style="margin-top:1rem"><strong>Output:</strong> a simple 30-day campaign outline.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S32: READY TO PUBLISH?                         -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide has-bg-img" style="background-image:url('../../assets/img/red-pen-circling.jpg')" data-part="4">
+  <div class="stagger">
+    <p class="eyebrow">Pre-publish checklist</p>
+    <h2>Ready to Publish?</h2>
+    <ul class="checklist" style="margin-top:1.5rem">
+      <li><strong>Accuracy</strong> &mdash; are all facts, dates and prices correct?</li>
+      <li><strong>Brand voice</strong> &mdash; does it sound like us?</li>
+      <li><strong>CTA</strong> &mdash; is there a clear call to action?</li>
+      <li><strong>Links</strong> &mdash; do all links work and go to the right place?</li>
+      <li><strong>Rights</strong> &mdash; do we have permission for all images?</li>
+      <li><strong>Mobile</strong> &mdash; does it look good on a phone?</li>
+    </ul>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ReadyToPublish.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S33: TRUST BUT CHECK                           -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" data-part="4">
+  <div class="stagger">
+    <p class="eyebrow">Responsible AI</p>
+    <h2>Trust, But Check</h2>
+    <p style="margin-top:1.5rem;max-width:42ch">AI can be confidently wrong. Before publishing, always verify:</p>
+    <ul class="checklist" style="margin-top:1rem">
+      <li>Offers and prices &mdash; are they current and accurate?</li>
+      <li>Claims &mdash; can you back them up?</li>
+      <li>Testimonials &mdash; are they real?</li>
+      <li>Dates and events &mdash; are they correct?</li>
+      <li>Legal language &mdash; have you checked with a professional?</li>
+    </ul>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TrustButCheck.jpg" alt="Cheat Sheet"></div>
+  <div class="cs-thumb" style="left:auto;right:2rem"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TheSecondOpinionTechnique.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S34: WOULD THIS BE FAIR?                       -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-part="4">
+  <div class="stagger">
+    <p class="eyebrow">Ethics &amp; inclusion</p>
+    <h2>Would This Be Fair<br>to Everyone?</h2>
+    <p style="margin-top:1.5rem">Before publishing AI-generated marketing content, ask:</p>
+    <ul class="checklist" style="margin-top:1rem">
+      <li>Could this <strong>stereotype</strong> a group of people?</li>
+      <li>Could it <strong>exclude</strong> part of our audience?</li>
+      <li>Does it <strong>represent</strong> our community fairly?</li>
+      <li>Is the imagery <strong>accessible</strong> (alt text, contrast, readability)?</li>
+    </ul>
+  </div>
+  <div class="cs-thumb"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WouldThisBeFair.jpg" alt="Cheat Sheet"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S35: FINAL MARKETING KIT                       -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-split" data-part="4">
+  <div class="cols v-center">
+    <div class="stagger">
+      <p class="eyebrow">Your toolkit</p>
+      <h2>Your Final<br>Marketing Kit</h2>
+      <p style="margin-top:1rem" class="lead">Everything you built today,<br>ready to use tomorrow.</p>
+    </div>
+    <div class="stagger cream-text" style="padding:2rem">
+      <ul class="checklist">
+        <li><strong>Customer persona</strong> &mdash; reusable avatar</li>
+        <li><strong>Brand voice block</strong> &mdash; paste into every prompt</li>
+        <li><strong>Marketing prompt formula</strong> &mdash; your template</li>
+        <li><strong>5 content pieces</strong> &mdash; one idea, five channels</li>
+        <li><strong>Customer message</strong> &mdash; email or review reply</li>
+        <li><strong>Visual prompt</strong> &mdash; image + Canva brief</li>
+        <li><strong>30-day campaign plan</strong> &mdash; 4-week structure</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- CHEAT SHEET LIBRARY                            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-dark" style="padding:1.5vh 2vw;display:flex;align-items:center;justify-content:center" data-part="4">
+  <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:1vh">
+    <h2 style="font-size:clamp(1.4rem,2.5vw,2.2rem);text-align:center;letter-spacing:-0.01em"><span class="accent">44</span> Cheat Sheets &mdash; Take Them All With You</h2>
+    <p style="font-size:0.8rem;color:var(--muted);text-align:center">Available on the mini-site &mdash; scan the QR code or visit the link</p>
+    <div style="display:grid;grid-template-columns:repeat(13,1fr);gap:0.4vw 0.4vw;width:100%">
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WhatShouldIUseAIFor.jpg" alt="What Should I Use AI For"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/AIinPlainEnglish.jpg" alt="AI in Plain English"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ActExplainPleasePromptFormula.jpg" alt="Act Explain Please Prompt Formula"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/OneTaskFiveBetterPrompts.jpg" alt="One Task Five Better Prompts"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TheMarketingPromptFormula.jpg" alt="The Marketing Prompt Formula"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WhoAreWeTalkingTo.jpg" alt="Who Are We Talking To"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/SoundLikeUs.jpg" alt="Sound Like Us"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/BeforeYouPasteSafetyChecklist.jpg" alt="Before You Paste Safety Checklist"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/SafeContextRewriter.jpg" alt="Safe Context Rewriter"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TrustButCheck.jpg" alt="Trust But Check"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WouldThisBeFair.jpg" alt="Would This Be Fair"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/OneIdeaFivePosts.jpg" alt="One Idea Five Posts"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/BetterCustomerMessages.jpg" alt="Better Customer Messages"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ReviewReplyCheatSheet.jpg" alt="Review Reply Cheat Sheet"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/StakeholderEmailTemplates.jpg" alt="Stakeholder Email Templates"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ImagePromptFormula.jpg" alt="Image Prompt Formula"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/30DayCampaignBuilder.jpg" alt="30 Day Campaign Builder"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ReadyToPublish.jpg" alt="Ready to Publish"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/ChatvsWorkflow.jpg" alt="Chat vs Workflow"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/PromptChains.jpg" alt="Prompt Chains"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TheSecondOpinionTechnique.jpg" alt="The Second Opinion Technique"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/7DayAIHabitBuilder.jpg" alt="7-Day AI Habit Builder"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TheBusinessPromptFormula.jpg" alt="The Business Prompt Formula"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/UseAIasaThinkingPartner.jpg" alt="Use AI as a Thinking Partner"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/AIForTimePoorBusinessOwners.jpg" alt="AI For Time-Poor Business Owners"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/EmailReplyHelper.jpg" alt="Email Reply Helper"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/TurnMessyNotesClearActions.jpg" alt="Turn Messy Notes Clear Actions"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/DocumentSummaryPromptSheet.jpg" alt="Document Summary Prompt Sheet"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/DailyAdminPromptPack.jpg" alt="Daily Admin Prompt Pack"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/HumanReviewChecklist.jpg" alt="Human Review Checklist"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/AIWorkflowCanvas.jpg" alt="AI Workflow Canvas"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/AIMeetingAssistant.jpg" alt="AI Meeting Assistant"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/PolicyDraftHelper.jpg" alt="Policy Draft Helper"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/DatatoDashboard.jpg" alt="Data to Dashboard"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/AIforInternalComms.jpg" alt="AI for Internal Comms"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/FromPDFtoAction.jpg" alt="From PDF to Action"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/WhatMarketingTask.jpg" alt="What Marketing Task"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/SmallBusinessAIStarterMap.jpg" alt="Small Business AI Starter Map"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/CustomerComplaintResponseSheet.jpg" alt="Customer Complaint Response Sheet"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/SocialMediaPostBuilder.jpg" alt="Social Media Post Builder"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/SpotTheHallucination.jpg" alt="Spot the Hallucination"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/AIToneAdjuster.jpg" alt="AI Tone Adjuster"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/CustomerFAQBuilder.jpg" alt="Customer FAQ Builder"></div>
+      <div class="cs-card"><img src="../../assets/cheatsheets/cheatsheet_thumbs/MarketingMessageClarifier.jpg" alt="Marketing Message Clarifier"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- S36: CLOSING                                   -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide bg-black" style="display:flex;align-items:center;justify-content:center;text-align:center">
+  <div class="stagger" style="max-width:48ch">
+    <h1 style="font-size:clamp(2.2rem,4.5vw,3.8rem);line-height:1.2">AI can draft and design.<br><span class="gradient-text">Your brand makes it worth publishing.</span></h1>
+    <p style="margin-top:2rem;font-size:1.15rem;color:var(--accent)">Persona. Voice. Prompt. Content. Visuals. Campaign.<br>You built it all today.</p>
+    <div class="tool-logos" style="justify-content:center;margin-top:2.5rem">
+      <div class="tool-logo"><img src="../../assets/ai-tool-logos/ChatGPT.png" alt="ChatGPT"><span>ChatGPT</span></div>
+      <div class="tool-logo"><div class="tool-logo-text">MID<br>JOURNEY</div><span>Midjourney</span></div>
+      <div class="tool-logo"><div class="tool-logo-text" style="font-size:0.55rem">NANO<br>BANANA</div><span>Nano Banana</span></div>
+      <div class="tool-logo"><div class="tool-logo-text">CANVA</div><span>Canva</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- AIM COURSES UPSELL -->
+<div class="slide bg-dark" style="padding:5vh 8vw;display:flex;flex-direction:column;justify-content:center">
+  <div class="stagger" style="display:flex;flex-direction:column;gap:1.2rem;width:100%">
+    <h2 style="margin-bottom:0.8rem">More AI Courses from <span class="accent">AIM</span></h2>
+    <div style="display:flex;gap:1.2rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;background:rgba(255,77,154,0.08);border:1px solid rgba(255,77,154,0.2);border-radius:16px;padding:1.5rem 2rem">
+        <p style="font-size:clamp(1.1rem,1.6vw,1.35rem);font-weight:700;color:var(--accent);margin-bottom:0.4rem">AI for Productivity</p>
+        <p style="font-size:clamp(0.9rem,1.2vw,1.05rem);color:var(--text);line-height:1.5">Streamline your daily workflow</p>
+      </div>
+      <div style="flex:1;min-width:240px;background:rgba(255,77,154,0.08);border:1px solid rgba(255,77,154,0.2);border-radius:16px;padding:1.5rem 2rem">
+        <p style="font-size:clamp(1.1rem,1.6vw,1.35rem);font-weight:700;color:var(--accent);margin-bottom:0.4rem">AI for Teamwork</p>
+        <p style="font-size:clamp(0.9rem,1.2vw,1.05rem);color:var(--text);line-height:1.5">Collaborate smarter with AI tools</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:1.2rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;background:rgba(255,77,154,0.08);border:1px solid rgba(255,77,154,0.2);border-radius:16px;padding:1.5rem 2rem">
+        <p style="font-size:clamp(1.1rem,1.6vw,1.35rem);font-weight:700;color:var(--accent);margin-bottom:0.4rem">AI Essentials for Business</p>
+        <p style="font-size:clamp(0.9rem,1.2vw,1.05rem);color:var(--text);line-height:1.5">The foundations for every leader</p>
+      </div>
+      <div style="flex:1;min-width:240px;background:rgba(255,77,154,0.08);border:1px solid rgba(255,77,154,0.2);border-radius:16px;padding:1.5rem 2rem">
+        <p style="font-size:clamp(1.1rem,1.6vw,1.35rem);font-weight:700;color:var(--accent);margin-bottom:0.4rem">AI for Project Management</p>
+        <p style="font-size:clamp(0.9rem,1.2vw,1.05rem);color:var(--text);line-height:1.5">Plan, track and deliver with AI</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:1.2rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;max-width:calc(50% - 0.6rem);background:rgba(255,77,154,0.08);border:1px solid rgba(255,77,154,0.2);border-radius:16px;padding:1.5rem 2rem">
+        <p style="font-size:clamp(1.1rem,1.6vw,1.35rem);font-weight:700;color:var(--accent);margin-bottom:0.4rem">Agentic AI</p>
+        <p style="font-size:clamp(0.9rem,1.2vw,1.05rem);color:var(--text);line-height:1.5">Build and manage autonomous AI agents</p>
+      </div>
+    </div>
+    <p style="font-size:clamp(1.6rem,3vw,2.4rem);font-weight:900;color:var(--accent);margin-top:0.5rem">aim.com.au</p>
+  </div>
+</div>
+
+<!-- FEEDBACK SURVEY QR -->
+<div class="slide bg-dark" data-part="4" style="display:flex;align-items:center;justify-content:center;text-align:center">
+  <div class="stagger" style="max-width:54ch">
+    <p class="eyebrow">Before you go</p>
+    <h2 style="margin-bottom:1.6rem">Tell Us What You Thought</h2>
+    <div style="display:inline-block;background:#fff;border-radius:20px;padding:1.5rem;box-shadow:0 8px 40px rgba(0,0,0,0.3)">
+      <img src="../../assets/CoSFeeedbackQR.jpg" alt="City of Sydney feedback survey QR code" style="width:280px;height:280px;display:block;border-radius:8px">
+    </div>
+    <p style="margin-top:1.8rem;font-size:clamp(1.1rem,1.8vw,1.4rem);color:#fff;font-weight:700">Scan to complete the<br>City of Sydney feedback survey</p>
+    <p style="margin-top:0.8rem;font-size:0.95rem;color:var(--muted)">Your feedback helps us improve future workshops</p>
+  </div>
+</div>
+
+<!-- THANK YOU -->
+<div class="slide bg-black" style="display:flex;align-items:center;justify-content:center;text-align:center">
+  <div class="stagger" style="display:flex;flex-direction:column;align-items:center;gap:3rem">
+    <h1 style="font-size:clamp(3.5rem,8vw,7rem);font-weight:900;letter-spacing:-0.03em"><span class="gradient-text">Thank You</span></h1>
+    <img src="../../assets/aimlogo_white.png" alt="AIM" style="height:clamp(3rem,5vw,4.5rem)">
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+(function(){
+  var slides = document.querySelectorAll('.slide');
+  var current = 0;
+  var total = slides.length;
+  var progBar = document.getElementById('progress');
+  var counter = document.getElementById('counter');
+  var hint = document.getElementById('navHint');
+  var transitioning = false;
+  var partColors = {1:'#6dd8ff',2:'#c98bff',3:'#ffb76b',4:'#36e0b0'};
+
+  function update(){
+    progBar.style.width = ((current+1)/total*100)+'%';
+    counter.textContent = (current+1)+' / '+total;
+    var p = slides[current].getAttribute('data-part');
+    progBar.style.background = partColors[p] || 'rgba(255,255,255,0.45)';
+  }
+
+  function go(n){
+    if(transitioning || n===current || n<0 || n>=total) return;
+    transitioning = true;
+    var prev = slides[current];
+    prev.classList.remove('active');
+    prev.classList.add('exit-up');
+    slides[n].classList.add('active');
+    current = n;
+    update();
+    if(current>0) hint.classList.add('hidden');
+    setTimeout(function(){ prev.classList.remove('exit-up'); transitioning=false; },650);
+  }
+
+  function next(){ go(current+1); }
+  function prev(){ go(current-1); }
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter') next();
+    else if(e.key==='ArrowLeft'||e.key==='Backspace') prev();
+    else if(e.key==='Home') go(0);
+    else if(e.key==='End') go(total-1);
+  });
+
+  document.addEventListener('click',function(e){
+    if(e.clientX > window.innerWidth*0.3) next(); else prev();
+  });
+
+  var touchX=0;
+  document.addEventListener('touchstart',function(e){touchX=e.touches[0].clientX});
+  document.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-touchX;
+    if(dx<-40) next(); else if(dx>40) prev();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
