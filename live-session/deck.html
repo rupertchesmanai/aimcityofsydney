@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Simplify Your Admin — Live 1-Hour Session | AIM</title>
+<!-- LIVE 1-HOUR SESSION DECK — adapted from the in-person "Simplify Your Admin" bootcamp in response to participant feedback. Linked from the main dashboard via live-session/index.html -->
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#2e3d7d;--blue-dark:#1a2249;--accent:#6dd8ff;--coral:#DC5A46;--cream:#F1EEDE;
+--text:rgba(255,255,255,0.88);--muted:rgba(255,255,255,0.5);}
+html,body{height:100%;overflow:hidden;font-family:"Lato",Arial,sans-serif;background:var(--blue);color:var(--text)}
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6vh 8vw;
+opacity:0;visibility:hidden;transition:opacity .6s ease,transform .6s ease;transform:translateY(30px);will-change:opacity,transform}
+.slide.active{opacity:1;visibility:visible;transform:translateY(0)}
+.slide.exit-up{opacity:0;transform:translateY(-40px)}
+.slide{background:var(--blue)}.slide.bg-dark{background:var(--blue-dark)}.slide.bg-black{background:#0a0e1a}
+.slide.bg-split{background:linear-gradient(90deg,var(--blue) 50%,var(--cream) 50%)}
+.slide.has-bg-img{background-size:cover;background-position:center}
+.slide.has-bg-img::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,34,73,.92),rgba(46,61,125,.82));z-index:0}
+.slide.has-bg-img>*{position:relative;z-index:1}
+h1{font-size:clamp(2.6rem,5.5vw,4.6rem);font-weight:900;line-height:1.08;color:#fff;letter-spacing:-.02em}
+h2{font-size:clamp(1.9rem,3.8vw,3rem);font-weight:700;line-height:1.15;color:#fff}
+h3{font-size:clamp(1.3rem,2.4vw,1.9rem);font-weight:700;color:#fff}
+p,.lead{font-size:clamp(1rem,1.55vw,1.22rem);line-height:1.6;color:var(--text);max-width:54ch}
+.lead{font-size:clamp(1.1rem,1.8vw,1.4rem);color:rgba(255,255,255,.75)}
+.accent{color:var(--accent)}
+.gradient-text{background:linear-gradient(135deg,#6dd8ff,#e4a4e1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+small{font-size:.85rem;color:var(--muted)}
+ul.checklist{list-style:none;display:flex;flex-direction:column;gap:.8rem;margin-top:1.2rem}
+ul.checklist li{display:flex;align-items:flex-start;gap:.7rem;font-size:clamp(.98rem,1.45vw,1.18rem);color:var(--text);line-height:1.5}
+ul.checklist li::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--pc,var(--accent));flex-shrink:0;margin-top:.5em}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:3vw;align-items:start;margin-top:1.4rem}
+.formula-box{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:12px;
+padding:1rem 1.5rem;font-size:1.05rem;color:var(--accent);font-weight:700;display:inline-block;margin:.5rem 0}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--accent);z-index:100;transition:width .4s ease,background .4s ease;border-radius:0 2px 2px 0}
+.counter{position:fixed;bottom:1.6rem;right:1.8rem;z-index:100;font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.05em}
+.tag{position:fixed;top:1.4rem;right:1.8rem;z-index:100;font-size:.65rem;font-weight:700;letter-spacing:.18em;
+text-transform:uppercase;color:var(--muted);border:1px solid rgba(255,255,255,.2);padding:.3rem .7rem;border-radius:999px}
+.logo{position:fixed;top:1.4rem;left:1.8rem;z-index:100;height:1.9rem;opacity:.7}
+.cobrand{display:flex;align-items:center;gap:1.4rem;margin-bottom:1.6rem}
+.cobrand img{width:auto}
+.tool-logos{display:flex;gap:2.2rem;align-items:center;margin-top:1.8rem;flex-wrap:wrap}
+.tool-logo{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.tool-logo img{width:54px;height:54px;border-radius:13px;object-fit:contain;background:rgba(255,255,255,.08);padding:6px}
+.tool-logo span{font-size:.72rem;font-weight:700;color:var(--muted)}
+.agenda-row{display:flex;align-items:center;gap:1.2rem;background:rgba(255,255,255,.05);border-radius:10px;padding:.85rem 1.3rem}
+.agenda-row .n{font-size:1.6rem;font-weight:900;min-width:2.4rem}
+.agenda-row small{display:block}
+/* ── Live-session additions ── */
+.lane{display:inline-flex;align-items:center;gap:.4rem;font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+padding:.28rem .65rem;border-radius:999px;border:1px solid currentColor;line-height:1}
+.lane.begin{color:#6dd8ff}.lane.pro{color:#ffb76b}
+.lanes{display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap}
+.prompt{background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--pc,var(--accent));
+border-radius:10px;padding:1rem 1.3rem;margin-top:1.1rem;font-size:clamp(.92rem,1.3vw,1.08rem);line-height:1.55;color:var(--text);max-width:70ch}
+.prompt b{color:#fff}
+.lane-note{display:flex;gap:.7rem;align-items:flex-start;margin-top:1.1rem;font-size:.95rem;color:var(--muted);max-width:64ch}
+.lane-note .chip{flex-shrink:0;margin-top:.1rem}
+.flow{display:flex;align-items:stretch;gap:1rem;margin-top:1.6rem;flex-wrap:wrap}
+.flow .step{flex:1;min-width:180px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.1rem 1.2rem}
+.flow .step h3{font-size:1.15rem;margin-bottom:.4rem}
+.flow .step p{font-size:.92rem;color:var(--muted);max-width:none}
+.flow .arrow{align-self:center;color:var(--muted);font-size:1.6rem;font-weight:900}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem 2.4rem;margin-top:1.4rem;max-width:74ch}
+.res-grid a,.res-grid div.ri{display:flex;align-items:flex-start;gap:.7rem;font-size:1.02rem;color:var(--text);text-decoration:none}
+.res-grid .b{color:#fff;font-weight:700}
+.res-grid small{display:block;color:var(--muted);font-size:.82rem}
+.qr-row{display:flex;gap:2.4rem;align-items:center;margin-top:1.8rem;flex-wrap:wrap}
+.qr-row figure{display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.qr-row img{width:118px;height:118px;border-radius:12px;background:#fff;padding:7px}
+.qr-row figcaption{font-size:.78rem;font-weight:700;color:var(--muted);text-align:center}
+.slide.active .stagger>*{animation:fadeUp .5s ease both}
+.slide.active .stagger>*:nth-child(2){animation-delay:.1s}
+.slide.active .stagger>*:nth-child(3){animation-delay:.18s}
+.slide.active .stagger>*:nth-child(4){animation-delay:.26s}
+.slide.active .stagger>*:nth-child(5){animation-delay:.34s}
+.slide.active .stagger>*:nth-child(6){animation-delay:.42s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.slide{padding:4vh 6vw}.cols{grid-template-columns:1fr;gap:1.4rem}.res-grid{grid-template-columns:1fr}h1{font-size:2.1rem}}
+</style></head><body>
+<!-- ===== Temporary password gate (password: aimtest) ===== -->
+<div id="ls-gate" style="position:fixed;inset:0;z-index:99999;background:#1a2249;display:flex;align-items:center;justify-content:center;font-family:'Lato',Arial,sans-serif;">
+  <div style="text-align:center;padding:2rem;max-width:380px;width:100%;">
+    <img src="../assets/aimlogo_white.png" alt="AIM" style="height:42px;margin-bottom:26px;opacity:.9">
+    <h1 style="font-size:1.7rem;font-weight:900;color:#fff;margin:0 0 8px;letter-spacing:-.02em;line-height:1.15">Live Working Session</h1>
+    <p style="font-size:.92rem;color:rgba(255,255,255,.5);margin:0 0 26px">This area is password-protected</p>
+    <div style="max-width:320px;margin:0 auto">
+      <input id="ls-pw" type="password" placeholder="Enter password" autocomplete="off" spellcheck="false"
+        onkeydown="if(event.key==='Enter')lsCheck()"
+        style="width:100%;padding:14px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:15px;outline:none;text-align:center;">
+      <p id="ls-err" style="color:#f87171;font-size:13px;margin:12px 0 0;font-weight:600;height:16px;opacity:0;transition:opacity .2s">Incorrect password</p>
+      <button onclick="lsCheck()" style="margin-top:14px;width:100%;padding:13px;border-radius:12px;border:none;background:#36e0b0;color:#0a0e1a;font-weight:800;font-size:14px;cursor:pointer">Enter session</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY='cos_ls_unlocked';
+  function unlocked(){try{return sessionStorage.getItem(KEY)==='1'}catch(e){return false}}
+  window.lsCheck=function(){
+    var i=document.getElementById('ls-pw'); if(!i)return;
+    if(i.value==='aimtest'){try{sessionStorage.setItem(KEY,'1')}catch(e){}var g=document.getElementById('ls-gate');if(g)g.parentNode.removeChild(g);document.body.style.overflow='';}
+    else{var e=document.getElementById('ls-err');if(e)e.style.opacity='1';i.value='';i.focus();}
+  };
+  function block(ev){ if(unlocked())return; var t=ev.target; if(t&&t.closest&&t.closest('#ls-gate'))return; ev.stopImmediatePropagation(); if(ev.type==='click')ev.preventDefault(); }
+  document.addEventListener('keydown',block,true);
+  document.addEventListener('click',block,true);
+  if(unlocked()){var g=document.getElementById('ls-gate');if(g)g.parentNode.removeChild(g);}
+  else{document.body.style.overflow='hidden';var p=document.getElementById('ls-pw');if(p)p.focus();}
+})();
+</script>
+<img src="../assets/aimlogo_white.png" alt="AIM" class="logo">
+<div class="tag">Live Session</div>
+<div class="progress" id="progress"></div>
+<div class="counter" id="counter"></div>
+<div class="deck" id="deck">
+
+<!-- 1 · TITLE -->
+<div class="slide bg-black has-bg-img active" style="background-image:url('../assets/img/tidy-admin-desk-1.jpg')">
+<div class="stagger"><div class="cobrand"><img src="../assets/city-of-sydney-logo_white.png" alt="City of Sydney" style="height:3rem"><span style="width:1px;height:2.6rem;background:rgba(255,255,255,.35)"></span><img src="../assets/aimlogo_white.png" alt="AIM" style="height:2.2rem"></div><p class="eyebrow">City of Sydney &middot; Australian Institute of Management &middot; Live 1-Hour Session</p><h1>Simplify Your Admin<br><span class="gradient-text">Live Working Session</span></h1><p class="lead" style="margin-top:1.4rem">One hour, hands-on. We build real admin tasks together &mdash; then turn them into repeatable workflows you can use from Monday.</p><div class="tool-logos"><div class="tool-logo"><img src="../assets/ai-tool-logos/ChatGPT.png" alt="ChatGPT"><span>ChatGPT</span></div><div class="tool-logo"><img src="../assets/ai-tool-logos/Gemini.png" alt="Gemini"><span>Gemini</span></div><div class="tool-logo"><img src="../assets/ai-tool-logos/Claude.png" alt="Claude"><span>Claude</span></div><div class="tool-logo"><img src="../assets/ai-tool-logos/Grok.png" alt="Grok"><span>Grok</span></div></div></div>
+</div>
+
+<!-- 2 · WHAT YOU TOLD US -->
+<div class="slide bg-dark" data-part="1" style="--pc:#6dd8ff">
+<div class="stagger" style="width:100%"><p class="eyebrow">Before we start</p><h2 style="margin-bottom:.4rem">You spoke. We listened.</h2><p class="lead" style="margin:.6rem 0 1.4rem">Your feedback from the workshop shaped this hour. Three things you asked for:</p><div style="display:flex;flex-direction:column;gap:.9rem;max-width:70ch"><div class="agenda-row" style="border-left:5px solid #6dd8ff"><span class="n" style="color:#6dd8ff">1</span><div style="flex:1"><strong style="color:#fff;font-size:1.1rem">More business, less &ldquo;intro to AI&rdquo;</strong><br><small>Real admin jobs &mdash; not personal examples</small></div></div><div class="agenda-row" style="border-left:5px solid #c98bff"><span class="n" style="color:#c98bff">2</span><div style="flex:1"><strong style="color:#fff;font-size:1.1rem">Build it live &mdash; show me how</strong><br><small>Watch tasks and automations actually get set up</small></div></div><div class="agenda-row" style="border-left:5px solid #ffb76b"><span class="n" style="color:#ffb76b">3</span><div style="flex:1"><strong style="color:#fff;font-size:1.1rem">Meet me at my level</strong><br><small>Clear lanes for new and confident users &mdash; nobody left behind or held back</small></div></div></div></div>
+</div>
+
+<!-- 3 · AGENDA (60 min) -->
+<div class="slide bg-dark" data-part="1" style="--pc:#6dd8ff">
+<div class="stagger" style="width:100%"><p class="eyebrow">The hour</p><h2 style="margin-bottom:1.2rem">Four blocks, sixty minutes</h2><div style="display:flex;flex-direction:column;gap:.7rem;max-width:70ch"><div class="agenda-row" style="border-left:5px solid #6dd8ff"><span class="n" style="color:#6dd8ff">1</span><div style="flex:1"><strong style="color:#fff;font-size:1.05rem">Foundations, fast</strong><br><small>The one prompt formula that fixes most outputs</small></div><span style="font-size:.82rem;font-weight:700;color:var(--muted);white-space:nowrap">0:00 &ndash; 0:10</span></div><div class="agenda-row" style="border-left:5px solid #c98bff"><span class="n" style="color:#c98bff">2</span><div style="flex:1"><strong style="color:#fff;font-size:1.05rem">Build it live</strong><br><small>Three real admin jobs, done in front of you</small></div><span style="font-size:.82rem;font-weight:700;color:var(--muted);white-space:nowrap">0:10 &ndash; 0:32</span></div><div class="agenda-row" style="border-left:5px solid #ffb76b"><span class="n" style="color:#ffb76b">3</span><div style="flex:1"><strong style="color:#fff;font-size:1.05rem">Chat &rarr; Workflow &rarr; Agent</strong><br><small>Make it repeatable &mdash; and watch Cowork run one</small></div><span style="font-size:.82rem;font-weight:700;color:var(--muted);white-space:nowrap">0:32 &ndash; 0:50</span></div><div class="agenda-row" style="border-left:5px solid #36e0b0"><span class="n" style="color:#36e0b0">4</span><div style="flex:1"><strong style="color:#fff;font-size:1.05rem">Your 7-day plan + take-home kit</strong><br><small>Improve one thing this week &mdash; with everything to do it</small></div><span style="font-size:.82rem;font-weight:700;color:var(--muted);white-space:nowrap">0:50 &ndash; 1:00</span></div></div></div>
+</div>
+
+<!-- 4 · POLL -->
+<div class="slide bg-blue" data-part="1" style="--pc:#6dd8ff;align-items:center;text-align:center">
+<div class="stagger" style="max-width:60ch;margin:0 auto"><p class="eyebrow" style="color:#6dd8ff">Quick poll &middot; 20 seconds</p><h2 style="margin-bottom:1.4rem">Where are you with AI right now?</h2><div class="flow" style="justify-content:center"><div class="step"><h3 class="accent">A &middot; New to it</h3><p>Tried it once or twice, not sure where to start</p></div><div class="step"><h3 style="color:#c98bff">B &middot; Dabbling</h3><p>Use it now and then for the odd task</p></div><div class="step"><h3 style="color:#ffb76b">C &middot; Daily</h3><p>It&rsquo;s already part of how I work</p></div></div><p class="lead" style="margin:1.6rem auto 0">No wrong answer. This is how I&rsquo;ll pitch the next 50 minutes &mdash; and which <strong>lane</strong> to follow.</p></div>
+</div>
+
+<!-- 5 · PART 1 · WHAT AI IS / ISN'T -->
+<div class="slide bg-dark" data-part="1" style="--pc:#6dd8ff">
+<div class="stagger"><p class="eyebrow" style="color:#6dd8ff">Part 1 &middot; Foundations</p><h2>What AI is great at &mdash; and what it isn&rsquo;t</h2><div class="cols"><div><h3 class="accent" style="font-size:1.05rem">LEAN ON IT FOR</h3><ul class="checklist"><li>First drafts &amp; rewrites</li><li>Summarising long documents</li><li>Turning mess into structure</li><li>Options, angles and ideas</li><li>Reformatting and tidying</li></ul></div><div><h3 style="font-size:1.05rem;color:var(--coral)">KEEP THE HUMAN ON</h3><ul class="checklist"><li>Guaranteed accuracy</li><li>Confidential judgement calls</li><li>Legal &amp; financial certainty</li><li>Tone with real people</li><li>Accountability for the result</li></ul></div></div></div>
+</div>
+
+<!-- 6 · PART 1 · PROMPT FORMULA -->
+<div class="slide bg-blue" data-part="1" style="--pc:#6dd8ff">
+<div class="stagger"><p class="eyebrow" style="color:#6dd8ff">Part 1 &middot; Foundations</p><h2>The one formula behind every good prompt</h2><div class="formula-box" style="margin-top:1rem">Act &middot; Explain &middot; Please</div><ul class="checklist"><li><b style="color:#fff">Act</b> as the useful expert &mdash; the role you want answering</li><li><b style="color:#fff">Explain</b> the context: the business, the situation, the constraints</li><li><b style="color:#fff">Please</b> do the specific task &mdash; and say what the output should look like</li></ul><div class="lane-note"><span class="lane begin chip">New</span><span>Weak result? Add a role, more context, the goal, the tone, the format. One of those five is almost always missing.</span></div><div class="lane-note"><span class="lane pro chip">Confident</span><span>Save your best prompts as reusable templates with blanks &mdash; your own swipe file beats writing from scratch every time.</span></div></div>
+</div>
+
+<!-- 7 · PART 2 · BUILD INTRO -->
+<div class="slide bg-dark" data-part="2" style="--pc:#c98bff">
+<div class="stagger"><p class="eyebrow" style="color:#c98bff">Part 2 &middot; Build it live</p><h2>Three real admin jobs &mdash; built right now</h2><p class="lead" style="margin:.6rem 0 0">No theory. We take three jobs every small business actually has, and do them live. Follow along with your own example.</p><div class="flow"><div class="step" style="border-left:4px solid #c98bff"><h3 style="color:#c98bff">1 &middot; Messy notes</h3><p>A page of meeting scrawl &rarr; a clean action list with owners</p></div><div class="step" style="border-left:4px solid #c98bff"><h3 style="color:#c98bff">2 &middot; Awkward email</h3><p>A tricky customer message &rarr; a calm, on-brand reply</p></div><div class="step" style="border-left:4px solid #c98bff"><h3 style="color:#c98bff">3 &middot; Long document</h3><p>A 12-page PDF &rarr; a one-page summary you can act on</p></div></div></div>
+</div>
+
+<!-- 8 · BUILD 1 -->
+<div class="slide bg-blue" data-part="2" style="--pc:#c98bff">
+<div class="stagger"><div class="lanes"><span class="lane begin">Everyone follows</span><span class="lane pro">Confident: template it</span></div><p class="eyebrow" style="color:#c98bff">Build 1 &middot; Meeting notes &rarr; actions</p><h2>From scrawl to a clear action list</h2><div class="prompt"><b>Act</b> as my operations assistant. <b>Explain:</b> below are my rough notes from a team meeting at a small Sydney café. <b>Please</b> turn them into a table of action items with: task, owner, and due date. Flag anything that looks unclear so I can confirm it. <br><span style="color:var(--muted)">[paste your notes]</span></div><div class="lane-note"><span class="lane pro chip">Confident</span><span>Add &ldquo;keep this as a reusable format&rdquo; and reuse it after every meeting &mdash; same prompt, new notes.</span></div></div>
+</div>
+
+<!-- 9 · BUILD 2 -->
+<div class="slide bg-blue" data-part="2" style="--pc:#c98bff">
+<div class="stagger"><div class="lanes"><span class="lane begin">Everyone follows</span><span class="lane pro">Confident: brand voice</span></div><p class="eyebrow" style="color:#c98bff">Build 2 &middot; Customer email &rarr; reply</p><h2>A calm, on-brand reply in seconds</h2><div class="prompt"><b>Act</b> as the owner of a small business replying to a customer. <b>Explain:</b> here is their message &mdash; they&rsquo;re unhappy about a delay. Our tone is warm, professional and solution-focused. <b>Please</b> draft a short reply that acknowledges the issue, offers a fix, and keeps them as a customer. <br><span style="color:var(--muted)">[paste the message]</span></div><div class="lane-note"><span class="lane pro chip">Confident</span><span>Paste a saved <b style="color:#fff">brand-voice block</b> at the top so every reply sounds like you, not like a robot.</span></div></div>
+</div>
+
+<!-- 10 · BUILD 3 + SAFE -->
+<div class="slide bg-blue" data-part="2" style="--pc:#c98bff">
+<div class="stagger"><div class="lanes"><span class="lane begin">Everyone follows</span><span class="lane pro">Confident: safe context</span></div><p class="eyebrow" style="color:#c98bff">Build 3 &middot; Long document &rarr; one page</p><h2>Read 12 pages in 30 seconds</h2><div class="prompt"><b>Act</b> as a business analyst. <b>Explain:</b> here is a long document (a report / contract / supplier proposal). <b>Please</b> give me a one-page summary: the 5 key points, anything that needs my decision, and 3 questions I should ask before I act.</div><div class="lane-note"><span class="lane begin chip">Safety</span><span><b style="color:#fff">Before you paste:</b> strip names, figures and addresses if it&rsquo;s sensitive &mdash; keep the problem, lose the private detail. And turn off &ldquo;train on my data&rdquo; in each tool&rsquo;s settings.</span></div></div>
+</div>
+
+<!-- 11 · PART 3 · CHAT > WORKFLOW > AGENT -->
+<div class="slide bg-dark" data-part="3" style="--pc:#ffb76b">
+<div class="stagger"><p class="eyebrow" style="color:#ffb76b">Part 3 &middot; Make it repeatable</p><h2>From one-off chat to something that runs itself</h2><div class="flow"><div class="step"><h3 style="color:#6dd8ff">Chat</h3><p>You ask, it answers. Great for one task, one time.</p></div><span class="arrow">&rarr;</span><div class="step"><h3 style="color:#c98bff">Workflow</h3><p>The same steps, saved and reused. Same prompt, new input, every week.</p></div><span class="arrow">&rarr;</span><div class="step"><h3 style="color:#ffb76b">Agent</h3><p>It does the multi-step job for you &mdash; you stay in the loop and approve.</p></div></div><p class="lead" style="margin-top:1.6rem">Most admin pain lives in step two: things you redo constantly. That&rsquo;s where the time is.</p></div>
+</div>
+
+<!-- 12 · PART 3 · COWORK -->
+<div class="slide bg-blue" data-part="3" style="--pc:#ffb76b">
+<div class="stagger"><div class="lanes"><span class="lane pro">The one you asked to see</span></div><p class="eyebrow" style="color:#ffb76b">Part 3 &middot; Cowork, set up for real</p><h2>An AI that works across your files &mdash; with you watching</h2><ul class="checklist"><li>Point it at a <b style="color:#fff">folder on your computer</b> &mdash; receipts, enquiries, documents</li><li>Give it a job in plain English: <i>&ldquo;sort these, draft a reply to each, summarise the lot&rdquo;</i></li><li>It works step by step &mdash; <b style="color:#fff">you approve before anything is sent or saved</b></li><li>Start tiny: one folder, one repeatable task. Not your whole business at once.</li></ul><div class="lane-note"><span class="lane begin chip">New</span><span>You don&rsquo;t need this yet &mdash; just know it exists for when a task becomes a weekly grind.</span></div></div>
+</div>
+
+<!-- 13 · PART 4 · 7-DAY PLAN -->
+<div class="slide bg-dark" data-part="4" style="--pc:#36e0b0">
+<div class="stagger"><p class="eyebrow" style="color:#36e0b0">Part 4 &middot; Your move</p><h2>Don&rsquo;t transform everything. Improve one thing.</h2><p class="lead" style="margin:.6rem 0 0">Pick the one admin job that drains you most. Spend 20 minutes this week building a prompt for it. That&rsquo;s the whole plan.</p><ul class="checklist"><li><b style="color:#fff">Today:</b> choose your one task</li><li><b style="color:#fff">This week:</b> build &amp; save the prompt &mdash; use the Prompt Builder on the site</li><li><b style="color:#fff">Next week:</b> reuse it 3 times &mdash; then pick the next one</li></ul><div class="lane-note"><span class="lane begin chip">Everyone</span><span>The 7-Day Action Plan tool walks you through this &mdash; it&rsquo;s in your take-home kit on the next slide.</span></div></div>
+</div>
+
+<!-- 14 · RESOURCES / LEAVE-BEHIND -->
+<div class="slide bg-blue" data-part="4" style="--pc:#36e0b0">
+<div class="stagger"><p class="eyebrow" style="color:#36e0b0">Take-home kit</p><h2>Everything from today, in one place</h2><div class="res-grid"><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">Live-build prompts</span><small>The three prompts we wrote, ready to copy</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">7-Day Action Plan</span><small>Pick one task and ship it</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">Prompt &amp; Admin libraries</span><small>Reusable templates for your business</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">Cheat sheets &amp; glossary</span><small>Printable references and plain-English terms</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">My AI Toolkit</span><small>Everything you build, saved in one page</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">These slides as a PDF</span><small>Yours to review and share</small></div></div></div><div class="qr-row"><figure><img src="../assets/AIMgithubqr.jpg" alt="Site QR"><figcaption>Open the site &amp; kit</figcaption></figure><figure><img src="../assets/CoSFeeedbackQR.jpg" alt="Feedback QR"><figcaption>2-min feedback</figcaption></figure></div></div>
+</div>
+
+<!-- 15 · CLOSING -->
+<div class="slide bg-black" style="display:flex;align-items:center;justify-content:center;text-align:center">
+<div class="stagger" style="max-width:52ch"><h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.2">Don&rsquo;t transform everything.<br><span class="gradient-text">Improve one thing.</span></h1><p class="lead" style="margin:1.6rem auto 0">Thank you. Take the kit, pick your one task, and start Monday.</p><div style="margin-top:2.4rem;display:flex;gap:1.4rem;justify-content:center;align-items:center"><img src="../assets/city-of-sydney-logo_white.png" alt="City of Sydney" style="height:2.2rem;opacity:.7"><img src="../assets/aimlogo_white.png" alt="AIM" style="height:2rem;opacity:.7"></div></div>
+</div>
+
+</div>
+<script>(function(){var s=document.querySelectorAll('.slide'),c=0,t=s.length,
+pb=document.getElementById('progress'),ct=document.getElementById('counter'),tr=false;
+var pc={1:'#6dd8ff',2:'#c98bff',3:'#ffb76b',4:'#36e0b0'};
+function u(){pb.style.width=((c+1)/t*100)+'%';ct.textContent=(c+1)+' / '+t;
+var p=s[c].getAttribute('data-part');pb.style.background=pc[p]||'rgba(255,255,255,0.45)';}
+function go(n){if(tr||n===c||n<0||n>=t)return;tr=true;var p=s[c];p.classList.remove('active');
+p.classList.add('exit-up');s[n].classList.add('active');c=n;u();
+setTimeout(function(){p.classList.remove('exit-up');tr=false;},650);}
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter')go(c+1);
+else if(e.key==='ArrowLeft'||e.key==='Backspace')go(c-1);else if(e.key==='Home')go(0);else if(e.key==='End')go(t-1);});
+document.addEventListener('click',function(e){if(e.clientX>window.innerWidth*0.3)go(c+1);else go(c-1);});
+u();})();</script>
+</body></html>
