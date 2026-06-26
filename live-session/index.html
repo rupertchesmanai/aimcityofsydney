@@ -32,15 +32,18 @@
   (function(){
     var KEY='cos_ls_unlocked';
     function unlocked(){try{return sessionStorage.getItem(KEY)==='1'}catch(e){return false}}
+    function removeGate(){var g=document.getElementById('ls-gate');if(g&&g.parentNode)g.parentNode.removeChild(g);document.body.style.overflow='';}
     window.lsCheck=function(){
       var i=document.getElementById('ls-pw'); if(!i)return;
-      if(i.value==='aimtest'){try{sessionStorage.setItem(KEY,'1')}catch(e){}var g=document.getElementById('ls-gate');if(g)g.parentNode.removeChild(g);document.body.style.overflow='';}
+      if(i.value==='aimtest'){try{sessionStorage.setItem(KEY,'1')}catch(e){}var g=document.getElementById('ls-gate');if(g)g.style.display='none';document.body.style.overflow='';setTimeout(removeGate,0);}
       else{var e=document.getElementById('ls-err');if(e)e.style.opacity='1';i.value='';i.focus();}
     };
     function block(ev){ if(unlocked())return; var t=ev.target; if(t&&t.closest&&t.closest('#ls-gate'))return; ev.stopImmediatePropagation(); if(ev.type==='click')ev.preventDefault(); }
     document.addEventListener('keydown',block,true);
     document.addEventListener('click',block,true);
-    if(unlocked()){var g=document.getElementById('ls-gate');if(g)g.parentNode.removeChild(g);}
+    var gate=document.getElementById('ls-gate');
+    if(gate){['click','keydown','keyup','mousedown','mouseup'].forEach(function(t){gate.addEventListener(t,function(e){e.stopPropagation();});});}
+    if(unlocked()){removeGate();}
     else{document.body.style.overflow='hidden';var p=document.getElementById('ls-pw');if(p)p.focus();}
   })();
   </script>
