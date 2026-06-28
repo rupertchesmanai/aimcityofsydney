@@ -13,41 +13,6 @@
 </head>
 <body>
 
-  <!-- ===== Temporary password gate (password: aimtest) ===== -->
-  <div id="ls-gate" style="position:fixed;inset:0;z-index:99999;background:#1a2249;display:flex;align-items:center;justify-content:center;font-family:'Lato',Arial,sans-serif;">
-    <div style="text-align:center;padding:2rem;max-width:380px;width:100%;">
-      <img src="../assets/aimlogo_white.png" alt="AIM" style="height:42px;margin-bottom:26px;opacity:.9">
-      <h1 style="font-size:1.7rem;font-weight:900;color:#fff;margin:0 0 8px;letter-spacing:-.02em;line-height:1.15">Live Working Session</h1>
-      <p style="font-size:.92rem;color:rgba(255,255,255,.5);margin:0 0 26px">This area is password-protected</p>
-      <div style="max-width:320px;margin:0 auto">
-        <input id="ls-pw" type="password" placeholder="Enter password" autocomplete="off" spellcheck="false"
-          onkeydown="if(event.key==='Enter')lsCheck()"
-          style="width:100%;padding:14px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:15px;outline:none;text-align:center;">
-        <p id="ls-err" style="color:#f87171;font-size:13px;margin:12px 0 0;font-weight:600;height:16px;opacity:0;transition:opacity .2s">Incorrect password</p>
-        <button onclick="lsCheck()" style="margin-top:14px;width:100%;padding:13px;border-radius:12px;border:none;background:#36e0b0;color:#0a0e1a;font-weight:800;font-size:14px;cursor:pointer">Enter session</button>
-      </div>
-    </div>
-  </div>
-  <script>
-  (function(){
-    var KEY='cos_ls_unlocked';
-    function unlocked(){try{return sessionStorage.getItem(KEY)==='1'}catch(e){return false}}
-    function removeGate(){var g=document.getElementById('ls-gate');if(g&&g.parentNode)g.parentNode.removeChild(g);document.body.style.overflow='';}
-    window.lsCheck=function(){
-      var i=document.getElementById('ls-pw'); if(!i)return;
-      if(i.value==='aimtest'){try{sessionStorage.setItem(KEY,'1')}catch(e){}var g=document.getElementById('ls-gate');if(g)g.style.display='none';document.body.style.overflow='';setTimeout(removeGate,0);}
-      else{var e=document.getElementById('ls-err');if(e)e.style.opacity='1';i.value='';i.focus();}
-    };
-    function block(ev){ if(unlocked())return; var t=ev.target; if(t&&t.closest&&t.closest('#ls-gate'))return; ev.stopImmediatePropagation(); if(ev.type==='click')ev.preventDefault(); }
-    document.addEventListener('keydown',block,true);
-    document.addEventListener('click',block,true);
-    var gate=document.getElementById('ls-gate');
-    if(gate){['click','keydown','keyup','mousedown','mouseup'].forEach(function(t){gate.addEventListener(t,function(e){e.stopPropagation();});});}
-    if(unlocked()){removeGate();}
-    else{document.body.style.overflow='hidden';var p=document.getElementById('ls-pw');if(p)p.focus();}
-  })();
-  </script>
-
   <!-- ============ NAV ============ -->
   <nav class="aim-nav fixed top-0 left-0 right-0 z-50 py-4">
     <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">

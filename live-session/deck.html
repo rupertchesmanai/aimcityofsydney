@@ -78,40 +78,6 @@ border-radius:10px;padding:1rem 1.3rem;margin-top:1.1rem;font-size:clamp(.92rem,
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:768px){.slide{padding:4vh 6vw}.cols{grid-template-columns:1fr;gap:1.4rem}.res-grid{grid-template-columns:1fr}h1{font-size:2.1rem}}
 </style></head><body>
-<!-- ===== Temporary password gate (password: aimtest) ===== -->
-<div id="ls-gate" style="position:fixed;inset:0;z-index:99999;background:#1a2249;display:flex;align-items:center;justify-content:center;font-family:'Lato',Arial,sans-serif;">
-  <div style="text-align:center;padding:2rem;max-width:380px;width:100%;">
-    <img src="../assets/aimlogo_white.png" alt="AIM" style="height:42px;margin-bottom:26px;opacity:.9">
-    <h1 style="font-size:1.7rem;font-weight:900;color:#fff;margin:0 0 8px;letter-spacing:-.02em;line-height:1.15">Live Working Session</h1>
-    <p style="font-size:.92rem;color:rgba(255,255,255,.5);margin:0 0 26px">This area is password-protected</p>
-    <div style="max-width:320px;margin:0 auto">
-      <input id="ls-pw" type="password" placeholder="Enter password" autocomplete="off" spellcheck="false"
-        onkeydown="if(event.key==='Enter')lsCheck()"
-        style="width:100%;padding:14px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:15px;outline:none;text-align:center;">
-      <p id="ls-err" style="color:#f87171;font-size:13px;margin:12px 0 0;font-weight:600;height:16px;opacity:0;transition:opacity .2s">Incorrect password</p>
-      <button onclick="lsCheck()" style="margin-top:14px;width:100%;padding:13px;border-radius:12px;border:none;background:#36e0b0;color:#0a0e1a;font-weight:800;font-size:14px;cursor:pointer">Enter session</button>
-    </div>
-  </div>
-</div>
-<script>
-(function(){
-  var KEY='cos_ls_unlocked';
-  function unlocked(){try{return sessionStorage.getItem(KEY)==='1'}catch(e){return false}}
-  function removeGate(){var g=document.getElementById('ls-gate');if(g&&g.parentNode)g.parentNode.removeChild(g);document.body.style.overflow='';}
-  window.lsCheck=function(){
-    var i=document.getElementById('ls-pw'); if(!i)return;
-    if(i.value==='aimtest'){try{sessionStorage.setItem(KEY,'1')}catch(e){}var g=document.getElementById('ls-gate');if(g)g.style.display='none';document.body.style.overflow='';setTimeout(removeGate,0);}
-    else{var e=document.getElementById('ls-err');if(e)e.style.opacity='1';i.value='';i.focus();}
-  };
-  function block(ev){ if(unlocked())return; var t=ev.target; if(t&&t.closest&&t.closest('#ls-gate'))return; ev.stopImmediatePropagation(); if(ev.type==='click')ev.preventDefault(); }
-  document.addEventListener('keydown',block,true);
-  document.addEventListener('click',block,true);
-  var gate=document.getElementById('ls-gate');
-  if(gate){['click','keydown','keyup','mousedown','mouseup'].forEach(function(t){gate.addEventListener(t,function(e){e.stopPropagation();});});}
-  if(unlocked()){removeGate();}
-  else{document.body.style.overflow='hidden';var p=document.getElementById('ls-pw');if(p)p.focus();}
-})();
-</script>
 <img src="../assets/aimlogo_white.png" alt="AIM" class="logo">
 <div class="tag">Live Session</div>
 <div class="progress" id="progress"></div>
@@ -198,22 +164,27 @@ border-radius:10px;padding:1rem 1.3rem;margin-top:1.1rem;font-size:clamp(.92rem,
 <div class="stagger"><p class="eyebrow" style="color:#36e0b0">Take-home kit</p><h2>Everything from today, in one place</h2><div class="res-grid"><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">Live-build prompts</span><small>Every prompt we wrote, ready to copy</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">7-Day Action Plan</span><small>Pick one task and ship it</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">Prompt &amp; Admin libraries</span><small>Reusable templates for your business</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">Cheat sheets &amp; glossary</span><small>Printable references and plain-English terms</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">My AI Toolkit</span><small>Everything you build, saved in one page</small></div></div><div class="ri"><span style="color:#36e0b0;font-weight:900">&#9656;</span><div><span class="b">These slides as a PDF</span><small>Yours to review and share</small></div></div></div><div class="qr-row"><figure><img src="../assets/AIMgithubqr.jpg" alt="Site QR"><figcaption>Open the site &amp; kit</figcaption></figure></div></div>
 </div>
 
+<!-- 14b · FEEDBACK SURVEY QR (matches the Business presentation) -->
+<div class="slide bg-dark" data-part="4" style="display:flex;align-items:center;justify-content:center;text-align:center">
+  <div class="stagger" style="max-width:54ch">
+    <p class="eyebrow">Before you go</p>
+    <h2 style="margin-bottom:1.6rem">Tell Us What You Thought</h2>
+    <div style="display:inline-block;background:#fff;border-radius:20px;padding:1.5rem;box-shadow:0 8px 40px rgba(0,0,0,0.3)">
+      <img src="../assets/CoSFeeedbackQR2.jpg" alt="City of Sydney feedback survey QR code" style="width:280px;height:280px;display:block;border-radius:8px">
+    </div>
+    <p style="margin-top:1.8rem;font-size:clamp(1.1rem,1.8vw,1.4rem);color:#fff;font-weight:700">Scan to complete the<br>City of Sydney feedback survey</p>
+    <p style="margin-top:0.8rem;font-size:0.95rem;color:var(--muted)">Your feedback helps us improve future workshops</p>
+  </div>
+</div>
+
 <!-- 15 · CLOSING -->
 <div class="slide bg-black" style="display:flex;align-items:center;justify-content:center;text-align:center">
 <div class="stagger" style="max-width:52ch"><h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.2">Don&rsquo;t transform everything.<br><span class="gradient-text">Improve one thing.</span></h1><p class="lead" style="margin:1.6rem auto 0">Thank you. Take the kit, pick your one task, and start Monday.</p><div style="margin-top:2.4rem;display:flex;gap:1.4rem;justify-content:center;align-items:center"><img src="../assets/city-of-sydney-logo_white.png" alt="City of Sydney" style="height:2.2rem;opacity:.7"><img src="../assets/aimlogo_white.png" alt="AIM" style="height:2rem;opacity:.7"></div></div>
 </div>
 
-<!-- 16 · FEEDBACK + WHAT'S NEXT -->
+<!-- 16 · WHAT'S NEXT — MARKETING BOOTCAMP -->
 <div class="slide bg-dark" data-part="4" style="--pc:#36e0b0">
-<div class="stagger" style="width:100%"><p class="eyebrow" style="color:#36e0b0">Before you go</p><h2>Two minutes that shape the next one</h2><div class="cols" style="align-items:center;margin-top:1.8rem">
-  <div style="display:flex;gap:1.6rem;align-items:center">
-    <!-- Replace the placeholder below with Monday's feedback QR, e.g.: <img src="../assets/feedback-qr.png" alt="Feedback QR" style="width:150px;height:150px;border-radius:12px;background:#fff;padding:7px;flex-shrink:0"> -->
-    <div style="width:150px;height:150px;border:2px dashed rgba(255,255,255,.3);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:.78rem;font-weight:700;flex-shrink:0;gap:.35rem"><span style="font-size:1.5rem;line-height:1">&#9633;</span>Feedback QR<br><span style="font-weight:500;font-size:.7rem">added Monday</span></div>
-    <div><h3 style="font-size:1.2rem">Tell us how today went</h3><p style="margin-top:.4rem">A quick scan, two minutes. Your feedback shapes the next session &mdash; just like this one was shaped by yours.</p></div>
-  </div>
-  <div style="background:rgba(54,224,176,.08);border:1px solid rgba(54,224,176,.3);border-radius:14px;padding:1.4rem 1.6rem">
-    <p class="eyebrow" style="color:#36e0b0;margin-bottom:.6rem">Coming up</p><h3 style="font-size:1.25rem">AI for Marketing Bootcamp</h3><p style="margin-top:.5rem"><b style="color:#fff">Wednesday 23 July.</b> Personas, brand voice, content and visuals &mdash; the marketing companion to today.</p><p style="margin-top:.7rem;color:#36e0b0;font-weight:700">Expressions of interest are still open.</p></div>
-</div></div>
+<div class="stagger" style="max-width:64ch"><p class="eyebrow" style="color:#36e0b0">Coming up</p><h2>AI for Marketing Bootcamp</h2><p class="lead" style="margin-top:1rem"><b style="color:#fff">Wednesday 23 July.</b> Personas, brand voice, content and visuals &mdash; the marketing companion to today&rsquo;s session.</p><div class="formula-box" style="margin-top:1.4rem;color:#36e0b0;border-color:rgba(54,224,176,.4)">Expressions of interest are still open</div></div>
 </div>
 
 </div>
