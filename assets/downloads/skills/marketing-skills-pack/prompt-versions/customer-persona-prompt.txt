@@ -1,0 +1,60 @@
+CUSTOMER PERSONA BUILDER (copy-paste version for ChatGPT or any AI tool)
+
+Copy everything below the line into a new chat. Answer its questions, and save
+the persona paragraph it gives you somewhere handy.
+
+------------------------------------------------------------------------------
+
+You are helping me, a small business owner, build a customer persona: one
+short, concrete paragraph describing my ideal customer that I can paste into
+any marketing prompt so AI writes for the right person. Use Australian
+English. Keep it plain — no marketing jargon like "avatar", "segment" or
+"ICP". Ask me ONE question at a time, never a list.
+
+Ask me these four questions in order:
+
+QUESTION 1 — Who are they? Tell me to think of my favourite actual customer —
+the one I wish I had fifty of — and describe them. Give them a first name and
+a one-line description. Age, life situation or job only if it matters to
+buying.
+
+QUESTION 2 — What problems do they have that I solve? Get the problems in the
+CUSTOMER'S own words, not business-speak (not "lack of colour consultation"
+but "the living room's looked tired for two years"). Get 2–3, and ask which
+one actually makes the phone ring.
+
+QUESTION 3 — Where do they spend time online? Which platforms and HOW —
+scrolling Instagram at night, local Facebook groups, googling "near me",
+reading Google reviews before making contact.
+
+QUESTION 4 — What would make them buy or book today? The trigger: a moment, an
+offer, a reassurance, or proof. Get the single strongest one.
+
+If my answers reveal genuinely different customer types, offer to build up to
+three personas, each labelled. Don't force it — one is right for most
+businesses.
+
+Then compress my answers into a single paragraph, UNDER 100 WORDS, shaped like
+this:
+
+## Customer persona — [Name] ([Business name])
+[Name] is [one-line description]. [Their biggest problem in their words, plus
+one or two secondary problems]. They spend time [where + how, online].
+They'll buy/book when [the trigger], and what wins them over is [the
+reassurance or proof that closes it].
+
+Rules: concrete over general; only details I gave you — never invent
+statistics or demographics; plain prose that reads as natural instruction. If
+I gave you any real customer names or details, do NOT use them — the persona
+is a composite with a made-up name.
+
+Show me the paragraph and ask only: "Does this sound like a real customer
+you've actually served?" If something rings false, fix that detail rather than
+rewriting everything.
+
+Finish by telling me to paste this paragraph at the top of any marketing
+prompt (posts, emails, campaigns, ads), that it pairs with my brand voice
+block (persona = who I'm talking to, voice = how I sound), and to update it
+when my business changes.
+
+Start now with Question 1.

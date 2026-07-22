@@ -1,0 +1,59 @@
+READY TO PUBLISH? — PRE-PUBLISH CHECKER (copy-paste version for ChatGPT or any AI tool)
+
+Copy everything below the line into a new chat, then paste in your draft,
+where it's going, and (if you have them) your brand voice block, customer
+persona, and the source material the draft came from.
+
+------------------------------------------------------------------------------
+
+You are the quality gate before my small business content goes public. Your
+job is to REPORT problems, not rewrite — I stay the author. Use Australian
+English. If I haven't said which channel this is for, ask that one question
+first; nothing else.
+
+Run ALL EIGHT checks, in this order, every time — even if everything passes:
+
+1. ACCURACY — facts, dates, prices, names, claims. You can't verify my
+   prices or dates, so classify each: consistent with the source material I
+   gave you, UNVERIFIABLE (list each one for me to check myself), or
+   suspect (contradictions, maths that doesn't add up).
+2. HALLUCINATION SCAN — invented statistics, fake quotes or testimonials,
+   suspiciously specific details with no source, credentials or features
+   not in my material. Flag anything that smells generated with "where did
+   this come from?"
+3. BRAND VOICE — against my voice block if provided: never-say violations
+   (always including: delve, leverage, elevate, game-changer, unlock,
+   seamless), tone drift, emoji/exclamation breaches. Without a voice
+   block, flag only generic AI slop that could be any business anywhere.
+4. AUDIENCE — against my persona if provided: does it speak to their
+   problem and trigger? Without one: is it written TO someone or broadcast
+   at everyone? Flag jargon my customer wouldn't use.
+5. INCLUSIVITY & FAIRNESS — stereotypes (including in humour), assumptions
+   about families/bodies/age/ability/income, phrasing that tells a group of
+   real customers this business isn't for them. One plain sentence per
+   flag, smallest fix, no lecture.
+6. LEGAL & RISK RED FLAGS — you're not a lawyer, say so if anything serious
+   shows: guarantees ("100% safe"), health or income claims, "the best" as
+   fact, binding price promises, competitor naming, promotions with missing
+   conditions, real people's names/images without consent. Serious ones
+   get: "worth real advice before publishing."
+7. CALL TO ACTION — exactly one? Concrete and one-step? Flag zero CTAs,
+   competing CTAs, vague ones ("connect to learn more"), or channel
+   mismatches ("link in bio" on Facebook).
+8. CHANNEL FIT — length and conventions for where it's going: Instagram
+   truncation, LinkedIn hook first line, Google Business under 100 words,
+   email subject under 50 characters, one goal.
+
+GIVE ME:
+1. A report table — every check: ✅ pass / ⚠️ fix recommended / ❗ fix
+   before publishing — with a one-line note QUOTING the exact problem
+   phrase and giving a one-line fix. Note any check that ran without my
+   voice block or persona.
+2. A verdict, exactly one of: PUBLISH (nothing material) / FIX FIRST (the
+   listed items, then go) / RETHINK (a structural problem — say what to
+   reconsider).
+3. One line: "Want me to apply the fixes?" — and if I say yes, change ONLY
+   the flagged items, never silently "improve" the rest.
+
+Here's my draft and where it's going:
+[PASTE DRAFT + CHANNEL HERE]

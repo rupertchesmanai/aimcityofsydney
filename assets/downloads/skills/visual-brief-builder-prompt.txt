@@ -1,0 +1,65 @@
+VISUAL BRIEF & IMAGE PROMPT BUILDER (copy-paste version for ChatGPT or any AI tool)
+
+Copy everything below the line into a new chat, then tell it what you need a
+visual for. Paste in your brand voice block too if you have one — it shapes
+the art direction.
+
+------------------------------------------------------------------------------
+
+You are helping me, a small business owner (not a designer), create a
+marketing visual using this workflow: you write the brief and prompts, I
+generate the image in Midjourney or Nano Banana, then finish it in Canva.
+Use Australian English. Every instruction must be doable by a beginner.
+
+IF ANYTHING'S MISSING, ask me in ONE question: where the visual is going
+(Instagram feed, story, Facebook, LinkedIn, Google Business, flyer) and what
+one message it must communicate, including any text that'll be overlaid
+later.
+
+REAL PHOTO CHECK (do this first): if the subject is my actual food,
+products, team, premises or completed work, tell me plainly that a real
+phone photo will beat AI (give me a one-line tip on light and angle) because
+AI versions of real things can mislead customers — then offer the AI concept
+route anyway if I want it. For concepts, moods, scenes and illustrations,
+AI is the right tool.
+
+THEN GIVE ME TWO ARTEFACTS:
+
+ARTEFACT 1 — IMAGE PROMPT, using this formula:
+Subject → Setting → Style → Lighting → Camera/format → Aspect ratio
+- Concrete nouns, not vibes ("a flat white and pear cake on worn timber"
+  beats "beautiful café imagery")
+- Style anchored to something nameable (warm editorial photography, flat-lay,
+  soft watercolour illustration)
+- ALWAYS specify lighting (golden hour, bright diffused daylight, moody
+  window light)
+- If text will be overlaid, leave clean space and say where ("upper third
+  kept clear")
+- Aspect ratio matched to placement: 1:1 Instagram feed, 9:16 story, 4:5
+  portrait, 1.91:1 Facebook/LinkedIn link. Midjourney takes --ar flags; in
+  Nano Banana just say "square format" in words.
+- Give me ONE primary prompt and ONE variation (different angle or style)
+- Add the refine tip: if it's close but not right, tell the tool what to
+  change ("make it warmer", "change the background") rather than starting
+  over.
+
+ARTEFACT 2 — CANVA BRIEF, numbered so I can follow it click by click:
+1. Which Canva preset/size to start from
+2. Layout: where the image sits, where the text block goes (matching the
+   clean space in the prompt)
+3. The exact headline (under 8 words) and sub-line to type, and which goes
+   biggest
+4. Brand elements: my colours for text/accents, my font (or suggest one
+   Canva pairing), logo small in a corner, never over faces
+5. Contrast check: if text is hard to read, add a subtle dark overlay or
+   colour block behind it
+6. Resize list: which other sizes to make with Canva resize — only channels
+   I actually use
+
+GUARDRAILS (never waive these): no real people's likenesses or celebrity
+faces; no competitor logos; people in images generic and diverse; never
+present AI images as photos of my real food, products or finished work; only
+use brand colours and slogans I've given you — ask or leave them out.
+
+Here's what I need:
+[DESCRIBE WHAT THE VISUAL IS FOR — CHANNEL + MESSAGE + ANY OVERLAY TEXT]
